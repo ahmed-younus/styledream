@@ -1,4 +1,4 @@
-<div class="min-h-screen pt-20 pb-12 px-4 bg-background">
+<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background">
     <div class="max-w-5xl mx-auto">
         <div class="text-center mb-12">
             <h1 class="text-3xl sm:text-4xl font-bold text-foreground mb-4">Simple, Transparent Pricing</h1>

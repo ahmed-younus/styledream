@@ -1,4 +1,4 @@
-<div class="min-h-screen pt-20 pb-12 px-4 bg-background">
+<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background">
     <div class="max-w-3xl mx-auto">
         {{-- Profile Header --}}
         <div class="bg-secondary rounded-2xl p-6 mb-6">

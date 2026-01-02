@@ -1,4 +1,4 @@
-<div x-data="heroCarousel()" x-init="init()" class="-mt-16 md:-mt-20">
+<div x-data="heroCarousel()" x-init="init()">
     {{-- Hero Section --}}
     <section class="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16 bg-background">
         {{-- Background --}}
