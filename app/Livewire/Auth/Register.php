@@ -42,7 +42,7 @@ class Register extends Component
 
         Auth::login($user);
 
-        return redirect()->route('studio');
+        return redirect()->route('onboarding');
     }
 
     public function render()

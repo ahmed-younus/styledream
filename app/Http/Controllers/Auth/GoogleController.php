@@ -24,6 +24,8 @@ class GoogleController extends Controller
                 ->orWhere('email', $googleUser->email)
                 ->first();
 
+            $isNewUser = false;
+
             if ($user) {
                 // Update google_id if not set
                 if (!$user->google_id) {
@@ -50,9 +52,16 @@ class GoogleController extends Controller
                     CreditTransaction::TYPE_SIGNUP_BONUS,
                     'Welcome bonus - 5 free credits'
                 );
+
+                $isNewUser = true;
             }
 
             Auth::login($user, true);
+
+            // Redirect new users to onboarding
+            if ($isNewUser) {
+                return redirect()->route('onboarding');
+            }
 
             return redirect()->intended(route('studio'));
 

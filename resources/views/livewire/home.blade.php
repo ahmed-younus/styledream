@@ -13,32 +13,32 @@
                 <div class="text-center lg:text-left order-2 lg:order-1">
                     <span class="inline-flex items-center gap-2 px-4 py-2 mb-6 sm:mb-8 text-xs font-medium tracking-widest uppercase text-muted-foreground border border-border bg-background rounded">
                         <svg class="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
-                        AI-Powered Virtual Try-On
+                        {{ __('home.hero_badge') }}
                     </span>
 
                     <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6 sm:mb-8">
-                        <span class="text-foreground">Try Clothes</span>
+                        <span class="text-foreground">{{ __('home.hero_title_1') }}</span>
                         <br>
-                        <span class="text-muted-foreground">Before You Buy</span>
+                        <span class="text-muted-foreground">{{ __('home.hero_title_2') }}</span>
                     </h1>
 
                     <p class="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-md mx-auto lg:mx-0 leading-relaxed">
-                        Upload your photo and watch as AI instantly shows you wearing any outfit. No changing room needed.
+                        {{ __('home.hero_description') }}
                     </p>
 
                     <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                         @auth
                             <a href="{{ route('studio') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
-                                TRY IT NOW
+                                {{ __('home.try_it_now') }}
                             </a>
                         @else
                             <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
-                                TRY IT FREE
+                                {{ __('home.try_it_free') }}
                             </a>
                             <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-2 px-6 py-4 border border-border hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors">
-                                Sign In
+                                {{ __('app.sign_in') }}
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
                             </a>
                         @endauth
@@ -48,17 +48,17 @@
                     <div class="mt-10 sm:mt-12 flex items-center gap-6 sm:gap-8 justify-center lg:justify-start">
                         <div class="text-center lg:text-left">
                             <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">30s</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">Try-on time</div>
+                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.tryon_time') }}</div>
                         </div>
                         <div class="w-px h-10 bg-border"></div>
                         <div class="text-center lg:text-left">
                             <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">1000+</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">Brands</div>
+                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.brands') }}</div>
                         </div>
                         <div class="w-px h-10 bg-border"></div>
                         <div class="text-center lg:text-left">
                             <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">Free</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">To start</div>
+                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.to_start') }}</div>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                             <div class="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-background/95 backdrop-blur-sm rounded-full shadow-sm">
                                 <div :class="isTransitioning ? 'animate-pulse bg-yellow-500' : 'bg-green-500'"
                                      class="w-2 h-2 rounded-full transition-colors"></div>
-                                <span class="text-[9px] font-medium text-muted-foreground" x-text="isTransitioning ? 'Trying On...' : 'Live Demo'"></span>
+                                <span class="text-[9px] font-medium text-muted-foreground" x-text="isTransitioning ? '{{ __('home.trying_on') }}' : '{{ __('home.live_demo') }}'"></span>
                             </div>
 
                             {{-- Style label (top right) --}}
@@ -131,7 +131,7 @@
                                  x-transition:enter-end="opacity-100 translate-y-0"
                                  class="absolute bottom-10 left-3 right-3 px-3 py-2 bg-foreground/90 text-background rounded-lg">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[9px] tracking-wide uppercase">Outfit Total</span>
+                                    <span class="text-[9px] tracking-wide uppercase">{{ __('home.outfit_total') }}</span>
                                     <span class="text-sm font-bold" x-text="'$' + totalPrice"></span>
                                 </div>
                             </div>
@@ -154,7 +154,7 @@
         <div class="absolute bottom-8 left-1/2 -translate-x-1/2 hidden sm:block">
             <button onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})"
                     class="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-                <span class="text-[10px] tracking-widest uppercase">Scroll to Learn More</span>
+                <span class="text-[10px] tracking-widest uppercase">{{ __('home.scroll_to_learn') }}</span>
                 <div class="w-6 h-10 border border-border rounded-full flex justify-center pt-2">
                     <div class="w-1 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
                 </div>
@@ -166,8 +166,8 @@
     <section id="features" class="py-12 sm:py-20 bg-secondary">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10 sm:mb-16">
-                <h2 class="text-2xl sm:text-3xl font-bold text-foreground">How It Works</h2>
-                <p class="mt-3 text-muted-foreground max-w-2xl mx-auto">Three simple steps to see yourself in any outfit</p>
+                <h2 class="text-2xl sm:text-3xl font-bold text-foreground">{{ __('home.how_it_works') }}</h2>
+                <p class="mt-3 text-muted-foreground max-w-2xl mx-auto">{{ __('home.how_it_works_subtitle') }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
@@ -178,8 +178,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-foreground mb-2">Upload Your Photo</h3>
-                    <p class="text-sm text-muted-foreground">Take a full-body photo or use an existing one from your gallery</p>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">{{ __('home.step1_title') }}</h3>
+                    <p class="text-sm text-muted-foreground">{{ __('home.step1_description') }}</p>
                 </div>
 
                 {{-- Step 2 --}}
@@ -189,8 +189,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-foreground mb-2">Select Clothing</h3>
-                    <p class="text-sm text-muted-foreground">Upload any clothing item you want to try on virtually</p>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">{{ __('home.step2_title') }}</h3>
+                    <p class="text-sm text-muted-foreground">{{ __('home.step2_description') }}</p>
                 </div>
 
                 {{-- Step 3 --}}
@@ -200,8 +200,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-foreground mb-2">See The Magic</h3>
-                    <p class="text-sm text-muted-foreground">AI generates you wearing the outfit in seconds</p>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">{{ __('home.step3_title') }}</h3>
+                    <p class="text-sm text-muted-foreground">{{ __('home.step3_description') }}</p>
                 </div>
             </div>
         </div>
@@ -213,19 +213,19 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
                 <div class="p-4">
                     <div class="text-2xl sm:text-4xl font-bold text-foreground">50K+</div>
-                    <div class="text-sm text-muted-foreground mt-1">Happy Users</div>
+                    <div class="text-sm text-muted-foreground mt-1">{{ __('home.happy_users') }}</div>
                 </div>
                 <div class="p-4">
                     <div class="text-2xl sm:text-4xl font-bold text-foreground">1M+</div>
-                    <div class="text-sm text-muted-foreground mt-1">Try-Ons Done</div>
+                    <div class="text-sm text-muted-foreground mt-1">{{ __('home.tryons_done') }}</div>
                 </div>
                 <div class="p-4">
                     <div class="text-2xl sm:text-4xl font-bold text-foreground">98%</div>
-                    <div class="text-sm text-muted-foreground mt-1">Accuracy Rate</div>
+                    <div class="text-sm text-muted-foreground mt-1">{{ __('home.accuracy_rate') }}</div>
                 </div>
                 <div class="p-4">
                     <div class="text-2xl sm:text-4xl font-bold text-foreground">30s</div>
-                    <div class="text-sm text-muted-foreground mt-1">Avg. Processing</div>
+                    <div class="text-sm text-muted-foreground mt-1">{{ __('home.avg_processing') }}</div>
                 </div>
             </div>
         </div>
@@ -235,21 +235,21 @@
     <section class="py-12 sm:py-20 bg-primary">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-foreground mb-4">
-                Ready to Transform Your Shopping?
+                {{ __('home.cta_title') }}
             </h2>
             <p class="text-primary-foreground/80 mb-6 sm:mb-8 max-w-xl mx-auto">
-                Join thousands of users who shop smarter with virtual try-on. Start with 5 free credits today!
+                {{ __('home.cta_description') }}
             </p>
             @auth
                 <a href="{{ route('studio') }}" class="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-background hover:bg-secondary text-foreground font-semibold rounded-lg shadow-lg transition-colors">
-                    Start Creating
+                    {{ __('home.start_creating') }}
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
                 </a>
             @else
                 <a href="{{ route('register') }}" class="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-background hover:bg-secondary text-foreground font-semibold rounded-lg shadow-lg transition-colors">
-                    Start Free Trial
+                    {{ __('home.start_free_trial') }}
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
@@ -260,6 +260,11 @@
 
     {{-- Alpine.js Carousel Script --}}
     <script>
+    const TRANSLATIONS = {
+        yourPhoto: '{{ __('home.your_photo') }}',
+        yourWardrobe: '{{ __('home.your_wardrobe') }}'
+    };
+
     function heroCarousel() {
         return {
             currentModelIndex: 0,
@@ -275,11 +280,11 @@
                         {
                             id: 0,
                             image: '/images/demo/demo-black-male-base.jpg',
-                            label: 'Your Photo',
+                            label: TRANSLATIONS.yourPhoto,
                             items: [
-                                { name: 'White T-Shirt', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'Light Jeans', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'White Sneakers', retailer: 'Your wardrobe', price: '—' },
+                                { name: 'White T-Shirt', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'Light Jeans', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'White Sneakers', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
                             ],
                             isBase: true,
                         },
@@ -314,11 +319,11 @@
                         {
                             id: 0,
                             image: '/images/demo/demo-asian-female-base.jpg',
-                            label: 'Your Photo',
+                            label: TRANSLATIONS.yourPhoto,
                             items: [
-                                { name: 'White Blouse', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'Beige Trousers', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'Nude Heels', retailer: 'Your wardrobe', price: '—' },
+                                { name: 'White Blouse', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'Beige Trousers', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'Nude Heels', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
                             ],
                             isBase: true,
                         },
@@ -353,11 +358,11 @@
                         {
                             id: 0,
                             image: '/images/demo/demo-latina-female-base.jpg',
-                            label: 'Your Photo',
+                            label: TRANSLATIONS.yourPhoto,
                             items: [
-                                { name: 'Grey Crop Top', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'Black Leggings', retailer: 'Your wardrobe', price: '—' },
-                                { name: 'Training Shoes', retailer: 'Your wardrobe', price: '—' },
+                                { name: 'Grey Crop Top', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'Black Leggings', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
+                                { name: 'Training Shoes', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
                             ],
                             isBase: true,
                         },

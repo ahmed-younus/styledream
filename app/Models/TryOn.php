@@ -19,14 +19,22 @@ class TryOn extends Model
         'user_id',
         'body_image_url',
         'garment_image_url',
+        'garment_urls',
         'result_image_url',
         'status',
+        'attempts',
+        'processing_started_at',
         'error_message',
         'processing_time_ms',
         'credits_used',
         'garment_name',
         'garment_brand',
         'garment_category',
+    ];
+
+    protected $casts = [
+        'garment_urls' => 'array',
+        'processing_started_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -56,7 +64,10 @@ class TryOn extends Model
 
     public function markAsProcessing(): void
     {
-        $this->update(['status' => self::STATUS_PROCESSING]);
+        $this->update([
+            'status' => self::STATUS_PROCESSING,
+            'processing_started_at' => now(),
+        ]);
     }
 
     public function markAsCompleted(string $resultUrl, int $processingTime): void
@@ -74,5 +85,28 @@ class TryOn extends Model
             'status' => self::STATUS_FAILED,
             'error_message' => $error,
         ]);
+    }
+
+    public function incrementAttempts(): void
+    {
+        $this->increment('attempts');
+    }
+
+    public function canRetry(int $maxAttempts = 3): bool
+    {
+        return $this->attempts < $maxAttempts;
+    }
+
+    /**
+     * Get all garment URLs - backwards compatible
+     */
+    public function getAllGarmentUrls(): array
+    {
+        if (!empty($this->garment_urls)) {
+            return $this->garment_urls;
+        }
+
+        // Fallback to single garment URL
+        return $this->garment_image_url ? [$this->garment_image_url] : [];
     }
 }

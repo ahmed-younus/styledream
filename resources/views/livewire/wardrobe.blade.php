@@ -3,14 +3,14 @@
         {{-- Header --}}
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-foreground mb-2">My Wardrobe</h1>
-                <p class="text-muted-foreground">{{ $items->count() }} items saved</p>
+                <h1 class="text-3xl font-bold text-foreground mb-2">{{ __('wardrobe.title') }}</h1>
+                <p class="text-muted-foreground">{{ __('wardrobe.items_saved', ['count' => $items->count()]) }}</p>
             </div>
             <button wire:click="$set('showAddModal', true)" class="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Add Item
+                {{ __('wardrobe.add_item') }}
             </button>
         </div>
 
@@ -19,7 +19,7 @@
             @if($groupedItems->count() > 1)
                 <div class="mb-6 flex flex-wrap gap-2">
                     <span class="px-4 py-2 bg-primary text-primary-foreground rounded-full text-sm font-medium">
-                        All ({{ $items->count() }})
+                        {{ __('wardrobe.all') }} ({{ $items->count() }})
                     </span>
                     @foreach($groupedItems as $category => $categoryItems)
                         <span class="px-4 py-2 bg-secondary text-foreground rounded-full text-sm">
@@ -50,7 +50,7 @@
                                         </svg>
                                     @endif
                                 </button>
-                                <button wire:click="deleteItem({{ $item->id }})" wire:confirm="Are you sure you want to delete this item?" class="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors">
+                                <button wire:click="deleteItem({{ $item->id }})" wire:confirm="{{ __('wardrobe.delete_confirm') }}" class="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors">
                                     <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
@@ -84,13 +84,13 @@
                 <svg class="w-20 h-20 mx-auto text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
-                <h3 class="text-xl font-semibold text-foreground mb-2">Your wardrobe is empty</h3>
-                <p class="text-muted-foreground mb-6 max-w-md mx-auto">Add your favorite clothing items to your wardrobe for quick access when creating outfits</p>
+                <h3 class="text-xl font-semibold text-foreground mb-2">{{ __('wardrobe.empty_title') }}</h3>
+                <p class="text-muted-foreground mb-6 max-w-md mx-auto">{{ __('wardrobe.empty_description') }}</p>
                 <button wire:click="$set('showAddModal', true)" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Add Your First Item
+                    {{ __('wardrobe.add_first_item') }}
                 </button>
             </div>
         @endif
@@ -101,21 +101,28 @@
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showAddModal', false)">
             <div class="bg-background rounded-2xl max-w-md w-full overflow-hidden">
                 <div class="p-6 border-b border-border flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-foreground">Add to Wardrobe</h3>
+                    <h3 class="text-lg font-bold text-foreground">{{ __('wardrobe.add_title') }}</h3>
                     <button wire:click="$set('showAddModal', false)" class="p-2 hover:bg-secondary rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
                 <form wire:submit="addItem" class="p-6 space-y-4">
+                    {{-- Error Display --}}
+                    @if($error)
+                        <div class="p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
+                            {{ $error }}
+                        </div>
+                    @endif
+
                     {{-- Image Upload --}}
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-2">Image *</label>
+                        <label class="block text-sm font-medium text-foreground mb-2">{{ __('wardrobe.image') }} *</label>
                         <label class="block cursor-pointer">
                             <div class="aspect-square max-w-[200px] mx-auto rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors overflow-hidden relative bg-secondary">
                                 @if($imagePreview)
                                     <img src="{{ $imagePreview }}" alt="Preview" class="w-full h-full object-cover">
-                                    <button type="button" wire:click="$set('image', null); $set('imagePreview', null)" class="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full">
+                                    <button type="button" wire:click="$set('image', null); $set('imagePreview', null); $set('imageUrl', '')" class="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 @else
@@ -123,11 +130,11 @@
                                         <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                         </svg>
-                                        <span class="text-sm">Upload image</span>
+                                        <span class="text-sm">{{ __('wardrobe.upload_image') }}</span>
                                     </div>
                                 @endif
 
-                                <div wire:loading wire:target="image" class="absolute inset-0 bg-background/90 flex items-center justify-center">
+                                <div wire:loading wire:target="image,loadFromUrl" class="absolute inset-0 bg-background/90 flex items-center justify-center">
                                     <svg class="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -137,40 +144,64 @@
                             <input type="file" wire:model="image" accept="image/*" class="hidden">
                         </label>
                         @error('image') <span class="text-destructive text-sm">{{ $message }}</span> @enderror
+
+                        {{-- URL Paste Option --}}
+                        @if(!$imagePreview)
+                            <div class="mt-3 max-w-[280px] mx-auto">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="flex-1 h-px bg-border"></div>
+                                    <span class="text-xs text-muted-foreground">{{ __('wardrobe.or_paste_link') }}</span>
+                                    <div class="flex-1 h-px bg-border"></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <input type="url" wire:model="imageUrl" placeholder="https://example.com/image.jpg" class="flex-1 px-3 py-2 text-sm bg-secondary border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <button type="button" wire:click="loadFromUrl" class="px-3 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
+                                        {{ __('wardrobe.add') }}
+                                    </button>
+                                </div>
+                                @error('imageUrl') <span class="text-destructive text-sm mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Name --}}
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-2">Name *</label>
-                        <input type="text" wire:model="name" placeholder="e.g., Blue Denim Jacket" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                        <label class="block text-sm font-medium text-foreground mb-2">{{ __('wardrobe.name') }} *</label>
+                        <input type="text" wire:model="name" placeholder="{{ __('wardrobe.name_placeholder') }}" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
                         @error('name') <span class="text-destructive text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Category --}}
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-2">Category *</label>
+                        <label class="block text-sm font-medium text-foreground mb-2">{{ __('wardrobe.category') }} *</label>
                         <select wire:model="category" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
-                            @foreach($categories as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
+                            <option value="">{{ __('wardrobe.select_category') }}</option>
+                            @foreach($categoryGroups as $group => $items)
+                                <optgroup label="{{ __('wardrobe.category_' . $group) }}">
+                                    @foreach($items as $key => $label)
+                                        <option value="{{ $key }}">{{ $label }}</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
+                        @error('category') <span class="text-destructive text-sm">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Brand (Optional) --}}
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-2">Brand (optional)</label>
-                        <input type="text" wire:model="brand" placeholder="e.g., Zara, H&M" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                        <label class="block text-sm font-medium text-foreground mb-2">{{ __('wardrobe.brand') }}</label>
+                        <input type="text" wire:model="brand" placeholder="{{ __('wardrobe.brand_placeholder') }}" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary">
                     </div>
 
                     {{-- Submit --}}
                     <button type="submit" class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
-                        <span wire:loading.remove wire:target="addItem">Add to Wardrobe</span>
+                        <span wire:loading.remove wire:target="addItem">{{ __('wardrobe.add_to_wardrobe') }}</span>
                         <span wire:loading wire:target="addItem" class="flex items-center gap-2">
                             <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                             </svg>
-                            Adding...
+                            {{ __('wardrobe.adding') }}
                         </span>
                     </button>
                 </form>
