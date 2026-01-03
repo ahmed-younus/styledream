@@ -21,6 +21,16 @@
             <h1 class="text-3xl sm:text-4xl font-bold text-foreground mb-4">{{ __('pricing.title') }}</h1>
             <p class="text-muted-foreground max-w-xl mx-auto">{{ __('pricing.subtitle') }}</p>
 
+            {{-- Currency Selector --}}
+            <div class="flex items-center justify-center gap-2 mt-6">
+                @foreach($currencies as $code => $currencyData)
+                    <button wire:click="setCurrency('{{ $code }}')"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer {{ $currency === $code ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/80' }}">
+                        {{ $currencyData['symbol'] }} {{ strtoupper($code) }}
+                    </button>
+                @endforeach
+            </div>
+
             {{-- Payment Methods Badge --}}
             <div class="flex items-center justify-center gap-4 mt-6">
                 <span class="text-sm text-muted-foreground">{{ __('pricing.we_accept') }}</span>
@@ -58,126 +68,112 @@
         @php
             $activeSubscription = auth()->check() ? auth()->user()->activeSubscription() : null;
             $currentPlan = $activeSubscription ? $activeSubscription->plan : 'free';
+            $planCount = count($plans);
+            $gridCols = $planCount <= 3 ? 'md:grid-cols-' . $planCount : 'md:grid-cols-4';
         @endphp
 
-        <div class="grid md:grid-cols-3 gap-6">
-            {{-- Free Plan --}}
-            <div class="bg-secondary rounded-2xl p-6 border border-border {{ $currentPlan === 'free' ? 'ring-2 ring-primary' : '' }}">
-                <h3 class="text-lg font-bold text-foreground mb-2">{{ __('pricing.free_name') }}</h3>
-                <div class="mb-4">
-                    <span class="text-4xl font-bold text-foreground">{{ __('pricing.free_price') }}</span>
-                    <span class="text-muted-foreground">{{ __('pricing.per_month') }}</span>
-                </div>
-                <p class="text-sm text-muted-foreground mb-6">{{ __('pricing.free_description') }}</p>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.free_feature1') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.free_feature2') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.free_feature3') }}
-                    </li>
-                </ul>
-                @auth
-                    @if($currentPlan === 'free')
-                        <span class="block w-full py-3 text-center bg-primary/10 text-primary font-medium rounded-lg border border-primary">{{ __('pricing.current_plan') }}</span>
-                    @else
-                        <span class="block w-full py-3 text-center bg-secondary text-muted-foreground font-medium rounded-lg border border-border">{{ __('pricing.free_tier') }}</span>
-                    @endif
-                @else
-                    <a href="{{ route('register') }}" class="block w-full py-3 text-center bg-secondary text-foreground font-medium rounded-lg border border-border hover:bg-background transition-colors">{{ __('pricing.get_started') }}</a>
-                @endauth
-            </div>
+        <div class="grid {{ $planCount === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : ($planCount === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' : ($planCount === 3 ? 'md:grid-cols-3' : ($planCount === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4'))) }} gap-6">
+            @foreach($plans as $planKey => $plan)
+                @php
+                    $isPopular = ($plan['badge'] ?? '') === 'Popular' || ($plan['badge'] ?? '') === 'popular';
+                    $isBestValue = ($plan['badge'] ?? '') === 'Best Value' || ($plan['badge'] ?? '') === 'best_value';
+                    $isCurrentPlan = $currentPlan === $planKey;
+                    $isFree = ($plan['price'] ?? 0) == 0;
+                    $features = $plan['features'] ?? [];
+                @endphp
 
-            {{-- Pro Plan --}}
-            <div class="bg-primary rounded-2xl p-6 text-primary-foreground relative {{ $currentPlan === 'pro' ? 'ring-4 ring-yellow-400' : '' }}">
-                <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-background text-foreground text-xs font-bold rounded-full">{{ __('pricing.popular') }}</div>
-                <h3 class="text-lg font-bold mb-2">{{ __('pricing.pro_name') }}</h3>
-                <div class="mb-4">
-                    <span class="text-4xl font-bold">{{ __('pricing.pro_price') }}</span>
-                    <span class="text-primary-foreground/70">{{ __('pricing.per_month') }}</span>
-                </div>
-                <p class="text-sm text-primary-foreground/80 mb-6">{{ __('pricing.pro_description') }}</p>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-center gap-2 text-sm">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.pro_feature1') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.pro_feature2') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.pro_feature3') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.pro_feature4') }}
-                    </li>
-                </ul>
-                @auth
-                    @if($currentPlan === 'pro')
-                        <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.manage_subscription') }}</a>
-                    @elseif($currentPlan === 'premium')
-                        <span class="block w-full py-3 text-center bg-background/50 text-foreground/70 font-medium rounded-lg">{{ __('pricing.on_premium') }}</span>
-                    @else
-                        <form action="{{ route('checkout.subscription') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="plan" value="pro">
-                            <button type="submit" class="w-full py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">{{ __('pricing.upgrade_pro') }}</button>
-                        </form>
-                    @endif
+                @if($isPopular)
+                    {{-- Popular Plan - Primary colored card --}}
+                    <div class="bg-primary rounded-2xl p-6 text-primary-foreground relative {{ $isCurrentPlan ? 'ring-4 ring-yellow-400' : '' }}">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-background text-foreground text-xs font-bold rounded-full">{{ $plan['badge'] }}</div>
+                        <h3 class="text-lg font-bold mb-2">{{ $plan['name'] }}</h3>
+                        <div class="mb-4">
+                            @if($isFree)
+                                <span class="text-4xl font-bold">{{ $currencySymbol }}0</span>
+                            @else
+                                <span class="text-4xl font-bold">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 0) }}</span>
+                            @endif
+                            <span class="text-primary-foreground/70">{{ __('pricing.per_month') }}</span>
+                        </div>
+                        @if(!empty($plan['description']))
+                            <p class="text-sm text-primary-foreground/80 mb-6">{{ $plan['description'] }}</p>
+                        @endif
+                        <ul class="space-y-3 mb-6">
+                            @foreach($features as $feature)
+                                <li class="flex items-center gap-2 text-sm">
+                                    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                    {{ $feature }}
+                                </li>
+                            @endforeach
+                        </ul>
+                        @auth
+                            @if($isCurrentPlan)
+                                <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.manage_subscription') }}</a>
+                            @elseif($isFree)
+                                <span class="block w-full py-3 text-center bg-background/50 text-foreground/70 font-medium rounded-lg">{{ $plan['button_text'] ?? __('pricing.free_tier') }}</span>
+                            @else
+                                <form action="{{ route('checkout.subscription') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="plan" value="{{ $planKey }}">
+                                    <input type="hidden" name="currency" value="{{ $currency }}">
+                                    <button type="submit" class="w-full py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">{{ $plan['button_text'] ?? __('pricing.upgrade_now') }}</button>
+                                </form>
+                            @endif
+                        @else
+                            <a href="{{ route('login') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.login_to_upgrade') }}</a>
+                        @endauth
+                    </div>
                 @else
-                    <a href="{{ route('login') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.login_to_upgrade') }}</a>
-                @endauth
-            </div>
-
-            {{-- Premium Plan --}}
-            <div class="bg-secondary rounded-2xl p-6 border border-border {{ $currentPlan === 'premium' ? 'ring-2 ring-primary' : '' }}">
-                <h3 class="text-lg font-bold text-foreground mb-2">{{ __('pricing.premium_name') }}</h3>
-                <div class="mb-4">
-                    <span class="text-4xl font-bold text-foreground">{{ __('pricing.premium_price') }}</span>
-                    <span class="text-muted-foreground">{{ __('pricing.per_month') }}</span>
-                </div>
-                <p class="text-sm text-muted-foreground mb-6">{{ __('pricing.premium_description') }}</p>
-                <ul class="space-y-3 mb-6">
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.premium_feature1') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.premium_feature2') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.premium_feature3') }}
-                    </li>
-                    <li class="flex items-center gap-2 text-sm text-foreground">
-                        <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                        {{ __('pricing.premium_feature4') }}
-                    </li>
-                </ul>
-                @auth
-                    @if($currentPlan === 'premium')
-                        <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">{{ __('pricing.manage_subscription') }}</a>
-                    @else
-                        <form action="{{ route('checkout.subscription') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="plan" value="premium">
-                            <button type="submit" class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">{{ __('pricing.go_premium') }}</button>
-                        </form>
-                    @endif
-                @else
-                    <a href="{{ route('login') }}" class="block w-full py-3 text-center bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">{{ __('pricing.login_to_upgrade') }}</a>
-                @endauth
-            </div>
+                    {{-- Regular Plan - Secondary colored card --}}
+                    <div class="bg-secondary rounded-2xl p-6 border border-border relative {{ $isCurrentPlan ? 'ring-2 ring-primary' : '' }} {{ $isBestValue ? 'ring-2 ring-green-500' : '' }}">
+                        @if(!empty($plan['badge']) && !$isPopular)
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 {{ $isBestValue ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground' }} text-xs font-bold rounded-full">{{ $plan['badge'] }}</div>
+                        @endif
+                        <h3 class="text-lg font-bold text-foreground mb-2">{{ $plan['name'] }}</h3>
+                        <div class="mb-4">
+                            @if($isFree)
+                                <span class="text-4xl font-bold text-foreground">{{ $currencySymbol }}0</span>
+                            @else
+                                <span class="text-4xl font-bold text-foreground">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 0) }}</span>
+                            @endif
+                            <span class="text-muted-foreground">{{ __('pricing.per_month') }}</span>
+                        </div>
+                        @if(!empty($plan['description']))
+                            <p class="text-sm text-muted-foreground mb-6">{{ $plan['description'] }}</p>
+                        @endif
+                        <ul class="space-y-3 mb-6">
+                            @foreach($features as $feature)
+                                <li class="flex items-center gap-2 text-sm text-foreground">
+                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                    {{ $feature }}
+                                </li>
+                            @endforeach
+                        </ul>
+                        @auth
+                            @if($isCurrentPlan && $isFree)
+                                <span class="block w-full py-3 text-center bg-primary/10 text-primary font-medium rounded-lg border border-primary">{{ __('pricing.current_plan') }}</span>
+                            @elseif($isCurrentPlan)
+                                <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">{{ __('pricing.manage_subscription') }}</a>
+                            @elseif($isFree)
+                                <span class="block w-full py-3 text-center bg-secondary text-muted-foreground font-medium rounded-lg border border-border">{{ $plan['button_text'] ?? __('pricing.free_tier') }}</span>
+                            @else
+                                <form action="{{ route('checkout.subscription') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="plan" value="{{ $planKey }}">
+                                    <input type="hidden" name="currency" value="{{ $currency }}">
+                                    <button type="submit" class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">{{ $plan['button_text'] ?? __('pricing.upgrade_now') }}</button>
+                                </form>
+                            @endif
+                        @else
+                            @if($isFree)
+                                <a href="{{ route('register') }}" class="block w-full py-3 text-center bg-secondary text-foreground font-medium rounded-lg border border-border hover:bg-background transition-colors">{{ __('pricing.get_started') }}</a>
+                            @else
+                                <a href="{{ route('login') }}" class="block w-full py-3 text-center bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">{{ __('pricing.login_to_upgrade') }}</a>
+                            @endif
+                        @endauth
+                    </div>
+                @endif
+            @endforeach
         </div>
 
         {{-- Active Subscription Info --}}
@@ -211,26 +207,31 @@
                 <p class="text-muted-foreground max-w-lg mx-auto">{{ __('pricing.credits_description') }}</p>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            @php
+                $packCount = count($creditPacks);
+            @endphp
+
+            <div class="grid {{ $packCount === 1 ? 'grid-cols-1 max-w-xs mx-auto' : ($packCount === 2 ? 'grid-cols-2 max-w-md mx-auto' : ($packCount === 3 ? 'grid-cols-3 max-w-2xl mx-auto' : 'grid-cols-2 md:grid-cols-4')) }} gap-4">
                 @foreach($creditPacks as $key => $pack)
-                    <div class="bg-secondary rounded-2xl p-5 border border-border relative {{ isset($pack['popular']) ? 'ring-2 ring-primary' : '' }} {{ isset($pack['best_value']) ? 'ring-2 ring-green-500' : '' }}">
-                        @if(isset($pack['popular']))
+                    <div class="bg-secondary rounded-2xl p-5 border border-border relative {{ isset($pack['popular']) && $pack['popular'] ? 'ring-2 ring-primary' : '' }} {{ isset($pack['best_value']) && $pack['best_value'] ? 'ring-2 ring-green-500' : '' }}">
+                        @if(isset($pack['popular']) && $pack['popular'])
                             <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary text-primary-foreground text-xs font-bold rounded-full">{{ __('pricing.popular') }}</div>
                         @endif
-                        @if(isset($pack['best_value']))
+                        @if(isset($pack['best_value']) && $pack['best_value'])
                             <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-green-500 text-white text-xs font-bold rounded-full">{{ __('pricing.best_value') }}</div>
                         @endif
 
                         <div class="text-center">
                             <div class="text-3xl sm:text-4xl font-bold text-primary mb-1">{{ $pack['credits'] }}</div>
                             <div class="text-sm text-muted-foreground mb-3">{{ __('pricing.credits') }}</div>
-                            <div class="text-xl sm:text-2xl font-bold text-foreground mb-1">${{ number_format($pack['price'] / 100, 2) }}</div>
+                            <div class="text-xl sm:text-2xl font-bold text-foreground mb-1">{{ $currencySymbol }}{{ number_format($pack['price'] / 100, 2) }}</div>
                             <div class="text-xs text-muted-foreground mb-4">{{ $pack['per_credit'] }}</div>
 
                             @auth
                                 <form action="{{ route('checkout.credits') }}" method="POST">
                                     @csrf
                                     <input type="hidden" name="pack" value="{{ $key }}">
+                                    <input type="hidden" name="currency" value="{{ $currency }}">
                                     <button type="submit" class="w-full py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
                                         {{ __('pricing.buy_now') }}
                                     </button>

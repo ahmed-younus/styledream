@@ -42,6 +42,7 @@ return [
     'go_premium' => 'Go Premium',
 
     // Subscription management
+    'upgrade_now' => 'Upgrade Now',
     'manage_subscription' => 'Manage Subscription',
     'manage_billing' => 'Manage Billing',
     'login_to_upgrade' => 'Login to Upgrade',

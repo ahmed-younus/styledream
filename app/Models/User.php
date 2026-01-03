@@ -16,6 +16,7 @@ class User extends Authenticatable
         'display_name',
         'bio',
         'locale',
+        'currency',
         'email',
         'password',
         'onboarding_completed',

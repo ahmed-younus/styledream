@@ -7,6 +7,8 @@ use App\Models\CreditTransaction;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\CreditService;
+use App\Services\CurrencyService;
+use App\Services\PricingService;
 use Illuminate\Http\Request;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -27,13 +29,20 @@ class PaymentController extends Controller
     public function createCheckout(Request $request)
     {
         $request->validate([
-            'pack' => 'required|string|in:small,medium,large,mega',
+            'pack' => 'required|string',
+            'currency' => 'nullable|string|in:usd,gbp,eur',
         ]);
 
-        $pack = config("credits.packs.{$request->pack}");
+        $pack = PricingService::getCreditPack($request->pack);
         if (!$pack) {
             abort(404, 'Credit pack not found');
         }
+
+        // Get currency from request or user preference
+        $currency = $request->currency ?? CurrencyService::getUserCurrency();
+
+        // Get price for the selected currency
+        $price = PricingService::getPackPrice($request->pack, $currency);
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
@@ -52,13 +61,13 @@ class PaymentController extends Controller
             ],
             'line_items' => [[
                 'price_data' => [
-                    'currency' => $pack['currency'],
+                    'currency' => $currency,
                     'product_data' => [
-                        'name' => $pack['label'],
+                        'name' => $pack['label'] ?? ($pack['credits'] . ' Credits'),
                         'description' => "StyleDream Credit Pack - {$pack['credits']} credits for virtual try-on",
                         'images' => [config('app.url') . '/images/logo.png'],
                     ],
-                    'unit_amount' => $pack['price'],
+                    'unit_amount' => $price,
                 ],
                 'quantity' => 1,
             ]],
@@ -70,6 +79,7 @@ class PaymentController extends Controller
                 'type' => 'credit_pack',
                 'pack' => $request->pack,
                 'credits' => $pack['credits'],
+                'currency' => $currency,
             ],
             'allow_promotion_codes' => true,
         ]);
@@ -85,14 +95,29 @@ class PaymentController extends Controller
     public function createSubscription(Request $request)
     {
         $request->validate([
-            'plan' => 'required|string|in:pro,premium',
+            'plan' => 'required|string',
+            'currency' => 'nullable|string|in:usd,gbp,eur',
         ]);
 
-        $plans = config('subscriptions.plans');
-        $plan = $plans[$request->plan] ?? null;
+        $plan = PricingService::getPlan($request->plan);
 
         if (!$plan) {
             abort(404, 'Plan not found');
+        }
+
+        // Get currency from request or user preference
+        $currency = $request->currency ?? CurrencyService::getUserCurrency();
+
+        // Get the correct Stripe Price ID for this currency
+        $stripePriceId = PricingService::getPlanStripePriceId($request->plan, $currency);
+
+        if (!$stripePriceId) {
+            // Fallback to USD if currency price not set
+            $stripePriceId = PricingService::getPlanStripePriceId($request->plan, 'usd');
+        }
+
+        if (!$stripePriceId) {
+            abort(400, 'Stripe price not configured for this plan');
         }
 
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -123,7 +148,7 @@ class PaymentController extends Controller
             'customer' => $customerId,
             'payment_method_types' => null, // Enables all available methods
             'line_items' => [[
-                'price' => $plan['stripe_price_id'],
+                'price' => $stripePriceId,
                 'quantity' => 1,
             ]],
             'mode' => 'subscription',
@@ -134,6 +159,7 @@ class PaymentController extends Controller
                 'type' => 'subscription',
                 'plan' => $request->plan,
                 'old_plan' => $oldPlan, // Store old plan for prorated credits
+                'currency' => $currency,
             ],
             'subscription_data' => [
                 'metadata' => [
@@ -536,8 +562,7 @@ class PaymentController extends Controller
      */
     protected function addSubscriptionCredits(Subscription $subscription)
     {
-        $plans = config('subscriptions.plans');
-        $plan = $plans[$subscription->plan] ?? null;
+        $plan = PricingService::getPlan($subscription->plan);
 
         if (!$plan || !isset($plan['credits_per_month'])) {
             return;
@@ -572,8 +597,7 @@ class PaymentController extends Controller
      */
     protected function addProratedSubscriptionCredits(Subscription $subscription, string $oldPlan)
     {
-        $plans = config('subscriptions.plans');
-        $newPlanConfig = $plans[$subscription->plan] ?? null;
+        $newPlanConfig = PricingService::getPlan($subscription->plan);
 
         if (!$newPlanConfig || !isset($newPlanConfig['credits_per_month'])) {
             return;
@@ -588,8 +612,9 @@ class PaymentController extends Controller
         $oldCredits = 0;
 
         // Get old plan credits (free = 0)
-        if ($oldPlan !== 'free' && isset($plans[$oldPlan])) {
-            $oldCredits = $plans[$oldPlan]['credits_per_month'] ?? 0;
+        if ($oldPlan !== 'free') {
+            $oldPlanConfig = PricingService::getPlan($oldPlan);
+            $oldCredits = $oldPlanConfig['credits_per_month'] ?? 0;
         }
 
         // Calculate prorated credits (difference only)
@@ -629,6 +654,7 @@ class PaymentController extends Controller
 
     /**
      * Get plan name from Stripe price ID
+     * Checks all currency price IDs
      */
     protected function getPlanFromPriceId(?string $priceId): string
     {
@@ -636,9 +662,19 @@ class PaymentController extends Controller
             return 'unknown';
         }
 
-        $plans = config('subscriptions.plans');
+        $plans = PricingService::getPlans();
         foreach ($plans as $name => $plan) {
-            if ($plan['stripe_price_id'] === $priceId) {
+            // Check new multi-currency format
+            if (isset($plan['stripe_price_ids']) && is_array($plan['stripe_price_ids'])) {
+                foreach ($plan['stripe_price_ids'] as $currencyPriceId) {
+                    if ($currencyPriceId === $priceId) {
+                        return $name;
+                    }
+                }
+            }
+
+            // Check old single-price format (fallback)
+            if (isset($plan['stripe_price_id']) && $plan['stripe_price_id'] === $priceId) {
                 return $name;
             }
         }
