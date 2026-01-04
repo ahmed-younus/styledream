@@ -128,15 +128,29 @@
                             </label>
                         @endif
 
-                        {{-- Loading overlay --}}
-                        <div wire:loading wire:target="bodyImage" class="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-2xl z-20">
-                            <div class="text-center">
-                                <svg class="w-10 h-10 text-primary animate-spin mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        {{-- Loading overlay with skeleton --}}
+                        <div wire:loading wire:target="bodyImage" class="absolute inset-0 bg-secondary/95 flex flex-col items-center justify-center rounded-xl z-20">
+                            {{-- Skeleton Body Silhouette with pulse --}}
+                            <div class="relative mb-3">
+                                <svg class="w-20 h-28 text-border animate-pulse" viewBox="0 0 100 150" fill="currentColor">
+                                    <ellipse cx="50" cy="14" rx="11" ry="13"/>
+                                    <rect x="44" y="27" width="12" height="8" rx="2"/>
+                                    <path d="M32 35 C32 35 28 38 28 45 L28 75 C28 80 32 85 38 85 L62 85 C68 85 72 80 72 75 L72 45 C72 38 68 35 68 35 L32 35 Z"/>
+                                    <path d="M28 38 L18 65 C16 70 18 73 22 74 L26 75 L32 50 L28 38 Z"/>
+                                    <path d="M72 38 L82 65 C84 70 82 73 78 74 L74 75 L68 50 L72 38 Z"/>
+                                    <path d="M38 85 L35 140 C35 144 38 147 42 147 L48 147 L50 95 L38 85 Z"/>
+                                    <path d="M62 85 L65 140 C65 144 62 147 58 147 L52 147 L50 95 L62 85 Z"/>
                                 </svg>
-                                <p class="text-sm font-medium text-foreground">{{ __('studio.uploading_photo') }}</p>
+                                {{-- Spinner overlay on silhouette --}}
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                </div>
                             </div>
+                            <p class="text-sm font-medium text-foreground">{{ __('studio.uploading_photo') }}</p>
+                            <p class="text-xs text-muted-foreground mt-1">{{ __('studio.please_wait') }}</p>
                         </div>
                     </div>
 
@@ -200,25 +214,22 @@
                     </h3>
 
                     {{-- Upload Multiple --}}
-                    <label class="block cursor-pointer mb-3 relative">
-                        <div class="border-2 border-dashed border-border hover:border-primary transition-colors rounded-xl p-4 text-center">
-                            <svg class="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label class="block cursor-pointer mb-3 relative" wire:loading.class="pointer-events-none" wire:target="garmentImages">
+                        <div class="border-2 border-dashed border-border hover:border-primary transition-colors rounded-xl p-4 text-center" wire:loading.class="border-primary bg-primary/5" wire:target="garmentImages">
+                            <svg wire:loading.remove wire:target="garmentImages" class="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
-                            <span class="text-sm text-muted-foreground">{{ __('studio.upload_clothing') }}</span>
-                            <span class="block text-xs text-muted-foreground mt-1">{{ __('studio.select_multiple') }}</span>
+                            {{-- Skeleton Placeholders when uploading --}}
+                            <div wire:loading wire:target="garmentImages" class="flex justify-center gap-3 mb-2">
+                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse"></div>
+                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse" style="animation-delay: 150ms"></div>
+                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse" style="animation-delay: 300ms"></div>
+                            </div>
+                            <span wire:loading.remove wire:target="garmentImages" class="text-sm text-muted-foreground">{{ __('studio.upload_clothing') }}</span>
+                            <span wire:loading.remove wire:target="garmentImages" class="block text-xs text-muted-foreground mt-1">{{ __('studio.select_multiple') }}</span>
+                            <span wire:loading wire:target="garmentImages" class="text-sm text-primary font-medium">{{ __('studio.uploading_clothing') }}</span>
                         </div>
                         <input type="file" wire:model="garmentImages" accept="image/*" multiple class="hidden">
-                        {{-- Garment Upload Loading Overlay --}}
-                        <div wire:loading wire:target="garmentImages" class="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
-                            <div class="text-center">
-                                <svg class="w-8 h-8 text-primary animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                </svg>
-                                <p class="text-xs font-medium text-foreground">{{ __('studio.uploading_clothing') }}</p>
-                            </div>
-                        </div>
                     </label>
 
                     {{-- URL Paste for Garments --}}
@@ -297,14 +308,6 @@
                         </div>
                     @endif
 
-                    {{-- Loading overlay --}}
-                    <div wire:loading wire:target="garmentImages" class="mt-4 flex items-center justify-center py-4">
-                        <svg class="w-6 h-6 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        <span class="ml-2 text-sm text-muted-foreground">{{ __('studio.uploading') }}</span>
-                    </div>
                 </div>
 
                 {{-- Generate Buttons --}}
