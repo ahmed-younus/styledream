@@ -11,6 +11,7 @@ use App\Models\Avatar;
 use App\Jobs\ProcessTryOn;
 use App\Services\CreditService;
 use App\Services\PricingService;
+use App\Services\ProductScraperService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -57,6 +58,12 @@ class Studio extends Component
     public $garmentImageUrl = '';
     public $bodyImageBase64 = null;
     public $garmentBase64Array = [];
+
+    // Category selector for garments
+    public array $garmentCategories = [];
+
+    // Product scraper preview
+    public ?array $scrapedProduct = null;
 
     // Saved body images for quick reuse
     public $savedBodyImages = [];
@@ -248,6 +255,8 @@ class Studio extends Component
             $this->garmentPreviews[] = $image->temporaryUrl();
             // Store the actual file for later base64 conversion during generate
             $this->uploadedGarments[] = $image;
+            // Add default category (auto-detect)
+            $this->garmentCategories[] = 'auto';
         }
 
         // Clear garmentImages array (files are now in uploadedGarments)
@@ -272,6 +281,12 @@ class Studio extends Component
         if (isset($this->garmentBase64Array[$index])) {
             unset($this->garmentBase64Array[$index]);
             $this->garmentBase64Array = array_values($this->garmentBase64Array);
+        }
+
+        // Remove category
+        if (isset($this->garmentCategories[$index])) {
+            unset($this->garmentCategories[$index]);
+            $this->garmentCategories = array_values($this->garmentCategories);
         }
     }
 
@@ -319,32 +334,141 @@ class Studio extends Component
         $this->validate(['garmentImageUrl' => 'required|url']);
         $this->error = '';
 
+        $url = $this->garmentImageUrl;
+        $scraperService = app(ProductScraperService::class);
+
+        // Check if it's a product page or direct image
+        if ($scraperService->isProductUrl($url)) {
+            // Try to scrape product page
+            $result = $scraperService->scrapeProduct($url);
+
+            if ($result['success'] && !empty($result['image'])) {
+                $this->scrapedProduct = $result;
+                // Don't add yet - wait for user confirmation
+                return;
+            }
+
+            // Scraping failed, try as direct URL
+            $this->error = __('studio.could_not_extract_image');
+            return;
+        }
+
+        // Direct image URL - add immediately
+        if (!$this->addDirectImageUrl($url, 'auto')) {
+            // Error already set in addDirectImageUrl
+            return;
+        }
+    }
+
+    /**
+     * Confirm and add scraped product image.
+     */
+    public function confirmScrapedProduct(): void
+    {
+        if (!$this->scrapedProduct) {
+            return;
+        }
+
+        $category = $this->scrapedProduct['category'] ?? 'auto';
+        $imageUrl = $this->scrapedProduct['image'] ?? '';
+
+        if (empty($imageUrl)) {
+            $this->error = __('studio.invalid_image_url');
+            $this->scrapedProduct = null;
+            return;
+        }
+
+        // Try to add the image - keep scrapedProduct if it fails
+        $success = $this->addDirectImageUrl($imageUrl, $category);
+
+        if ($success) {
+            $this->scrapedProduct = null;
+            $this->garmentImageUrl = '';
+        }
+    }
+
+    /**
+     * Cancel scraped product preview.
+     */
+    public function cancelScrapedProduct(): void
+    {
+        $this->scrapedProduct = null;
+        $this->garmentImageUrl = '';
+    }
+
+    /**
+     * Add a direct image URL as garment.
+     * @return bool Success status
+     */
+    protected function addDirectImageUrl(string $url, string $category = 'auto'): bool
+    {
         try {
-            $imageData = $this->fetchImageFromUrl($this->garmentImageUrl);
+            \Log::info('Fetching image from URL', ['url' => $url]);
+            $imageData = $this->fetchImageFromUrl($url);
+
+            if (empty($imageData)) {
+                \Log::warning('Empty image data from URL', ['url' => $url]);
+                $this->error = __('studio.invalid_image_url');
+                return false;
+            }
+
             $this->garmentPreviews[] = 'data:image/jpeg;base64,' . $imageData;
             $this->garmentBase64Array[] = $imageData;
+            $this->garmentCategories[] = $category;
             $this->garmentImageUrl = '';
+            \Log::info('Image added successfully', ['category' => $category]);
+            return true;
         } catch (\Exception $e) {
-            $this->error = __('studio.invalid_image_url');
+            \Log::error('Failed to fetch image', ['url' => $url, 'error' => $e->getMessage()]);
+            $this->error = __('studio.invalid_image_url') . ' (' . $e->getMessage() . ')';
+            return false;
         }
     }
 
     protected function fetchImageFromUrl(string $url): string
     {
+        // Use full browser-like headers to avoid CDN blocks
         $response = Http::timeout(30)
-            ->withHeaders(['User-Agent' => 'Mozilla/5.0 StyleDream/1.0'])
+            ->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                'Accept-Language' => 'en-US,en;q=0.9',
+                'Accept-Encoding' => 'gzip, deflate, br',
+                'Connection' => 'keep-alive',
+                'Sec-Fetch-Dest' => 'image',
+                'Sec-Fetch-Mode' => 'no-cors',
+                'Sec-Fetch-Site' => 'cross-site',
+                'Referer' => parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST) . '/',
+            ])
+            ->withOptions(['verify' => false])
             ->get($url);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to fetch image');
+            \Log::warning('Image fetch failed', [
+                'url' => $url,
+                'status' => $response->status(),
+            ]);
+            throw new \Exception('Failed to fetch image (HTTP ' . $response->status() . ')');
         }
 
         $contentType = $response->header('Content-Type');
-        if ($contentType && !str_starts_with($contentType, 'image/')) {
-            throw new \Exception('URL is not an image');
+        \Log::info('Image fetched', [
+            'url' => $url,
+            'content_type' => $contentType,
+            'size' => strlen($response->body()),
+        ]);
+
+        // Allow image types and also octet-stream (some CDNs use this)
+        if ($contentType && !str_starts_with($contentType, 'image/') && $contentType !== 'application/octet-stream') {
+            throw new \Exception('URL is not an image (got: ' . $contentType . ')');
         }
 
-        return base64_encode($response->body());
+        $body = $response->body();
+        if (empty($body)) {
+            throw new \Exception('Empty image response');
+        }
+
+        return base64_encode($body);
     }
 
     public function removeBodyImage()
@@ -368,27 +492,32 @@ class Studio extends Component
 
         $user = auth()->user();
 
-        // Collect all garment URLs (store images first)
+        // Collect all garment URLs and categories (in same order)
         $garmentUrls = [];
+        $garmentCategories = [];
 
         // Add garments from file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $garment) {
+        foreach ($this->uploadedGarments as $index => $garment) {
             if ($garment && method_exists($garment, 'getRealPath')) {
                 $base64 = base64_encode(file_get_contents($garment->getRealPath()));
                 $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
             }
         }
 
         // Add garments from URL paste (already base64)
-        foreach ($this->garmentBase64Array as $base64) {
+        $uploadedCount = count($this->uploadedGarments);
+        foreach ($this->garmentBase64Array as $index => $base64) {
             $garmentUrls[] = $this->storeImage($base64, 'garment');
+            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
         }
 
-        // Add wardrobe items
+        // Add wardrobe items (default to 'auto' category)
         foreach ($this->selectedWardrobeItems as $itemId) {
             $item = WardrobeItem::find($itemId);
             if ($item) {
                 $garmentUrls[] = $item->image_url;
+                $garmentCategories[] = 'auto';
             }
         }
 
@@ -424,6 +553,7 @@ class Studio extends Component
                 'body_image_url' => $bodyUrl,
                 'garment_image_url' => $garmentUrls[0], // Primary garment (backwards compat)
                 'garment_urls' => $garmentUrls, // All garments as JSON
+                'garment_categories' => $garmentCategories, // Categories for each garment
                 'status' => TryOn::STATUS_PENDING,
                 'credits_used' => 1,
             ]);
@@ -436,20 +566,36 @@ class Studio extends Component
 
             // Track current job for UI
             $this->currentJobId = $tryOn->id;
-            $this->showQueueStatus = true;
 
-            // Reload pending jobs
+            // Refresh the try-on to get updated status (important for sync queue driver)
+            $tryOn->refresh();
+
+            // If job completed synchronously, show the result immediately
+            if ($tryOn->status === TryOn::STATUS_COMPLETED && $tryOn->result_image_url) {
+                $this->resultImage = $tryOn->result_image_url;
+                $this->lastTryOnId = $tryOn->id;
+                $this->showResultReady = true;
+            } else {
+                $this->showQueueStatus = true;
+            }
+
+            // Reload pending jobs and processing results
             $this->loadPendingJobs();
+            $this->loadProcessingResults();
 
             // Clear only garment inputs - keep body image for quick next generation
             $this->reset([
                 'garmentPreviews',
                 'garmentBase64Array',
+                'uploadedGarments',
                 'selectedWardrobeItems',
+                'garmentCategories',
             ]);
 
-            // Show success message
-            session()->flash('message', __('studio.queued_success'));
+            // Show success message only if still processing
+            if ($tryOn->status !== TryOn::STATUS_COMPLETED) {
+                session()->flash('message', __('studio.queued_success'));
+            }
 
         } catch (\Exception $e) {
             $this->error = __('studio.queue_error') . ': ' . $e->getMessage();
@@ -499,6 +645,8 @@ class Studio extends Component
             'garmentBase64Array',
             'uploadedGarments',
             'selectedWardrobeItems',
+            'garmentCategories',
+            'scrapedProduct',
             'resultImage',
             'lastTryOnId',
             'error',
@@ -547,27 +695,32 @@ class Studio extends Component
             return;
         }
 
-        // Collect garment URLs
+        // Collect garment URLs and categories
         $garmentUrls = [];
+        $garmentCategories = [];
 
         // From file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $garment) {
+        foreach ($this->uploadedGarments as $index => $garment) {
             if ($garment && method_exists($garment, 'getRealPath')) {
                 $base64 = base64_encode(file_get_contents($garment->getRealPath()));
                 $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
             }
         }
 
         // From URL paste (already base64)
-        foreach ($this->garmentBase64Array as $base64) {
+        $uploadedCount = count($this->uploadedGarments);
+        foreach ($this->garmentBase64Array as $index => $base64) {
             $garmentUrls[] = $this->storeImage($base64, 'garment');
+            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
         }
 
-        // From wardrobe
+        // From wardrobe (default to 'auto' category)
         foreach ($this->selectedWardrobeItems as $itemId) {
             $item = WardrobeItem::find($itemId);
             if ($item) {
                 $garmentUrls[] = $item->image_url;
+                $garmentCategories[] = 'auto';
             }
         }
 
@@ -601,6 +754,7 @@ class Studio extends Component
                 'body_image_url' => $bodyUrl,
                 'garment_image_url' => $garmentUrls[0],
                 'garment_urls' => $garmentUrls,
+                'garment_categories' => $garmentCategories,
                 'status' => TryOn::STATUS_QUEUED,
                 'queue_position' => $queueCount + 1,
                 'credits_used' => 1,
@@ -614,7 +768,9 @@ class Studio extends Component
             $this->reset([
                 'garmentPreviews',
                 'garmentBase64Array',
+                'uploadedGarments',
                 'selectedWardrobeItems',
+                'garmentCategories',
             ]);
 
             // Reload queue and show panel

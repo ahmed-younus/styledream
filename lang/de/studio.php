@@ -66,4 +66,20 @@ return [
     'update_queue_item' => 'Aktualisieren',
     'generate_now' => 'Generieren (1 Guthaben)',
     'in_queue' => 'in Warteschlange',
+
+    // Category Selector
+    'select_category' => 'Typ wählen',
+    'category_auto' => 'Auto',
+    'category_top' => 'Oberteil',
+    'category_bottom' => 'Hose',
+    'category_dress' => 'Kleid',
+    'category_shoes' => 'Schuhe',
+    'category_accessory' => 'Accessoire',
+
+    // Product Scraper
+    'product_detected' => 'Produkt erkannt',
+    'could_not_extract_image' => 'Bild konnte nicht extrahiert werden. Versuche einen direkten Bildlink.',
+    'fetching_product' => 'Produkt wird abgerufen...',
+    'supported_sites' => 'Unterstützt ASOS, Zara, H&M und mehr',
+    'cancel' => 'Abbrechen',
 ];

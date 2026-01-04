@@ -73,8 +73,11 @@ class ProcessTryOn implements ShouldQueue
 
             $startTime = microtime(true);
 
-            // Call AI service
-            $result = $aiService->generateMultipleTryOn($bodyBase64, $garmentBase64Array);
+            // Get garment categories
+            $categories = $this->tryOn->getAllGarmentCategories();
+
+            // Call AI service with categories
+            $result = $aiService->generateMultipleTryOn($bodyBase64, $garmentBase64Array, $categories);
 
             $processingTime = (int) ((microtime(true) - $startTime) * 1000);
 

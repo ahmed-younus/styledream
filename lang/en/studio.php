@@ -159,4 +159,20 @@ return [
     'generation_time_hint' => 'This usually takes about 30 seconds',
     'generating_btn' => 'Generating...',
     'please_wait' => 'Please wait',
+
+    // Category Selector
+    'select_category' => 'Select type',
+    'category_auto' => 'Auto',
+    'category_top' => 'Top',
+    'category_bottom' => 'Bottom',
+    'category_dress' => 'Dress',
+    'category_shoes' => 'Shoes',
+    'category_accessory' => 'Accessory',
+
+    // Product Scraper
+    'product_detected' => 'Product detected',
+    'could_not_extract_image' => 'Could not extract product image. Right-click the product image and copy image URL instead.',
+    'fetching_product' => 'Fetching product...',
+    'supported_sites' => 'Paste product page URL or direct image link',
+    'cancel' => 'Cancel',
 ];

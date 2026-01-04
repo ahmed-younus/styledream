@@ -296,20 +296,64 @@
                         </button>
                     @endif
 
+                    {{-- Scraped Product Preview --}}
+                    @if($scrapedProduct)
+                        <div class="mt-4 p-3 bg-background rounded-xl border border-primary/20">
+                            <div class="flex items-center gap-3">
+                                <div class="w-16 h-20 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                                    <img src="{{ $scrapedProduct['image'] }}" alt="Product" class="w-full h-full object-cover">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-foreground truncate">{{ $scrapedProduct['name'] ?: __('studio.product_detected') }}</p>
+                                    @if($scrapedProduct['brand'])
+                                        <p class="text-xs text-muted-foreground">{{ $scrapedProduct['brand'] }}</p>
+                                    @endif
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">
+                                            {{ ucfirst($scrapedProduct['category']) }}
+                                        </span>
+                                        <span class="text-xs text-muted-foreground">{{ $scrapedProduct['source'] }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <button wire:click="confirmScrapedProduct"
+                                            wire:loading.attr="disabled"
+                                            wire:target="confirmScrapedProduct"
+                                            class="px-3 py-1.5 bg-primary text-primary-foreground text-xs rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-1">
+                                        <span wire:loading.remove wire:target="confirmScrapedProduct">{{ __('studio.add') }}</span>
+                                        <span wire:loading wire:target="confirmScrapedProduct" class="flex items-center gap-1">
+                                            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Adding...
+                                        </span>
+                                    </button>
+                                    <button wire:click="cancelScrapedProduct"
+                                            wire:loading.attr="disabled"
+                                            wire:target="confirmScrapedProduct"
+                                            class="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50">
+                                        {{ __('studio.cancel') }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Selected Items Preview --}}
                     @if(count($garmentPreviews) > 0 || count($selectedWardrobeItems) > 0)
                         <div class="mt-4">
                             <div class="flex flex-wrap gap-4 justify-center">
-                                {{-- Uploaded garments with loading state --}}
+                                {{-- Uploaded garments with loading state and category selector --}}
                                 @foreach($garmentPreviews as $index => $preview)
                                     <div class="relative" x-data="{ loaded: false }">
-                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden shadow-sm relative">
+                                        <div class="w-20 rounded-xl border border-border overflow-hidden shadow-sm relative bg-secondary">
                                             {{-- Shimmer skeleton while loading --}}
                                             <div x-show="!loaded"
                                                  x-transition:leave="transition ease-in duration-200"
                                                  x-transition:leave-start="opacity-100"
                                                  x-transition:leave-end="opacity-0"
-                                                 class="absolute inset-0 animate-shimmer rounded-xl">
+                                                 class="absolute inset-0 animate-shimmer rounded-xl z-10">
                                                 {{-- Clothing icon placeholder --}}
                                                 <div class="absolute inset-0 flex items-center justify-center">
                                                     <svg class="w-8 h-8 text-muted-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,10 +364,20 @@
                                             {{-- Actual image --}}
                                             <img src="{{ $preview }}"
                                                  alt="Garment"
-                                                 class="w-full h-full object-cover transition-opacity duration-300"
+                                                 class="w-full h-24 object-cover transition-opacity duration-300"
                                                  :class="loaded ? 'opacity-100' : 'opacity-0'"
                                                  x-on:load="loaded = true"
                                                  loading="eager">
+                                            {{-- Category selector - positioned at bottom of image --}}
+                                            <select wire:model.live="garmentCategories.{{ $index }}"
+                                                    class="w-full text-[10px] bg-primary text-primary-foreground px-1 py-1 text-center appearance-none cursor-pointer border-0 focus:ring-0 focus:outline-none font-medium"
+                                                    style="font-size: 10px;">
+                                                <option value="auto">{{ __('studio.category_auto') }}</option>
+                                                <option value="top">{{ __('studio.category_top') }}</option>
+                                                <option value="bottom">{{ __('studio.category_bottom') }}</option>
+                                                <option value="dress">{{ __('studio.category_dress') }}</option>
+                                                <option value="shoes">{{ __('studio.category_shoes') }}</option>
+                                            </select>
                                         </div>
                                         {{-- X button - always visible for interaction --}}
                                         <button type="button"

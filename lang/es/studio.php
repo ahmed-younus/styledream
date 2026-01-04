@@ -131,4 +131,20 @@ return [
     'queue_started' => '¡Procesando todos los outfits!',
     'update_queue_item' => 'Actualizar',
     'generate_now' => 'Generar (1 crédito)',
+
+    // Category Selector
+    'select_category' => 'Seleccionar tipo',
+    'category_auto' => 'Auto',
+    'category_top' => 'Top',
+    'category_bottom' => 'Pantalón',
+    'category_dress' => 'Vestido',
+    'category_shoes' => 'Zapatos',
+    'category_accessory' => 'Accesorio',
+
+    // Product Scraper
+    'product_detected' => 'Producto detectado',
+    'could_not_extract_image' => 'No se pudo extraer la imagen. Prueba con un enlace directo.',
+    'fetching_product' => 'Obteniendo producto...',
+    'supported_sites' => 'Compatible con ASOS, Zara, H&M y más',
+    'cancel' => 'Cancelar',
 ];

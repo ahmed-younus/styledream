@@ -24,15 +24,18 @@ class GoogleAIService
 
     /**
      * Generate try-on with multiple garments in a single API call
+     * @param string $bodyImageBase64 Base64 encoded body image
+     * @param array $garmentImagesBase64 Array of base64 encoded garment images
+     * @param array $categories Optional array of categories for each garment (top, bottom, dress, shoes, accessory, auto)
      */
-    public function generateMultipleTryOn(string $bodyImageBase64, array $garmentImagesBase64): array
+    public function generateMultipleTryOn(string $bodyImageBase64, array $garmentImagesBase64, array $categories = []): array
     {
         if (!$this->isConfigured()) {
             throw new Exception('Google AI API key not configured. Please add GOOGLE_AI_API_KEY to your .env file.');
         }
 
         $model = config('services.google_ai.models.try_on');
-        $prompt = $this->getMultipleTryOnPrompt(count($garmentImagesBase64));
+        $prompt = $this->getMultipleTryOnPrompt(count($garmentImagesBase64), $categories);
 
         // Build parts array with body image and all garment images
         $parts = [
@@ -134,35 +137,64 @@ class GoogleAIService
         return $base64;
     }
 
-    protected function getMultipleTryOnPrompt(int $garmentCount): string
+    protected function getMultipleTryOnPrompt(int $garmentCount, array $categories = []): string
     {
-        if ($garmentCount === 1) {
+        if ($garmentCount === 1 && (empty($categories) || ($categories[0] ?? 'auto') === 'auto')) {
             return $this->getTryOnPrompt();
         }
+
+        $categoryInstructions = $this->buildCategoryInstructions($categories, $garmentCount);
 
         return <<<PROMPT
 VIRTUAL CLOTHING TRY-ON TASK - MULTIPLE ITEMS
 
-You are performing a virtual try-on with multiple clothing items.
+You are performing a virtual try-on with specific clothing items.
 
 IMAGES PROVIDED:
 - Image 1: The person (model)
-- Images 2 to {$garmentCount} + 1: Different clothing items to wear
+- Images 2 to {$garmentCount} + 1: Clothing items to apply
 
-YOUR TASK:
-Create a single image showing the person from Image 1 wearing ALL the clothing items from the other images combined into one complete outfit.
+CLOTHING CATEGORIES AND INSTRUCTIONS:
+{$categoryInstructions}
 
-REQUIREMENTS:
-1. Keep the person's face, skin color, body shape, and hair EXACTLY as they appear in Image 1
-2. Combine ALL clothing items into one cohesive outfit on the person
-3. If there are multiple tops, use the most prominent one or layer them naturally
-4. If there are pants/bottoms and tops, dress the person in the complete outfit
-5. Make all clothing fit naturally on the person's body
-6. Maintain realistic lighting and shadows
-7. Keep the same pose and background from Image 1
+CRITICAL INSTRUCTIONS:
+1. ONLY apply the specified clothing type from each garment image - nothing else!
+2. If a garment image shows a full outfit (person wearing multiple clothes), EXTRACT ONLY the specified category
+3. PRESERVE ORIGINAL ITEMS: If only applying a "top", keep the person's ORIGINAL pants and shoes from Image 1. If only applying a "bottom", keep the person's ORIGINAL shirt and shoes from Image 1.
+4. NEVER change shoes unless specifically instructed with "shoes" category
+5. Keep the person's face, skin color, body shape, hair, and pose from Image 1 EXACTLY
+6. Layer clothing naturally based on categories
+7. Maintain realistic lighting and shadows
+8. Keep the same pose and background from Image 1
 
-Generate ONE high-quality image showing the person wearing the complete outfit.
+REMEMBER: Only replace what is specified. Everything else stays from the original Image 1.
+
+Generate ONE high-quality image showing the person wearing the specified clothing items combined into one cohesive outfit.
 PROMPT;
+    }
+
+    /**
+     * Build category-specific instructions for AI prompt
+     */
+    protected function buildCategoryInstructions(array $categories, int $garmentCount): string
+    {
+        $instructions = [];
+
+        for ($i = 0; $i < $garmentCount; $i++) {
+            $category = $categories[$i] ?? 'auto';
+            $imageNum = $i + 2;
+
+            $instructions[] = match ($category) {
+                'top' => "- Image {$imageNum}: Extract ONLY the TOP/SHIRT/JACKET from this image. IGNORE and DO NOT APPLY: pants, shorts, skirts, shoes, footwear, or any lower body items. Keep the person's ORIGINAL pants and shoes from Image 1.",
+                'bottom' => "- Image {$imageNum}: Extract ONLY the PANTS/TROUSERS/SHORTS/SKIRT from this image. IGNORE and DO NOT APPLY: shirts, jackets, shoes, footwear, or any upper body items. Keep the person's ORIGINAL shirt and shoes from Image 1.",
+                'dress' => "- Image {$imageNum}: This is a DRESS/FULL BODY GARMENT - apply the entire garment as one piece. Keep the person's ORIGINAL shoes from Image 1 unless shoes are part of the outfit.",
+                'shoes' => "- Image {$imageNum}: Extract ONLY the SHOES/FOOTWEAR from this image. IGNORE all clothing items. Keep the person's ORIGINAL clothing from Image 1.",
+                'accessory' => "- Image {$imageNum}: This is an ACCESSORY (bag, hat, scarf, jewelry, etc.) - apply it appropriately. Keep ALL original clothing and shoes from Image 1.",
+                default => "- Image {$imageNum}: Auto-detect the SINGLE most prominent clothing item from this image and apply only that item.",
+            };
+        }
+
+        return implode("\n", $instructions);
     }
 
     protected function getTryOnPrompt(): string

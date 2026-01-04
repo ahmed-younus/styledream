@@ -66,4 +66,20 @@ return [
     'update_queue_item' => 'Aggiorna',
     'generate_now' => 'Genera (1 credito)',
     'in_queue' => 'in coda',
+
+    // Category Selector
+    'select_category' => 'Tipo',
+    'category_auto' => 'Auto',
+    'category_top' => 'Top',
+    'category_bottom' => 'Pantaloni',
+    'category_dress' => 'Vestito',
+    'category_shoes' => 'Scarpe',
+    'category_accessory' => 'Accessorio',
+
+    // Product Scraper
+    'product_detected' => 'Prodotto rilevato',
+    'could_not_extract_image' => 'Impossibile estrarre l\'immagine. Prova un link diretto.',
+    'fetching_product' => 'Recupero prodotto...',
+    'supported_sites' => 'Supporta ASOS, Zara, H&M e altri',
+    'cancel' => 'Annulla',
 ];

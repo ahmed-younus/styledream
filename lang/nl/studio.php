@@ -66,4 +66,20 @@ return [
     'update_queue_item' => 'Bijwerken',
     'generate_now' => 'Genereren (1 tegoed)',
     'in_queue' => 'in wachtrij',
+
+    // Category Selector
+    'select_category' => 'Type',
+    'category_auto' => 'Auto',
+    'category_top' => 'Top',
+    'category_bottom' => 'Broek',
+    'category_dress' => 'Jurk',
+    'category_shoes' => 'Schoenen',
+    'category_accessory' => 'Accessoire',
+
+    // Product Scraper
+    'product_detected' => 'Product gedetecteerd',
+    'could_not_extract_image' => 'Kon afbeelding niet ophalen. Probeer een directe link.',
+    'fetching_product' => 'Product ophalen...',
+    'supported_sites' => 'Ondersteunt ASOS, Zara, H&M en meer',
+    'cancel' => 'Annuleren',
 ];

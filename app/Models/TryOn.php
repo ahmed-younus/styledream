@@ -21,6 +21,7 @@ class TryOn extends Model
         'body_image_url',
         'garment_image_url',
         'garment_urls',
+        'garment_categories',
         'result_image_url',
         'viewed_at',
         'status',
@@ -37,6 +38,7 @@ class TryOn extends Model
 
     protected $casts = [
         'garment_urls' => 'array',
+        'garment_categories' => 'array',
         'processing_started_at' => 'datetime',
         'viewed_at' => 'datetime',
     ];
@@ -117,6 +119,19 @@ class TryOn extends Model
 
         // Fallback to single garment URL
         return $this->garment_image_url ? [$this->garment_image_url] : [];
+    }
+
+    /**
+     * Get all garment categories - returns array matching garment_urls
+     */
+    public function getAllGarmentCategories(): array
+    {
+        if (!empty($this->garment_categories)) {
+            return $this->garment_categories;
+        }
+
+        // Fallback: return 'auto' for each garment
+        return array_fill(0, count($this->getAllGarmentUrls()), 'auto');
     }
 
     /**

@@ -66,4 +66,20 @@ return [
     'update_queue_item' => 'Mettre à jour',
     'generate_now' => 'Générer (1 crédit)',
     'in_queue' => 'en file',
+
+    // Category Selector
+    'select_category' => 'Type',
+    'category_auto' => 'Auto',
+    'category_top' => 'Haut',
+    'category_bottom' => 'Bas',
+    'category_dress' => 'Robe',
+    'category_shoes' => 'Chaussures',
+    'category_accessory' => 'Accessoire',
+
+    // Product Scraper
+    'product_detected' => 'Produit détecté',
+    'could_not_extract_image' => 'Impossible d\'extraire l\'image. Essayez un lien direct.',
+    'fetching_product' => 'Récupération du produit...',
+    'supported_sites' => 'Compatible avec ASOS, Zara, H&M et plus',
+    'cancel' => 'Annuler',
 ];
