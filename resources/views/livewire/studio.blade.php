@@ -216,18 +216,49 @@
                     {{-- Upload Multiple --}}
                     <label class="block cursor-pointer mb-3 relative" wire:loading.class="pointer-events-none" wire:target="garmentImages">
                         <div class="border-2 border-dashed border-border hover:border-primary transition-colors rounded-xl p-4 text-center" wire:loading.class="border-primary bg-primary/5" wire:target="garmentImages">
-                            <svg wire:loading.remove wire:target="garmentImages" class="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            {{-- Skeleton Placeholders when uploading --}}
-                            <div wire:loading wire:target="garmentImages" class="flex justify-center gap-3 mb-2">
-                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse"></div>
-                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse" style="animation-delay: 150ms"></div>
-                                <div class="w-14 h-16 bg-border rounded-lg animate-pulse" style="animation-delay: 300ms"></div>
+                            {{-- Normal state --}}
+                            <div wire:loading.remove wire:target="garmentImages">
+                                <svg class="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span class="text-sm text-muted-foreground">{{ __('studio.upload_clothing') }}</span>
+                                <span class="block text-xs text-muted-foreground mt-1">{{ __('studio.select_multiple') }}</span>
                             </div>
-                            <span wire:loading.remove wire:target="garmentImages" class="text-sm text-muted-foreground">{{ __('studio.upload_clothing') }}</span>
-                            <span wire:loading.remove wire:target="garmentImages" class="block text-xs text-muted-foreground mt-1">{{ __('studio.select_multiple') }}</span>
-                            <span wire:loading wire:target="garmentImages" class="text-sm text-primary font-medium">{{ __('studio.uploading_clothing') }}</span>
+
+                            {{-- Loading state with animated cards --}}
+                            <div wire:loading wire:target="garmentImages" class="py-2">
+                                <div class="flex justify-center gap-3 mb-3">
+                                    {{-- Animated shimmer cards --}}
+                                    <div class="w-12 h-14 rounded-lg animate-shimmer relative overflow-hidden">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-muted-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="w-12 h-14 rounded-lg animate-shimmer relative overflow-hidden" style="animation-delay: 0.2s">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-muted-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="w-12 h-14 rounded-lg animate-shimmer relative overflow-hidden" style="animation-delay: 0.4s">
+                                        <div class="absolute inset-0 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-muted-foreground/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    <span class="text-sm text-primary font-medium">{{ __('studio.uploading_clothing') }}</span>
+                                </div>
+                            </div>
                         </div>
                         <input type="file" wire:model="garmentImages" accept="image/*" multiple class="hidden">
                     </label>
@@ -269,14 +300,33 @@
                     @if(count($garmentPreviews) > 0 || count($selectedWardrobeItems) > 0)
                         <div class="mt-4">
                             <div class="flex flex-wrap gap-4 justify-center">
-                                {{-- Uploaded garments --}}
+                                {{-- Uploaded garments with loading state --}}
                                 @foreach($garmentPreviews as $index => $preview)
-                                    <div class="relative">
-                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
-                                            <img src="{{ $preview }}" alt="Garment" class="w-full h-full object-cover">
+                                    <div class="relative" x-data="{ loaded: false }">
+                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden shadow-sm relative">
+                                            {{-- Shimmer skeleton while loading --}}
+                                            <div x-show="!loaded"
+                                                 x-transition:leave="transition ease-in duration-200"
+                                                 x-transition:leave-start="opacity-100"
+                                                 x-transition:leave-end="opacity-0"
+                                                 class="absolute inset-0 animate-shimmer rounded-xl">
+                                                {{-- Clothing icon placeholder --}}
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <svg class="w-8 h-8 text-muted-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.314l-.295-.295a1.125 1.125 0 010-1.591l.13-.132a1.125 1.125 0 011.3-.21l.603.302a.809.809 0 001.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 001.528-1.732l.146-.292M6.115 5.19A9 9 0 1017.18 4.64M6.115 5.19A8.965 8.965 0 0112 3c1.929 0 3.72.608 5.18 1.64"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            {{-- Actual image --}}
+                                            <img src="{{ $preview }}"
+                                                 alt="Garment"
+                                                 class="w-full h-full object-cover transition-opacity duration-300"
+                                                 :class="loaded ? 'opacity-100' : 'opacity-0'"
+                                                 x-on:load="loaded = true"
+                                                 loading="eager">
                                         </div>
+                                        {{-- X button - always visible for interaction --}}
                                         <button type="button"
-                                                x-data
                                                 x-on:click.prevent.stop="$wire.removeGarment({{ $index }})"
                                                 class="absolute -top-3 -right-3 w-8 h-8 bg-destructive active:bg-destructive/80 rounded-full flex items-center justify-center shadow-lg z-10 cursor-pointer select-none"
                                                 style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; font-size: 16px;">
@@ -285,14 +335,32 @@
                                     </div>
                                 @endforeach
 
-                                {{-- Wardrobe items --}}
+                                {{-- Wardrobe items with loading state --}}
                                 @foreach($selectedItems as $item)
-                                    <div class="relative">
-                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
-                                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover">
+                                    <div class="relative" x-data="{ loaded: false }">
+                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden shadow-sm relative">
+                                            {{-- Shimmer skeleton while loading --}}
+                                            <div x-show="!loaded"
+                                                 x-transition:leave="transition ease-in duration-200"
+                                                 x-transition:leave-start="opacity-100"
+                                                 x-transition:leave-end="opacity-0"
+                                                 class="absolute inset-0 animate-shimmer rounded-xl">
+                                                <div class="absolute inset-0 flex items-center justify-center">
+                                                    <svg class="w-8 h-8 text-muted-foreground/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.115 5.19l.319 1.913A6 6 0 008.11 10.36L9.75 12l-.387.775c-.217.433-.132.956.21 1.298l1.348 1.348c.21.21.329.497.329.795v1.089c0 .426.24.815.622 1.006l.153.076c.433.217.956.132 1.298-.21l.723-.723a8.7 8.7 0 002.288-4.042 1.087 1.087 0 00-.358-1.099l-1.33-1.108c-.251-.21-.582-.299-.905-.245l-1.17.195a1.125 1.125 0 01-.98-.314l-.295-.295a1.125 1.125 0 010-1.591l.13-.132a1.125 1.125 0 011.3-.21l.603.302a.809.809 0 001.086-1.086L14.25 7.5l1.256-.837a4.5 4.5 0 001.528-1.732l.146-.292M6.115 5.19A9 9 0 1017.18 4.64M6.115 5.19A8.965 8.965 0 0112 3c1.929 0 3.72.608 5.18 1.64"/>
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            {{-- Actual image --}}
+                                            <img src="{{ $item->image_url }}"
+                                                 alt="{{ $item->name }}"
+                                                 class="w-full h-full object-cover transition-opacity duration-300"
+                                                 :class="loaded ? 'opacity-100' : 'opacity-0'"
+                                                 x-on:load="loaded = true"
+                                                 loading="eager">
                                         </div>
+                                        {{-- X button --}}
                                         <button type="button"
-                                                x-data
                                                 x-on:click.prevent.stop="$wire.removeWardrobeItem({{ $item->id }})"
                                                 class="absolute -top-3 -right-3 w-8 h-8 bg-destructive active:bg-destructive/80 rounded-full flex items-center justify-center shadow-lg z-10 cursor-pointer select-none"
                                                 style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; font-size: 16px;">
