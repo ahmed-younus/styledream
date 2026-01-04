@@ -242,26 +242,33 @@ class Studio extends Component
     {
         $this->validate(['garmentImages.*' => 'image|max:10240']);
 
-        // Append new images - convert to base64 for unified handling
+        // Append new images - store file paths for later processing
         foreach ($this->garmentImages as $image) {
-            $base64 = base64_encode(file_get_contents($image->getRealPath()));
-            $this->garmentPreviews[] = 'data:image/jpeg;base64,' . $base64;
-            $this->garmentBase64Array[] = $base64;
+            // Use temporaryUrl for fast preview (don't convert to base64 yet)
+            $this->garmentPreviews[] = $image->temporaryUrl();
+            // Store the actual file for later base64 conversion during generate
+            $this->uploadedGarments[] = $image;
         }
 
-        // Clear uploadedGarments since we now use garmentBase64Array
-        $this->uploadedGarments = [];
+        // Clear garmentImages array (files are now in uploadedGarments)
         $this->garmentImages = [];
     }
 
     public function removeGarment($index)
     {
-        // Remove from both arrays
+        // Remove from preview array
         if (isset($this->garmentPreviews[$index])) {
             unset($this->garmentPreviews[$index]);
             $this->garmentPreviews = array_values($this->garmentPreviews);
         }
 
+        // Remove from uploaded garments (new flow)
+        if (isset($this->uploadedGarments[$index])) {
+            unset($this->uploadedGarments[$index]);
+            $this->uploadedGarments = array_values($this->uploadedGarments);
+        }
+
+        // Remove from base64 array (URL paste flow)
         if (isset($this->garmentBase64Array[$index])) {
             unset($this->garmentBase64Array[$index]);
             $this->garmentBase64Array = array_values($this->garmentBase64Array);
@@ -364,7 +371,15 @@ class Studio extends Component
         // Collect all garment URLs (store images first)
         $garmentUrls = [];
 
-        // Add garments from uploads and URL paste (unified in garmentBase64Array)
+        // Add garments from file uploads (convert to base64 and store)
+        foreach ($this->uploadedGarments as $garment) {
+            if ($garment && method_exists($garment, 'getRealPath')) {
+                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+            }
+        }
+
+        // Add garments from URL paste (already base64)
         foreach ($this->garmentBase64Array as $base64) {
             $garmentUrls[] = $this->storeImage($base64, 'garment');
         }
@@ -482,6 +497,7 @@ class Studio extends Component
             'bodyImageBase64',
             'garmentPreviews',
             'garmentBase64Array',
+            'uploadedGarments',
             'selectedWardrobeItems',
             'resultImage',
             'lastTryOnId',
@@ -534,7 +550,15 @@ class Studio extends Component
         // Collect garment URLs
         $garmentUrls = [];
 
-        // From direct uploads/URL paste
+        // From file uploads (convert to base64 and store)
+        foreach ($this->uploadedGarments as $garment) {
+            if ($garment && method_exists($garment, 'getRealPath')) {
+                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+            }
+        }
+
+        // From URL paste (already base64)
         foreach ($this->garmentBase64Array as $base64) {
             $garmentUrls[] = $this->storeImage($base64, 'garment');
         }
