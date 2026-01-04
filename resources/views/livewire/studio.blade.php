@@ -406,7 +406,7 @@
             </div>
 
             {{-- Right Column: Result --}}
-            <div class="bg-secondary rounded-2xl p-6 relative" wire:poll.5s="pollJobStatus">
+            <div class="bg-secondary rounded-2xl p-6 relative">
                 {{-- Generation Loading Overlay with Dynamic Timer --}}
                 <div wire:loading wire:target="generate, runQueue"
                      class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30"
