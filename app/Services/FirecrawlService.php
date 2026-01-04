@@ -8,7 +8,7 @@ use Exception;
 
 class FirecrawlService
 {
-    protected string $apiKey;
+    protected ?string $apiKey = null;
     protected string $baseUrl = 'https://api.firecrawl.dev/v1';
 
     public function __construct()
