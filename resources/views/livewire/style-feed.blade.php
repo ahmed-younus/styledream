@@ -68,8 +68,8 @@
                             </div>
 
                             {{-- Post Image --}}
-                            <div class="relative aspect-[3/4] bg-secondary">
-                                <img src="{{ $post->image_url }}" alt="Outfit" class="w-full h-full object-cover">
+                            <div class="relative aspect-[3/4] bg-secondary/50">
+                                <img src="{{ $post->image_url }}" alt="Outfit" class="w-full h-full object-contain">
                             </div>
 
                             {{-- Actions --}}

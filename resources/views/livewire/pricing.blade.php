@@ -91,7 +91,7 @@
                             @if($isFree)
                                 <span class="text-4xl font-bold">{{ $currencySymbol }}0</span>
                             @else
-                                <span class="text-4xl font-bold">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 0) }}</span>
+                                <span class="text-4xl font-bold">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 2) }}</span>
                             @endif
                             <span class="text-primary-foreground/70">{{ __('pricing.per_month') }}</span>
                         </div>
@@ -134,7 +134,7 @@
                             @if($isFree)
                                 <span class="text-4xl font-bold text-foreground">{{ $currencySymbol }}0</span>
                             @else
-                                <span class="text-4xl font-bold text-foreground">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 0) }}</span>
+                                <span class="text-4xl font-bold text-foreground">{{ $currencySymbol }}{{ number_format($plan['price'] / 100, 2) }}</span>
                             @endif
                             <span class="text-muted-foreground">{{ __('pricing.per_month') }}</span>
                         </div>

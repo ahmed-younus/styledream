@@ -1,18 +1,18 @@
 <div>
     {{-- Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
+    <div class="flex flex-col gap-4 mb-6">
+        <div class="hidden sm:block">
             <h2 class="text-lg font-medium text-gray-500 dark:text-gray-400">Manage all registered users</h2>
         </div>
 
         {{-- Filters --}}
-        <div class="flex items-center gap-3">
-            <div class="relative">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div class="relative flex-1 sm:flex-initial">
                 <input
                     type="text"
                     wire:model.live.debounce.300ms="search"
                     placeholder="Search users..."
-                    class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent w-64"
+                    class="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent w-full sm:w-64"
                 >
                 <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -33,28 +33,28 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('name')">
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('name')">
                             User
                             @if($sortBy === 'name')
                                 <span class="ml-1">{{ $sortDir === 'asc' ? '↑' : '↓' }}</span>
                             @endif
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('credits')">
+                        <th class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('credits')">
                             Credits
                             @if($sortBy === 'credits')
                                 <span class="ml-1">{{ $sortDir === 'asc' ? '↑' : '↓' }}</span>
                             @endif
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Subscription
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Plan
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('created_at')">
+                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" wire:click="sortBy('created_at')">
                             Joined
                             @if($sortBy === 'created_at')
                                 <span class="ml-1">{{ $sortDir === 'asc' ? '↑' : '↓' }}</span>
                             @endif
                         </th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Actions
                         </th>
                     </tr>
@@ -62,50 +62,55 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                     @forelse($users as $user)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                <div class="flex items-center gap-2 sm:gap-3">
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0 text-sm sm:text-base">
                                         {{ substr($user->name, 0, 1) }}
                                     </div>
-                                    <div>
-                                        <p class="font-medium text-gray-900 dark:text-white">{{ $user->name }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $user->email }}</p>
+                                    <div class="min-w-0">
+                                        <p class="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate max-w-[120px] sm:max-w-none">{{ $user->name }}</p>
+                                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate max-w-[120px] sm:max-w-none">{{ $user->email }}</p>
+                                        {{-- Show credits on mobile --}}
+                                        <p class="text-xs text-purple-600 dark:text-purple-400 sm:hidden">{{ number_format($user->credits) }} credits</p>
                                     </div>
                                     @if($user->is_banned ?? false)
-                                        <span class="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">Banned</span>
+                                        <span class="hidden sm:inline-block px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">Banned</span>
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                                 <span class="font-medium text-gray-900 dark:text-white">{{ number_format($user->credits) }}</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                 @php $subscription = $user->activeSubscription(); @endphp
                                 @if($subscription)
                                     <span class="px-2 py-1 text-xs font-medium rounded-full {{ $subscription->plan === 'premium' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }}">
                                         {{ ucfirst($subscription->plan) }}
                                     </span>
                                 @else
-                                    <span class="text-gray-400">Free</span>
+                                    <span class="text-gray-400 text-xs sm:text-sm">Free</span>
+                                @endif
+                                @if($user->is_banned ?? false)
+                                    <span class="sm:hidden ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-700 rounded">Ban</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                 {{ $user->created_at->format('M d, Y') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <button wire:click="openCreditsModal({{ $user->id }})" class="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors" title="Add Credits">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end gap-1 sm:gap-2">
+                                    <button wire:click="openCreditsModal({{ $user->id }})" class="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors" title="Add Credits">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                         </svg>
                                     </button>
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Edit">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Edit">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                    <button wire:click="toggleBan({{ $user->id }})" class="p-2 {{ ($user->is_banned ?? false) ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50' }} dark:hover:bg-gray-700 rounded-lg transition-colors" title="{{ ($user->is_banned ?? false) ? 'Unban' : 'Ban' }}">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <button wire:click="toggleBan({{ $user->id }})" class="p-1.5 sm:p-2 {{ ($user->is_banned ?? false) ? 'text-green-600 hover:bg-green-50' : 'text-red-600 hover:bg-red-50' }} dark:hover:bg-gray-700 rounded-lg transition-colors" title="{{ ($user->is_banned ?? false) ? 'Unban' : 'Ban' }}">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                                         </svg>
                                     </button>

@@ -10,6 +10,7 @@ use App\Models\ShareEvent;
 use App\Models\Avatar;
 use App\Jobs\ProcessTryOn;
 use App\Services\CreditService;
+use App\Services\PricingService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -75,6 +76,19 @@ class Studio extends Component
     // Credit purchase modal
     public $showCreditModal = false;
 
+    // User-managed queue
+    public $queueItems = [];
+    public $showQueuePanel = false;
+    public $editingQueueItem = null;
+
+    // Processing results (shown in Step 3)
+    public $processingResults = [];
+
+    // Lightbox modal
+    public $showLightbox = false;
+    public $lightboxImage = null;
+    public $lightboxTryOnId = null;
+
     public function mount()
     {
         if (Auth::check()) {
@@ -102,6 +116,12 @@ class Studio extends Component
 
             // Load pending/processing jobs
             $this->loadPendingJobs();
+
+            // Load user's queue items
+            $this->loadQueueItems();
+
+            // Load processing results for display
+            $this->loadProcessingResults();
         }
     }
 
@@ -435,25 +455,10 @@ class Studio extends Component
     public function pollJobStatus(): void
     {
         $this->loadPendingJobs();
-
-        // Check if any jobs just completed
-        $completedJobs = Auth::user()
-            ->tryOns()
-            ->completed()
-            ->whereNotNull('result_image_url')
-            ->where('created_at', '>=', now()->subMinutes(5))
-            ->latest()
-            ->get();
-
-        // If we have a recently completed job and no result showing, show it
-        if ($completedJobs->isNotEmpty() && !$this->resultImage) {
-            $latestCompleted = $completedJobs->first();
-            $this->resultImage = $latestCompleted->result_image_url;
-            $this->lastTryOnId = $latestCompleted->id;
-        }
+        $this->loadProcessingResults();
 
         // Hide queue status if no pending jobs
-        if (empty($this->pendingJobs)) {
+        if (empty($this->pendingJobs) && empty($this->processingResults)) {
             $this->showQueueStatus = false;
         }
     }
@@ -482,7 +487,479 @@ class Studio extends Component
             'lastTryOnId',
             'error',
             'showResultReady',
+            'editingQueueItem',
         ]);
+    }
+
+    // ============ USER-MANAGED QUEUE ============
+
+    /**
+     * Load user's queued items.
+     */
+    public function loadQueueItems(): void
+    {
+        if (!Auth::check()) {
+            $this->queueItems = [];
+            return;
+        }
+
+        $this->queueItems = Auth::user()
+            ->tryOns()
+            ->queued()
+            ->orderBy('queue_position')
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * Add current outfit to queue.
+     */
+    public function addToQueue(): void
+    {
+        // Validate body image
+        if (!$this->bodyImage && !$this->bodyImageBase64) {
+            $this->error = __('studio.select_body_first');
+            return;
+        }
+
+        $user = auth()->user();
+
+        // Check queue limit (max 5)
+        $queueCount = $user->tryOns()->queued()->count();
+        if ($queueCount >= 5) {
+            $this->error = __('studio.queue_full');
+            return;
+        }
+
+        // Collect garment URLs
+        $garmentUrls = [];
+
+        // From direct uploads/URL paste
+        foreach ($this->garmentBase64Array as $base64) {
+            $garmentUrls[] = $this->storeImage($base64, 'garment');
+        }
+
+        // From wardrobe
+        foreach ($this->selectedWardrobeItems as $itemId) {
+            $item = WardrobeItem::find($itemId);
+            if ($item) {
+                $garmentUrls[] = $item->image_url;
+            }
+        }
+
+        if (empty($garmentUrls)) {
+            $this->error = __('studio.error_no_clothing');
+            return;
+        }
+
+        // Check credits
+        if (!$user->hasCredits(1)) {
+            $this->showCreditModal = true;
+            return;
+        }
+
+        $this->error = '';
+
+        try {
+            // Get body image base64
+            if ($this->bodyImageBase64) {
+                $bodyBase64 = $this->bodyImageBase64;
+            } else {
+                $bodyBase64 = base64_encode(file_get_contents($this->bodyImage->getRealPath()));
+            }
+
+            // Store body image
+            $bodyUrl = $this->storeImage($bodyBase64, 'body');
+
+            // Create TryOn with QUEUED status
+            $tryOn = TryOn::create([
+                'user_id' => $user->id,
+                'body_image_url' => $bodyUrl,
+                'garment_image_url' => $garmentUrls[0],
+                'garment_urls' => $garmentUrls,
+                'status' => TryOn::STATUS_QUEUED,
+                'queue_position' => $queueCount + 1,
+                'credits_used' => 1,
+            ]);
+
+            // Deduct credit immediately
+            $creditService = app(CreditService::class);
+            $creditService->useCredits($user, 1, 'Queued outfit #' . $tryOn->id, (string) $tryOn->id);
+
+            // Clear garments, keep body image
+            $this->reset([
+                'garmentPreviews',
+                'garmentBase64Array',
+                'selectedWardrobeItems',
+            ]);
+
+            // Reload queue and show panel
+            $this->loadQueueItems();
+            $this->showQueuePanel = true;
+
+            session()->flash('message', __('studio.added_to_queue'));
+
+        } catch (\Exception $e) {
+            $this->error = __('studio.queue_error') . ': ' . $e->getMessage();
+        }
+    }
+
+    /**
+     * Remove item from queue and refund credit.
+     */
+    public function removeFromQueue(int $id): void
+    {
+        $tryOn = Auth::user()->tryOns()
+            ->queued()
+            ->where('id', $id)
+            ->first();
+
+        if ($tryOn) {
+            // Refund credit
+            $creditService = app(CreditService::class);
+            $creditService->refundCredits(Auth::user(), 1, 'Removed from queue', (string) $tryOn->id);
+
+            // Delete the record
+            $tryOn->delete();
+
+            // Reorder remaining items
+            $this->reorderQueuePositions();
+
+            // Reload queue
+            $this->loadQueueItems();
+
+            session()->flash('message', __('studio.queue_item_removed'));
+        }
+    }
+
+    /**
+     * Process all queued items - Step 1: Close UI and prepare.
+     */
+    public function runQueue(): void
+    {
+        $queuedItems = Auth::user()->tryOns()
+            ->queued()
+            ->orderBy('queue_position')
+            ->get();
+
+        if ($queuedItems->isEmpty()) {
+            return;
+        }
+
+        // Update all items to pending status
+        foreach ($queuedItems as $tryOn) {
+            $tryOn->update([
+                'status' => TryOn::STATUS_PENDING,
+                'queue_position' => null,
+            ]);
+        }
+
+        // IMMEDIATELY close sidebar and clear local queue
+        $this->showQueuePanel = false;
+        $this->queueItems = [];
+
+        // Load processing results to show loaders
+        $this->loadProcessingResults();
+        $this->loadPendingJobs();
+
+        // Dispatch browser event to trigger job processing after UI updates
+        $this->dispatch('process-queue-jobs');
+    }
+
+    /**
+     * Process all queued items - Step 2: Actually dispatch jobs.
+     * Called from Alpine after UI has updated.
+     */
+    public function processQueueJobs(): void
+    {
+        $pendingItems = Auth::user()->tryOns()
+            ->pending()
+            ->get();
+
+        foreach ($pendingItems as $tryOn) {
+            ProcessTryOn::dispatch($tryOn);
+        }
+
+        // Refresh results after processing
+        $this->loadProcessingResults();
+        $this->loadPendingJobs();
+    }
+
+    /**
+     * Load queue item for editing.
+     */
+    public function editQueueItem(int $id): void
+    {
+        $tryOn = Auth::user()->tryOns()
+            ->queued()
+            ->where('id', $id)
+            ->first();
+
+        if ($tryOn) {
+            $this->editingQueueItem = $id;
+
+            // Load body image
+            $this->bodyImagePreview = $tryOn->body_image_url;
+            $path = str_replace('/storage/', '', $tryOn->body_image_url);
+            if (Storage::disk('public')->exists($path)) {
+                $this->bodyImageBase64 = base64_encode(Storage::disk('public')->get($path));
+            }
+
+            // Load garments
+            $this->garmentPreviews = [];
+            $this->garmentBase64Array = [];
+            foreach ($tryOn->getAllGarmentUrls() as $url) {
+                $this->garmentPreviews[] = $url;
+                // Load base64 for editing
+                $path = str_replace('/storage/', '', $url);
+                if (Storage::disk('public')->exists($path)) {
+                    $this->garmentBase64Array[] = base64_encode(Storage::disk('public')->get($path));
+                }
+            }
+
+            $this->showQueuePanel = false;
+        }
+    }
+
+    /**
+     * Save edits to queued item.
+     */
+    public function updateQueueItem(): void
+    {
+        if (!$this->editingQueueItem) {
+            return;
+        }
+
+        $tryOn = Auth::user()->tryOns()
+            ->queued()
+            ->where('id', $this->editingQueueItem)
+            ->first();
+
+        if (!$tryOn) {
+            $this->editingQueueItem = null;
+            return;
+        }
+
+        // Validate
+        if (!$this->bodyImage && !$this->bodyImageBase64) {
+            $this->error = __('studio.select_body_first');
+            return;
+        }
+
+        // Collect new garment URLs
+        $garmentUrls = [];
+        foreach ($this->garmentBase64Array as $base64) {
+            $garmentUrls[] = $this->storeImage($base64, 'garment');
+        }
+        foreach ($this->selectedWardrobeItems as $itemId) {
+            $item = WardrobeItem::find($itemId);
+            if ($item) {
+                $garmentUrls[] = $item->image_url;
+            }
+        }
+
+        if (empty($garmentUrls)) {
+            $this->error = __('studio.error_no_clothing');
+            return;
+        }
+
+        try {
+            // Get body image
+            if ($this->bodyImageBase64) {
+                $bodyBase64 = $this->bodyImageBase64;
+            } else {
+                $bodyBase64 = base64_encode(file_get_contents($this->bodyImage->getRealPath()));
+            }
+            $bodyUrl = $this->storeImage($bodyBase64, 'body');
+
+            // Update the try-on
+            $tryOn->update([
+                'body_image_url' => $bodyUrl,
+                'garment_image_url' => $garmentUrls[0],
+                'garment_urls' => $garmentUrls,
+            ]);
+
+            $this->editingQueueItem = null;
+            $this->clearAll();
+            $this->loadQueueItems();
+            $this->showQueuePanel = true;
+
+            session()->flash('message', __('studio.queue_item_updated'));
+
+        } catch (\Exception $e) {
+            $this->error = $e->getMessage();
+        }
+    }
+
+    /**
+     * Cancel editing queue item.
+     */
+    public function cancelEditQueueItem(): void
+    {
+        $this->editingQueueItem = null;
+        $this->clearAll();
+        $this->loadQueueItems();
+        $this->showQueuePanel = true;
+    }
+
+    /**
+     * Clear entire queue and refund credits.
+     */
+    public function clearQueue(): void
+    {
+        $queuedItems = Auth::user()->tryOns()->queued()->get();
+        $creditService = app(CreditService::class);
+
+        foreach ($queuedItems as $tryOn) {
+            $creditService->refundCredits(Auth::user(), 1, 'Queue cleared', (string) $tryOn->id);
+            $tryOn->delete();
+        }
+
+        $this->queueItems = [];
+        $this->showQueuePanel = false;
+
+        session()->flash('message', __('studio.queue_cleared'));
+    }
+
+    /**
+     * Reorder queue positions after removal.
+     */
+    protected function reorderQueuePositions(): void
+    {
+        $queuedItems = Auth::user()->tryOns()
+            ->queued()
+            ->orderBy('queue_position')
+            ->get();
+
+        $position = 1;
+        foreach ($queuedItems as $item) {
+            $item->update(['queue_position' => $position]);
+            $position++;
+        }
+    }
+
+    // ============ PROCESSING RESULTS ============
+
+    /**
+     * Load processing results for display in Step 3 area.
+     */
+    public function loadProcessingResults(): void
+    {
+        if (!Auth::check()) {
+            $this->processingResults = [];
+            return;
+        }
+
+        try {
+            // Try with viewed_at column (if migration has run)
+            $this->processingResults = Auth::user()->tryOns()
+                ->whereIn('status', [
+                    TryOn::STATUS_PENDING,
+                    TryOn::STATUS_PROCESSING,
+                    TryOn::STATUS_COMPLETED,
+                    TryOn::STATUS_FAILED,
+                ])
+                ->where('created_at', '>=', now()->subHours(24))
+                ->whereNull('viewed_at')
+                ->orderByDesc('created_at')
+                ->take(10)
+                ->get()
+                ->toArray();
+        } catch (\Exception $e) {
+            // Fallback without viewed_at (if migration hasn't run)
+            $this->processingResults = Auth::user()->tryOns()
+                ->whereIn('status', [
+                    TryOn::STATUS_PENDING,
+                    TryOn::STATUS_PROCESSING,
+                    TryOn::STATUS_COMPLETED,
+                    TryOn::STATUS_FAILED,
+                ])
+                ->where('created_at', '>=', now()->subHours(1))
+                ->orderByDesc('created_at')
+                ->take(10)
+                ->get()
+                ->toArray();
+        }
+    }
+
+    /**
+     * View a completed result (opens in lightbox modal).
+     */
+    public function viewResult(int $id): void
+    {
+        $tryOn = Auth::user()->tryOns()->completed()->find($id);
+        if ($tryOn) {
+            $this->lightboxImage = $tryOn->result_image_url;
+            $this->lightboxTryOnId = $tryOn->id;
+            $this->showLightbox = true;
+
+            // Also set for action modals
+            $this->historyTryOnId = $tryOn->id;
+            $this->historyImageUrl = $tryOn->result_image_url;
+        }
+    }
+
+    /**
+     * Close the lightbox modal.
+     */
+    public function closeLightbox(): void
+    {
+        $this->showLightbox = false;
+        $this->lightboxImage = null;
+        $this->lightboxTryOnId = null;
+    }
+
+    /**
+     * Dismiss lightbox and mark result as viewed.
+     */
+    public function dismissLightboxResult(): void
+    {
+        if ($this->lightboxTryOnId) {
+            $tryOn = Auth::user()->tryOns()->find($this->lightboxTryOnId);
+            if ($tryOn) {
+                try {
+                    $tryOn->update(['viewed_at' => now()]);
+                } catch (\Exception $e) {
+                    // viewed_at column might not exist yet
+                }
+            }
+        }
+        $this->closeLightbox();
+        $this->loadProcessingResults();
+    }
+
+    /**
+     * Dismiss a result (mark as viewed without loading).
+     */
+    public function dismissResult(int $id): void
+    {
+        $tryOn = Auth::user()->tryOns()->find($id);
+        if ($tryOn) {
+            try {
+                $tryOn->update(['viewed_at' => now()]);
+            } catch (\Exception $e) {
+                // viewed_at column might not exist yet - just delete from results
+                $tryOn->delete();
+            }
+            $this->loadProcessingResults();
+        }
+    }
+
+    /**
+     * Clear all processing results (mark all as viewed).
+     */
+    public function clearProcessingResults(): void
+    {
+        try {
+            Auth::user()->tryOns()
+                ->whereIn('status', [TryOn::STATUS_COMPLETED, TryOn::STATUS_FAILED])
+                ->whereNull('viewed_at')
+                ->update(['viewed_at' => now()]);
+        } catch (\Exception $e) {
+            // If viewed_at doesn't exist, just clear the array
+        }
+
+        $this->processingResults = [];
     }
 
     protected function storeImage(string $imageData, string $type): string
@@ -664,6 +1141,7 @@ class Studio extends Component
             'history' => $user->tryOns()->completed()->latest()->take(6)->get(),
             'wardrobeItems' => $user->wardrobeItems()->latest()->get(),
             'selectedItems' => WardrobeItem::whereIn('id', $this->selectedWardrobeItems)->get(),
+            'creditPacks' => PricingService::getCreditPacksForCurrency('usd'),
         ])->layout('layouts.app', ['title' => 'Try-On Studio']);
     }
 }

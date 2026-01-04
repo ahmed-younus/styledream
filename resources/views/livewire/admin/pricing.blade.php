@@ -5,15 +5,42 @@
         </div>
     @endif
 
+    @if(session('warning'))
+        <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+            <p class="text-yellow-700 dark:text-yellow-400">{{ session('warning') }}</p>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+            <p class="text-red-700 dark:text-red-400">{{ session('error') }}</p>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Subscription Plans --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="flex items-center justify-between mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Subscription Plans</h3>
-                <button wire:click="openPlanModal()"
-                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
-                    + Add Plan
-                </button>
+                <div class="flex gap-2">
+                    <button wire:click="syncAllWithStripe"
+                            wire:loading.attr="disabled"
+                            wire:target="syncAllWithStripe"
+                            class="flex-1 sm:flex-initial px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center justify-center gap-1 disabled:opacity-50">
+                        <svg wire:loading wire:target="syncAllWithStripe" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg wire:loading.remove wire:target="syncAllWithStripe" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        <span class="hidden xs:inline">Sync</span> Stripe
+                    </button>
+                    <button wire:click="openPlanModal()"
+                            class="flex-1 sm:flex-initial px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium">
+                        + Add Plan
+                    </button>
+                </div>
             </div>
 
             <div class="space-y-4">
@@ -25,26 +52,28 @@
                             </span>
                         @endif
 
-                        <div class="flex items-start justify-between mb-2">
+                        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
                             <div>
                                 <h4 class="font-semibold text-gray-900 dark:text-white">{{ $plan['name'] ?? ucfirst($key) }}</h4>
                                 @if(!empty($plan['description']))
                                     <p class="text-xs text-gray-500 mt-0.5">{{ $plan['description'] }}</p>
                                 @endif
                             </div>
-                            <div class="text-right">
+                            <div class="text-left sm:text-right">
                                 @php
                                     $usdPrice = $this->getPlanPrice($plan, 'usd');
                                     $gbpPrice = $this->getPlanPrice($plan, 'gbp');
                                     $eurPrice = $this->getPlanPrice($plan, 'eur');
                                 @endphp
                                 @if($usdPrice > 0 || $gbpPrice > 0 || $eurPrice > 0)
-                                    <div class="text-sm font-bold text-purple-600">
-                                        ${{ number_format($usdPrice / 100, 2) }} |
-                                        <span class="text-blue-600">£{{ number_format($gbpPrice / 100, 2) }}</span> |
+                                    <div class="text-xs sm:text-sm font-bold flex flex-wrap gap-1 sm:gap-0">
+                                        <span class="text-purple-600">${{ number_format($usdPrice / 100, 2) }}</span>
+                                        <span class="text-gray-400 hidden sm:inline">|</span>
+                                        <span class="text-blue-600">£{{ number_format($gbpPrice / 100, 2) }}</span>
+                                        <span class="text-gray-400 hidden sm:inline">|</span>
                                         <span class="text-green-600">€{{ number_format($eurPrice / 100, 2) }}</span>
+                                        <span class="text-xs text-gray-400 ml-1">/mo</span>
                                     </div>
-                                    <p class="text-xs text-gray-400">/month</p>
                                 @else
                                     <span class="text-lg font-bold text-purple-600">Free</span>
                                 @endif
@@ -91,7 +120,7 @@
         </div>
 
         {{-- Credit Packs --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Credit Packs</h3>
                 <button wire:click="openPackModal()"
@@ -109,17 +138,19 @@
                             <span class="absolute -top-2 left-4 px-2 py-0.5 bg-green-600 text-white text-xs font-medium rounded">BEST VALUE</span>
                         @endif
 
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                             <h4 class="font-semibold text-gray-900 dark:text-white">{{ $pack['credits'] ?? 0 }} Credits</h4>
-                            <div class="text-right">
+                            <div class="text-left sm:text-right">
                                 @php
                                     $usdPrice = $this->getPackPrice($pack, 'usd');
                                     $gbpPrice = $this->getPackPrice($pack, 'gbp');
                                     $eurPrice = $this->getPackPrice($pack, 'eur');
                                 @endphp
-                                <div class="text-sm font-bold">
-                                    <span class="text-purple-600">${{ number_format($usdPrice / 100, 2) }}</span> |
-                                    <span class="text-blue-600">£{{ number_format($gbpPrice / 100, 2) }}</span> |
+                                <div class="text-xs sm:text-sm font-bold flex flex-wrap gap-1 sm:gap-0">
+                                    <span class="text-purple-600">${{ number_format($usdPrice / 100, 2) }}</span>
+                                    <span class="text-gray-400 hidden sm:inline">|</span>
+                                    <span class="text-blue-600">£{{ number_format($gbpPrice / 100, 2) }}</span>
+                                    <span class="text-gray-400 hidden sm:inline">|</span>
                                     <span class="text-green-600">€{{ number_format($eurPrice / 100, 2) }}</span>
                                 </div>
                             </div>
@@ -157,9 +188,19 @@
 
     {{-- Info Box --}}
     <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-        <p class="text-sm text-blue-700 dark:text-blue-400">
-            <strong>Multi-Currency:</strong> Set prices in USD ($), GBP (£), and EUR (€). Create separate Price IDs in Stripe for each currency.
-        </p>
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            <div class="text-sm text-blue-700 dark:text-blue-400">
+                <p class="font-semibold mb-1">Auto Stripe Sync</p>
+                <ul class="list-disc list-inside space-y-1 text-xs">
+                    <li><strong>Subscription Plans:</strong> Stripe Prices are automatically created when you save. Change price → new Stripe Price created.</li>
+                    <li><strong>Credit Packs:</strong> Dynamic pricing - changes apply instantly (no Stripe Price IDs needed).</li>
+                    <li>Click <strong>"Sync Stripe"</strong> to recreate all Stripe prices at once.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     {{-- Plan Modal --}}
@@ -184,7 +225,7 @@
                             </div>
                         @endif
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan Name</label>
                                 <input wire:model="planName" type="text"
@@ -210,7 +251,7 @@
                         {{-- Multi-Currency Prices --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Prices (in cents, 0 = free)</label>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3">
                                 <div>
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-sm font-bold text-purple-600">$ USD</span>
@@ -252,39 +293,45 @@
                             @error('planCredits') <span class="text-sm text-red-500">{{ $message }}</span> @enderror
                         </div>
 
-                        {{-- Stripe Price IDs --}}
+                        {{-- Stripe Price IDs (Auto-generated) --}}
                         @if(($planPrices['usd'] ?? 0) > 0 || ($planPrices['gbp'] ?? 0) > 0 || ($planPrices['eur'] ?? 0) > 0)
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Stripe Price IDs</label>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Stripe Price IDs</label>
+                                    <span class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Auto-synced with Stripe
+                                    </span>
+                                </div>
                                 <div class="space-y-2">
                                     @if(($planPrices['usd'] ?? 0) > 0)
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-purple-600 w-12">USD</span>
-                                            <input wire:model="planStripePriceIds.usd" type="text"
-                                                   class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                                   placeholder="price_xxxxx_usd">
+                                            <input wire:model="planStripePriceIds.usd" type="text" readonly
+                                                   class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 font-mono text-xs cursor-not-allowed"
+                                                   placeholder="Will be auto-generated">
                                         </div>
-                                        @error('planStripePriceIds.usd') <span class="text-xs text-red-500 ml-14">{{ $message }}</span> @enderror
                                     @endif
                                     @if(($planPrices['gbp'] ?? 0) > 0)
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-blue-600 w-12">GBP</span>
-                                            <input wire:model="planStripePriceIds.gbp" type="text"
-                                                   class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                   placeholder="price_xxxxx_gbp">
+                                            <input wire:model="planStripePriceIds.gbp" type="text" readonly
+                                                   class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 font-mono text-xs cursor-not-allowed"
+                                                   placeholder="Will be auto-generated">
                                         </div>
-                                        @error('planStripePriceIds.gbp') <span class="text-xs text-red-500 ml-14">{{ $message }}</span> @enderror
                                     @endif
                                     @if(($planPrices['eur'] ?? 0) > 0)
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-green-600 w-12">EUR</span>
-                                            <input wire:model="planStripePriceIds.eur" type="text"
-                                                   class="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                                   placeholder="price_xxxxx_eur">
+                                            <input wire:model="planStripePriceIds.eur" type="text" readonly
+                                                   class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-500 dark:text-gray-400 font-mono text-xs cursor-not-allowed"
+                                                   placeholder="Will be auto-generated">
                                         </div>
-                                        @error('planStripePriceIds.eur') <span class="text-xs text-red-500 ml-14">{{ $message }}</span> @enderror
                                     @endif
                                 </div>
+                                <p class="text-xs text-gray-500 mt-2">Stripe prices are automatically created when you save the plan.</p>
                             </div>
                         @endif
 
@@ -370,7 +417,7 @@
                         {{-- Multi-Currency Prices --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Prices (in cents)</label>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-3 gap-2 sm:gap-3">
                                 <div>
                                     <div class="flex items-center gap-1 mb-1">
                                         <span class="text-xs font-bold text-purple-600">$ USD</span>

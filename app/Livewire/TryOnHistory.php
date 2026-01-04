@@ -33,6 +33,32 @@ class TryOnHistory extends Component
     public $showDeleteModal = false;
     public $deleteTargetId = null;
 
+    // Lightbox modal
+    public $showLightbox = false;
+    public $lightboxImage = null;
+    public $lightboxTryOnId = null;
+
+    // ============ LIGHTBOX ============
+
+    public function openLightbox($tryOnId)
+    {
+        $tryOn = TryOn::where('id', $tryOnId)->where('user_id', Auth::id())->first();
+        if ($tryOn) {
+            $this->lightboxImage = $tryOn->result_image_url;
+            $this->lightboxTryOnId = $tryOn->id;
+            $this->selectedTryOnId = $tryOn->id;
+            $this->selectedImageUrl = $tryOn->result_image_url;
+            $this->showLightbox = true;
+        }
+    }
+
+    public function closeLightbox()
+    {
+        $this->showLightbox = false;
+        $this->lightboxImage = null;
+        $this->lightboxTryOnId = null;
+    }
+
     // ============ SAVE TO MY OUTFITS ============
 
     public function openSaveModal($tryOnId)

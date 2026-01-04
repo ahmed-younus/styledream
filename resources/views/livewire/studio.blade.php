@@ -1,4 +1,7 @@
-<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background" @if(count($pendingJobs) > 0) wire:poll.3s="pollJobStatus" @endif>
+<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background"
+     @if(count($pendingJobs) > 0 || count($processingResults) > 0) wire:poll.3s="pollJobStatus" @endif
+     x-data
+     @process-queue-jobs.window="setTimeout(() => $wire.processQueueJobs(), 100)">
     <div class="max-w-6xl mx-auto">
         {{-- Header --}}
         <div class="text-center mb-8">
@@ -273,175 +276,217 @@
                     </div>
                 </div>
 
-                {{-- Generate Button --}}
-                <button
-                    wire:click="generate"
-                    wire:loading.attr="disabled"
-                    wire:target="generate"
-                    @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
-                    class="w-full py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-                >
-                    <span wire:loading.remove wire:target="generate" class="flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
-                        </svg>
-                        {{ __('studio.generate_credit') }}
-                    </span>
-                    <span wire:loading wire:target="generate" class="flex items-center gap-2">
-                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        {{ __('studio.queueing') }}
-                    </span>
-                </button>
+                {{-- Generate Buttons --}}
+                @if($editingQueueItem)
+                    {{-- Editing Queue Item Mode --}}
+                    <div class="flex gap-3">
+                        <button wire:click="cancelEditQueueItem"
+                                class="flex-1 py-4 bg-secondary text-foreground font-semibold rounded-xl hover:bg-secondary/80 transition-colors">
+                            {{ __('app.cancel') }}
+                        </button>
+                        <button wire:click="updateQueueItem"
+                                wire:loading.attr="disabled"
+                                @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
+                                class="flex-1 py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50">
+                            <span wire:loading.remove wire:target="updateQueueItem">{{ __('studio.update_queue_item') }}</span>
+                            <span wire:loading wire:target="updateQueueItem">
+                                <svg class="w-5 h-5 animate-spin inline" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                @else
+                    {{-- Normal Mode: Generate & Add to Queue --}}
+                    <div class="flex gap-3">
+                        {{-- Generate Now Button --}}
+                        <button
+                            wire:click="generate"
+                            wire:loading.attr="disabled"
+                            wire:target="generate"
+                            @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
+                            class="flex-1 py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            <span wire:loading.remove wire:target="generate" class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                                </svg>
+                                {{ __('studio.generate_now') }}
+                            </span>
+                            <span wire:loading wire:target="generate" class="flex items-center gap-2">
+                                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </span>
+                        </button>
 
-                {{-- Success Message with Generate Another option --}}
-                @if(session()->has('message'))
-                    <div class="mt-3 p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                            </svg>
-                            <p class="text-sm font-medium text-green-700 dark:text-green-300">{{ session('message') }}</p>
-                        </div>
-                        <div class="flex items-center justify-between mt-2 ml-7">
-                            <p class="text-xs text-green-600 dark:text-green-400">{{ __('studio.add_more_clothes') }}</p>
-                            <button wire:click="clearAll" class="text-xs text-primary hover:underline font-medium">
-                                {{ __('studio.start_fresh') }} &rarr;
-                            </button>
-                        </div>
+                        {{-- Add to Queue Button --}}
+                        @auth
+                        <button
+                            wire:click="addToQueue"
+                            wire:loading.attr="disabled"
+                            wire:target="addToQueue"
+                            @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
+                            class="py-4 px-5 bg-secondary hover:bg-secondary/80 text-foreground font-medium rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-border hover:border-primary/30 relative"
+                            title="{{ __('studio.add_to_queue') }}"
+                        >
+                            <span wire:loading.remove wire:target="addToQueue" class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                <span class="hidden sm:inline text-sm">Queue</span>
+                            </span>
+                            <span wire:loading wire:target="addToQueue">
+                                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </span>
+                            @if(count($queueItems) > 0)
+                                <span class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow">{{ count($queueItems) }}</span>
+                            @endif
+                        </button>
+                        @endauth
                     </div>
                 @endif
 
-                {{-- View Queue Button --}}
+                {{-- View Processing Queue Button --}}
                 @if(count($pendingJobs) > 0)
                     <button wire:click="$set('showQueueModal', true)"
-                            class="w-full mt-3 py-3 bg-secondary hover:bg-secondary/80 text-foreground font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-border">
+                            class="w-full mt-3 py-3 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-blue-500/20">
                         <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                         {{ __('studio.view_queue') }}
-                        <span class="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full">{{ count($pendingJobs) }}</span>
+                        <span class="px-2 py-0.5 bg-blue-500 text-white text-xs font-semibold rounded-full">{{ count($pendingJobs) }}</span>
                     </button>
                 @endif
+
+                {{-- View User Queue Button --}}
+                @auth
+                    @if(count($queueItems) > 0)
+                        <button wire:click="$set('showQueuePanel', true)"
+                                class="w-full mt-3 py-3 bg-primary/5 hover:bg-primary/10 text-primary font-medium rounded-xl transition-colors flex items-center justify-center gap-3 border border-primary/20">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                            </svg>
+                            <span>{{ count($queueItems) }} {{ __('studio.outfits') }} ready to generate</span>
+                            <svg class="w-4 h-4 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    @endif
+                @endauth
             </div>
 
             {{-- Right Column: Result --}}
-            <div class="bg-secondary rounded-2xl p-6">
-                <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">3</span>
-                    {{ __('studio.step_result') }}
-                </h3>
-                <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border overflow-hidden relative bg-background">
-                    {{-- Loading state - shows only when generate is clicked --}}
-                    <div wire:loading.flex wire:target="generate" class="absolute inset-0 bg-background z-10 flex-col items-center justify-center">
-                        <svg class="w-12 h-12 mb-6" style="animation: spin 1s linear infinite;" viewBox="0 0 50 50">
-                            <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4" class="text-border"></circle>
-                            <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4, 125.6" class="text-primary"></circle>
-                        </svg>
-                        <p class="text-base font-medium text-foreground text-center m-0">{{ __('studio.creating_outfit') }}</p>
-                        <p class="text-sm text-muted-foreground text-center mt-1">{{ __('studio.processing_time') }}</p>
+            <div class="bg-secondary rounded-2xl p-6" wire:poll.5s="pollJobStatus">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-foreground flex items-center gap-2">
+                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">3</span>
+                        {{ __('studio.step_result') }}
+                    </h3>
+                    @if(count($processingResults) > 0)
+                        <button wire:click="clearProcessingResults" class="text-xs text-muted-foreground hover:text-foreground">
+                            Clear All
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Processing Results Grid --}}
+                @if(count($processingResults) > 0)
+                    <div class="grid grid-cols-2 gap-3">
+                        @foreach($processingResults as $result)
+                            <div class="bg-background rounded-xl border border-border overflow-hidden">
+                                {{-- Loading State (pending/processing) --}}
+                                @if($result['status'] === 'pending' || $result['status'] === 'processing')
+                                    <div class="aspect-[3/4] flex items-center justify-center bg-muted">
+                                        <div class="text-center p-4">
+                                            <svg class="w-10 h-10 animate-spin text-primary mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <p class="text-sm font-medium text-foreground">
+                                                {{ $result['status'] === 'pending' ? __('studio.queued') : __('studio.generating') }}...
+                                            </p>
+                                            <p class="text-xs text-muted-foreground mt-1">
+                                                {{ count($result['garment_urls'] ?? []) }} items
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                {{-- Completed State --}}
+                                @elseif($result['status'] === 'completed')
+                                    <div class="relative aspect-[3/4]">
+                                        {{-- Clickable Image --}}
+                                        <button wire:click="viewResult({{ $result['id'] }})" class="absolute inset-0 w-full h-full cursor-pointer z-0">
+                                            <img src="{{ $result['result_image_url'] }}" alt="Result" class="w-full h-full object-cover">
+                                        </button>
+                                        {{-- Bottom Actions - Always Visible --}}
+                                        <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent z-10">
+                                            <div class="flex gap-2">
+                                                <button wire:click="viewResult({{ $result['id'] }})"
+                                                        class="flex-1 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-medium hover:bg-white/30 transition-colors">
+                                                    {{ __('studio.view_result') }}
+                                                </button>
+                                                <button wire:click="dismissResult({{ $result['id'] }})"
+                                                        class="px-2 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white hover:bg-white/30 transition-colors">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {{-- Ready Badge --}}
+                                        <div class="absolute top-2 right-2 px-2 py-0.5 bg-green-500 text-white text-[10px] font-medium rounded-full z-10">
+                                            Ready
+                                        </div>
+                                    </div>
+
+                                {{-- Failed State --}}
+                                @else
+                                    <div class="aspect-[3/4] flex items-center justify-center bg-destructive/10">
+                                        <div class="text-center p-4">
+                                            <svg class="w-10 h-10 text-destructive mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                            <p class="text-sm font-medium text-destructive">{{ __('studio.failed') }}</p>
+                                            <button wire:click="dismissResult({{ $result['id'] }})"
+                                                    class="mt-2 text-xs text-primary hover:underline">
+                                                {{ __('studio.dismiss') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
 
-                    {{-- Processing State - Timeline Progress --}}
-                    @if(count($pendingJobs) > 0 && !$resultImage)
-                        @php
-                            $currentJob = collect($pendingJobs)->first();
-                            $isProcessing = $currentJob && $currentJob['status'] === 'processing';
-                        @endphp
-                        <div class="absolute inset-0 flex flex-col items-center justify-center bg-background p-6">
-                            {{-- Timeline Progress --}}
-                            <div class="w-full max-w-xs mb-8">
-                                <div class="flex items-center justify-between relative">
-                                    {{-- Progress Line --}}
-                                    <div class="absolute top-4 left-6 right-6 h-0.5 bg-border"></div>
-                                    <div class="absolute top-4 left-6 h-0.5 bg-primary transition-all duration-500" style="width: {{ $isProcessing ? '50%' : '0%' }};"></div>
-
-                                    {{-- Step 1: Queued --}}
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center {{ !$isProcessing ? 'bg-primary text-primary-foreground' : 'bg-primary text-primary-foreground' }}">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                        </div>
-                                        <span class="text-xs text-muted-foreground mt-2 font-medium">{{ __('studio.queued_stat') }}</span>
-                                    </div>
-
-                                    {{-- Step 2: Generating --}}
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-8 h-8 rounded-full flex items-center justify-center {{ $isProcessing ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground border-2 border-border' }}">
-                                            @if($isProcessing)
-                                                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                </svg>
-                                            @else
-                                                <span class="text-xs font-bold">2</span>
-                                            @endif
-                                        </div>
-                                        <span class="text-xs mt-2 font-medium {{ $isProcessing ? 'text-primary' : 'text-muted-foreground' }}">{{ __('studio.generating_stat') }}</span>
-                                    </div>
-
-                                    {{-- Step 3: Ready --}}
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <div class="w-8 h-8 rounded-full bg-secondary text-muted-foreground border-2 border-border flex items-center justify-center">
-                                            <span class="text-xs font-bold">3</span>
-                                        </div>
-                                        <span class="text-xs text-muted-foreground mt-2 font-medium">{{ __('studio.ready_stat') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Status Text --}}
-                            <div class="text-center">
-                                <p class="text-lg font-semibold text-foreground">
-                                    {{ $isProcessing ? __('studio.creating_outfit') : __('studio.job_pending') }}
-                                </p>
-                                <p class="text-sm text-muted-foreground mt-1">
-                                    {{ count($pendingJobs) }} {{ __('studio.in_queue') }}
-                                </p>
-                            </div>
-
-                            {{-- Progress Bar --}}
-                            @if($isProcessing)
-                                <div class="w-full max-w-xs mt-6">
-                                    <div class="h-1.5 bg-secondary rounded-full overflow-hidden">
-                                        <div class="h-full bg-primary rounded-full animate-pulse" style="width: 60%;"></div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Start Fresh Link --}}
-                            <button wire:click="clearAll" class="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                {{ __('studio.start_fresh') }}
-                            </button>
-                        </div>
-                    @elseif($resultImage)
+                {{-- Single Result View (from direct generate) --}}
+                @elseif($resultImage)
+                    <div class="aspect-[3/4] rounded-xl border-2 border-border overflow-hidden relative bg-background">
                         <img src="{{ $resultImage }}" alt="Try-on result" class="w-full h-full object-cover">
                         {{-- Action buttons overlay --}}
                         <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
                             <div class="grid grid-cols-4 gap-2 mb-2">
-                                {{-- Save --}}
                                 <button wire:click="openSaveModal" class="flex flex-col items-center gap-1 p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors cursor-pointer" title="{{ __('studio.save_to_outfits') }}">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
                                     </svg>
                                     <span class="text-[10px] text-white">{{ __('studio.save') }}</span>
                                 </button>
-                                {{-- Share to Feed --}}
                                 <button wire:click="openPostModal" class="flex flex-col items-center gap-1 p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors cursor-pointer" title="{{ __('feed.post_to_feed') }}">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                                     </svg>
                                     <span class="text-[10px] text-white">{{ __('studio.post') }}</span>
                                 </button>
-                                {{-- Share to Social --}}
                                 <button wire:click="openShareModal" class="flex flex-col items-center gap-1 p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors cursor-pointer" title="{{ __('studio.share') }}">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                                     </svg>
                                     <span class="text-[10px] text-white">{{ __('studio.share') }}</span>
                                 </button>
-                                {{-- Download --}}
                                 <a href="{{ $resultImage }}" download class="flex flex-col items-center gap-1 p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-colors" title="{{ __('studio.download') }}">
                                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -453,15 +498,32 @@
                                 {{ __('studio.try_again') }}
                             </button>
                         </div>
-                    @else
-                        <div wire:loading.remove wire:target="generate" class="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                    </div>
+
+                {{-- Loading state for direct generate --}}
+                @elseif($isProcessing)
+                    <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border overflow-hidden relative bg-background">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <svg class="w-12 h-12 mb-6" style="animation: spin 1s linear infinite;" viewBox="0 0 50 50">
+                                <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4" class="text-border"></circle>
+                                <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.4, 125.6" class="text-primary"></circle>
+                            </svg>
+                            <p class="text-base font-medium text-foreground text-center">{{ __('studio.creating_outfit') }}</p>
+                            <p class="text-sm text-muted-foreground text-center mt-1">{{ __('studio.processing_time') }}</p>
+                        </div>
+                    </div>
+
+                {{-- Empty State --}}
+                @else
+                    <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border overflow-hidden relative bg-background">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
                             <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
                             </svg>
                             <span class="text-sm font-medium">{{ __('studio.result_placeholder') }}</span>
                         </div>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -479,42 +541,19 @@
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     @foreach($history as $tryOn)
-                        <div class="aspect-[3/4] rounded-xl overflow-hidden bg-secondary relative group cursor-pointer">
+                        <button wire:click="viewResult({{ $tryOn->id }})"
+                                class="aspect-[3/4] rounded-xl overflow-hidden bg-secondary relative group cursor-pointer hover:ring-2 hover:ring-primary transition-all">
                             <img src="{{ $tryOn->result_image_url }}" alt="Try-on result" class="w-full h-full object-cover">
-                            {{-- Bottom gradient overlay with actions - always visible --}}
-                            <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent">
-                                <div class="grid grid-cols-4 gap-1">
-                                    {{-- Save --}}
-                                    <button wire:click="openSaveModalForHistory({{ $tryOn->id }})" class="flex flex-col items-center gap-0.5 p-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/40 transition-colors cursor-pointer" title="{{ __('studio.save') }}">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                                        </svg>
-                                        <span class="text-[8px] text-white">{{ __('studio.save') }}</span>
-                                    </button>
-                                    {{-- Post --}}
-                                    <button wire:click="openPostModalForHistory({{ $tryOn->id }})" class="flex flex-col items-center gap-0.5 p-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/40 transition-colors cursor-pointer" title="{{ __('studio.post') }}">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                                        </svg>
-                                        <span class="text-[8px] text-white">{{ __('studio.post') }}</span>
-                                    </button>
-                                    {{-- Share --}}
-                                    <button wire:click="openShareModalForHistory({{ $tryOn->id }})" class="flex flex-col items-center gap-0.5 p-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/40 transition-colors cursor-pointer" title="{{ __('studio.share') }}">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                                        </svg>
-                                        <span class="text-[8px] text-white">{{ __('studio.share') }}</span>
-                                    </button>
-                                    {{-- Download --}}
-                                    <a href="{{ $tryOn->result_image_url }}" download class="flex flex-col items-center gap-0.5 p-1.5 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/40 transition-colors" title="{{ __('studio.download') }}">
-                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                        </svg>
-                                        <span class="text-[8px] text-white">{{ __('studio.download') }}</span>
-                                    </a>
+                            {{-- Hover indicator --}}
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
+                                    <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     @endforeach
                 </div>
             </div>
@@ -792,6 +831,76 @@
         </div>
     @endif
 
+    {{-- Result Lightbox Modal --}}
+    @if($showLightbox && $lightboxImage)
+        <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+             wire:click.self="closeLightbox">
+            <div class="relative max-w-[90vw] sm:max-w-md bg-background rounded-2xl overflow-hidden shadow-2xl">
+                {{-- Close Button --}}
+                <button wire:click="closeLightbox"
+                        class="absolute top-3 right-3 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                {{-- Image --}}
+                <div class="relative">
+                    <img src="{{ $lightboxImage }}"
+                         alt="Try-on result"
+                         class="w-auto h-auto max-h-[60vh] sm:max-h-[65vh] max-w-full mx-auto block">
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="p-3 sm:p-4 bg-background border-t border-border">
+                    <div class="flex items-center justify-center gap-3">
+                        {{-- Save --}}
+                        <button wire:click="closeLightbox" x-on:click="$nextTick(() => $wire.openSaveModal())"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.save') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                            </svg>
+                        </button>
+
+                        {{-- Post --}}
+                        <button wire:click="closeLightbox" x-on:click="$nextTick(() => $wire.openPostModal())"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.post') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </button>
+
+                        {{-- Share --}}
+                        <button wire:click="closeLightbox" x-on:click="$nextTick(() => $wire.openShareModal())"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.share') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                            </svg>
+                        </button>
+
+                        {{-- Download --}}
+                        <a href="{{ $lightboxImage }}" download
+                           class="p-3 rounded-full bg-primary hover:bg-primary/90 transition-colors"
+                           title="{{ __('studio.download') }}">
+                            <svg class="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </a>
+                    </div>
+
+                    {{-- Dismiss Button --}}
+                    <button wire:click="dismissLightboxResult"
+                            class="w-full mt-3 py-2.5 border border-border text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-colors text-sm font-medium">
+                        {{ __('studio.dismiss') }} & Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Corner Toast Notification --}}
     @if($showResultReady)
         <div x-data="{ show: true }"
@@ -823,6 +932,146 @@
         </div>
     @endif
 
+    {{-- User Queue Panel (Slideover) --}}
+    @if($showQueuePanel)
+        <div class="fixed inset-0 z-40">
+            {{-- Backdrop --}}
+            <div class="absolute inset-0 bg-black/50" wire:click="$set('showQueuePanel', false)"></div>
+
+            {{-- Panel --}}
+            <div class="absolute top-16 bottom-0 right-0 w-full max-w-sm bg-background shadow-2xl flex flex-col border-l border-border">
+
+                {{-- Header --}}
+                <div class="p-4 bg-secondary border-b border-border">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-bold text-foreground">{{ __('studio.my_queue') }}</h3>
+                        <button wire:click="$set('showQueuePanel', false)" class="p-2 hover:bg-background rounded-lg transition-colors">
+                            <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {{-- Progress Bar --}}
+                    <div class="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                        <span>{{ count($queueItems) }} of 5 slots</span>
+                        <span class="text-primary font-medium">~{{ count($queueItems) * 20 }}s</span>
+                    </div>
+                    <div class="h-2 bg-background rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full transition-all" style="width: {{ (count($queueItems) / 5) * 100 }}%"></div>
+                    </div>
+                </div>
+
+                {{-- Queue Items --}}
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                    @forelse($queueItems as $index => $item)
+                        <div class="bg-secondary rounded-xl p-3 border border-border">
+                            <div class="flex items-center gap-3">
+                                {{-- Number Badge --}}
+                                <div class="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                    {{ $index + 1 }}
+                                </div>
+
+                                {{-- Images --}}
+                                <div class="flex gap-2 flex-1 min-w-0">
+                                    <div class="w-12 h-16 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                                        <img src="{{ $item['body_image_url'] }}" alt="Body" class="w-full h-full object-cover">
+                                    </div>
+                                    @foreach(array_slice($item['garment_urls'] ?? [], 0, 2) as $gUrl)
+                                        <div class="w-12 h-16 rounded-lg overflow-hidden border border-border flex-shrink-0">
+                                            <img src="{{ $gUrl }}" alt="Garment" class="w-full h-full object-cover">
+                                        </div>
+                                    @endforeach
+                                    @if(count($item['garment_urls'] ?? []) > 2)
+                                        <div class="w-12 h-16 rounded-lg bg-muted border border-border flex items-center justify-center text-xs text-muted-foreground flex-shrink-0">
+                                            +{{ count($item['garment_urls']) - 2 }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                {{-- Actions --}}
+                                <div class="flex gap-1 flex-shrink-0">
+                                    <button wire:click="editQueueItem({{ $item['id'] }})"
+                                            class="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                            title="{{ __('studio.edit') }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                        </svg>
+                                    </button>
+                                    <button wire:click="removeFromQueue({{ $item['id'] }})"
+                                            class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                            title="{{ __('studio.remove') }}">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-secondary flex items-center justify-center">
+                                <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                            </div>
+                            <p class="text-foreground font-medium">{{ __('studio.queue_empty') }}</p>
+                            <p class="text-muted-foreground text-sm mt-1">{{ __('studio.queue_empty_hint') }}</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Footer --}}
+                @if(count($queueItems) > 0)
+                    <div class="p-4 bg-secondary border-t border-border">
+                        <button wire:click="runQueue"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-75 cursor-wait"
+                                wire:target="runQueue"
+                                class="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                            <span wire:loading.remove wire:target="runQueue" class="flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Generate All {{ count($queueItems) }} Outfits
+                            </span>
+                            <span wire:loading wire:target="runQueue" class="flex items-center gap-2">
+                                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </span>
+                        </button>
+                        <div class="flex items-center justify-between mt-3">
+                            <span class="text-xs text-muted-foreground">Credits already deducted</span>
+                            <button wire:click="clearQueue"
+                                    wire:loading.attr="disabled"
+                                    wire:target="clearQueue"
+                                    class="text-xs text-destructive hover:underline font-medium">
+                                <span wire:loading.remove wire:target="clearQueue">{{ __('studio.clear_queue') }}</span>
+                                <span wire:loading wire:target="clearQueue">Clearing...</span>
+                            </button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    {{-- Floating Queue Button --}}
+    @auth
+        @if(count($queueItems) > 0 && !$showQueuePanel)
+            <button wire:click="$set('showQueuePanel', true)"
+                    class="fixed bottom-6 right-6 z-40 px-5 py-3 bg-primary text-white rounded-full shadow-lg flex items-center gap-2 hover:bg-primary/90 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <span class="font-semibold">{{ count($queueItems) }} in Queue</span>
+            </button>
+        @endif
+    @endauth
+
     {{-- Get Credits Modal --}}
     @if($showCreditModal)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showCreditModal', false)">
@@ -844,40 +1093,47 @@
                     <p class="text-sm text-muted-foreground">{{ __('studio.get_credits_subtitle') }}</p>
                 </div>
 
-                {{-- Credit Packs --}}
+                {{-- Credit Packs (synced from admin pricing) --}}
                 <div class="p-6 space-y-3">
-                    @php $packs = config('credits.packs'); @endphp
-
                     {{-- Quick Pack Options - Show 2 best options --}}
                     <div class="grid grid-cols-2 gap-3">
+                        @if(isset($creditPacks['medium']))
                         {{-- Medium Pack (Popular) --}}
                         <form action="{{ route('checkout.credits') }}" method="POST">
                             @csrf
                             <input type="hidden" name="pack" value="medium">
                             <button type="submit" class="w-full p-4 bg-primary/5 border-2 border-primary rounded-xl hover:bg-primary/10 transition-all group cursor-pointer text-left">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-2xl font-bold text-foreground">50</span>
+                                    <span class="text-2xl font-bold text-foreground">{{ $creditPacks['medium']['credits'] ?? 50 }}</span>
+                                    @if($creditPacks['medium']['popular'] ?? false)
                                     <span class="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full uppercase">{{ __('pricing.popular') }}</span>
+                                    @endif
                                 </div>
                                 <div class="text-xs text-muted-foreground mb-2">{{ __('pricing.credits') }}</div>
-                                <div class="text-lg font-bold text-primary">${{ number_format($packs['medium']['price'] / 100, 2) }}</div>
-                                <div class="text-[10px] text-muted-foreground">{{ $packs['medium']['per_credit'] }}</div>
+                                <div class="text-lg font-bold text-primary">${{ number_format(($creditPacks['medium']['price'] ?? 999) / 100, 2) }}</div>
+                                <div class="text-[10px] text-muted-foreground">{{ $creditPacks['medium']['per_credit'] ?? '$0.20/credit' }}</div>
                             </button>
                         </form>
+                        @endif
 
+                        @if(isset($creditPacks['large']))
                         {{-- Large Pack --}}
                         <form action="{{ route('checkout.credits') }}" method="POST">
                             @csrf
                             <input type="hidden" name="pack" value="large">
                             <button type="submit" class="w-full p-4 bg-secondary border-2 border-border rounded-xl hover:border-primary/50 transition-all group cursor-pointer text-left">
                                 <div class="flex items-center justify-between mb-2">
-                                    <span class="text-2xl font-bold text-foreground">100</span>
+                                    <span class="text-2xl font-bold text-foreground">{{ $creditPacks['large']['credits'] ?? 100 }}</span>
+                                    @if($creditPacks['large']['best_value'] ?? false)
+                                    <span class="px-2 py-0.5 bg-green-500 text-white text-[10px] font-semibold rounded-full uppercase">{{ __('pricing.best_value') }}</span>
+                                    @endif
                                 </div>
                                 <div class="text-xs text-muted-foreground mb-2">{{ __('pricing.credits') }}</div>
-                                <div class="text-lg font-bold text-foreground">${{ number_format($packs['large']['price'] / 100, 2) }}</div>
-                                <div class="text-[10px] text-muted-foreground">{{ $packs['large']['per_credit'] }}</div>
+                                <div class="text-lg font-bold text-foreground">${{ number_format(($creditPacks['large']['price'] ?? 1499) / 100, 2) }}</div>
+                                <div class="text-[10px] text-muted-foreground">{{ $creditPacks['large']['per_credit'] ?? '$0.15/credit' }}</div>
                             </button>
                         </form>
+                        @endif
                     </div>
 
                     {{-- Subscription Promo --}}

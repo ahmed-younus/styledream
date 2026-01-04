@@ -160,7 +160,28 @@ class PricingService
      */
     public static function clearCache(): void
     {
+        // Clear PricingService cache
         Cache::forget('pricing_plans');
         Cache::forget('pricing_credit_packs');
+
+        // Also clear Setting cache to ensure fresh data
+        Cache::forget('setting_subscription_plans');
+        Cache::forget('setting_credit_packs');
+
+        // Clear any other potential caches
+        Cache::forget('pricing:plans:usd');
+        Cache::forget('pricing:plans:gbp');
+        Cache::forget('pricing:plans:eur');
+        Cache::forget('pricing:packs:usd');
+        Cache::forget('pricing:packs:gbp');
+        Cache::forget('pricing:packs:eur');
+    }
+
+    /**
+     * Force clear ALL cache (use sparingly)
+     */
+    public static function flushAllCache(): void
+    {
+        Cache::flush();
     }
 }

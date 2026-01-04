@@ -1,14 +1,14 @@
 <div>
     {{-- Tabs --}}
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav class="flex gap-4">
-            <button wire:click="$set('activeTab', 'api')" class="pb-3 px-1 {{ $activeTab === 'api' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors">
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <nav class="flex gap-2 sm:gap-4 overflow-x-auto pb-px">
+            <button wire:click="$set('activeTab', 'api')" class="pb-3 px-2 sm:px-1 whitespace-nowrap {{ $activeTab === 'api' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors text-sm sm:text-base">
                 API Keys
             </button>
-            <button wire:click="$set('activeTab', 'smtp')" class="pb-3 px-1 {{ $activeTab === 'smtp' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors">
+            <button wire:click="$set('activeTab', 'smtp')" class="pb-3 px-2 sm:px-1 whitespace-nowrap {{ $activeTab === 'smtp' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors text-sm sm:text-base">
                 SMTP / Email
             </button>
-            <button wire:click="$set('activeTab', 'general')" class="pb-3 px-1 {{ $activeTab === 'general' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors">
+            <button wire:click="$set('activeTab', 'general')" class="pb-3 px-2 sm:px-1 whitespace-nowrap {{ $activeTab === 'general' ? 'border-b-2 border-purple-600 text-purple-600' : 'text-gray-500 hover:text-gray-700' }} font-medium transition-colors text-sm sm:text-base">
                 General
             </button>
         </nav>
@@ -16,7 +16,7 @@
 
     {{-- API Settings --}}
     @if($activeTab === 'api')
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">API Configuration</h3>
 
             <div class="space-y-6">
@@ -55,7 +55,7 @@
 
     {{-- SMTP Settings --}}
     @if($activeTab === 'smtp')
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">SMTP Configuration</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -95,7 +95,7 @@
 
     {{-- General Settings --}}
     @if($activeTab === 'general')
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">General Settings</h3>
 
             <div class="space-y-6">

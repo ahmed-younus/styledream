@@ -8,7 +8,10 @@
 
         {{-- Flash Message --}}
         @if (session()->has('message'))
-            <div class="mb-6 p-4 bg-green-100 text-green-800 rounded-lg">
+            <div class="mb-6 p-4 bg-primary/10 text-primary border border-primary/20 rounded-lg flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
                 {{ session('message') }}
             </div>
         @endif
@@ -17,33 +20,23 @@
         @if($tryOns->count() > 0)
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 @foreach($tryOns as $tryOn)
-                    <div class="bg-card rounded-xl overflow-hidden shadow-sm border border-border">
-                        {{-- Image --}}
-                        <div class="aspect-[3/4] relative">
-                            <img src="{{ $tryOn->result_image_url }}" alt="Try-on result" class="w-full h-full object-cover">
-                            <div class="absolute top-2 left-2 px-2 py-1 bg-black/60 rounded-full">
-                                <span class="text-[10px] text-white font-medium">{{ $tryOn->created_at->format('M d') }}</span>
+                    <button wire:click="openLightbox({{ $tryOn->id }})"
+                            class="aspect-[3/4] rounded-xl overflow-hidden shadow-sm border border-border relative group cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                        <img src="{{ $tryOn->result_image_url }}" alt="Try-on result" class="w-full h-full object-cover">
+                        {{-- Date Badge --}}
+                        <div class="absolute top-2 left-2 px-2 py-1 bg-black/60 rounded-full">
+                            <span class="text-[10px] text-white font-medium">{{ $tryOn->created_at->format('M d') }}</span>
+                        </div>
+                        {{-- Hover Indicator --}}
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
+                                <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
                             </div>
                         </div>
-                        {{-- Actions --}}
-                        <div class="p-2 bg-secondary flex justify-center gap-1">
-                            <button wire:click="openSaveModal({{ $tryOn->id }})" class="p-2 hover:bg-background rounded-lg cursor-pointer" title="Save">
-                                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
-                            </button>
-                            <button wire:click="openPostModal({{ $tryOn->id }})" class="p-2 hover:bg-background rounded-lg cursor-pointer" title="Post">
-                                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                            </button>
-                            <button wire:click="openShareModal({{ $tryOn->id }})" class="p-2 hover:bg-background rounded-lg cursor-pointer" title="Share">
-                                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                            </button>
-                            <a href="{{ $tryOn->result_image_url }}" download class="p-2 hover:bg-background rounded-lg cursor-pointer" title="Download">
-                                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </a>
-                            <button wire:click="confirmDelete({{ $tryOn->id }})" class="p-2 hover:bg-red-100 rounded-lg cursor-pointer" title="Delete">
-                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </div>
-                    </div>
+                    </button>
                 @endforeach
             </div>
 
@@ -184,6 +177,79 @@
                     <button wire:click="deleteTryOn" class="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                         {{ __('history.delete') }}
                     </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Lightbox Modal --}}
+    @if($showLightbox && $lightboxImage)
+        <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+             wire:click.self="closeLightbox">
+            <div class="relative max-w-[90vw] sm:max-w-md bg-background rounded-2xl overflow-hidden shadow-2xl">
+                {{-- Close Button --}}
+                <button wire:click="closeLightbox"
+                        class="absolute top-3 right-3 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                {{-- Image --}}
+                <div class="relative">
+                    <img src="{{ $lightboxImage }}"
+                         alt="Try-on result"
+                         class="w-auto h-auto max-h-[60vh] sm:max-h-[65vh] max-w-full mx-auto block">
+                </div>
+
+                {{-- Actions --}}
+                <div class="p-3 sm:p-4 bg-background border-t border-border">
+                    <div class="flex items-center justify-center gap-3">
+                        {{-- Save --}}
+                        <button wire:click="openSaveModal({{ $lightboxTryOnId }})"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.save') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                            </svg>
+                        </button>
+
+                        {{-- Post --}}
+                        <button wire:click="openPostModal({{ $lightboxTryOnId }})"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.post') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                        </button>
+
+                        {{-- Share --}}
+                        <button wire:click="openShareModal({{ $lightboxTryOnId }})"
+                                class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                                title="{{ __('studio.share') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                            </svg>
+                        </button>
+
+                        {{-- Download --}}
+                        <a href="{{ $lightboxImage }}" download
+                           class="p-3 rounded-full bg-secondary hover:bg-secondary/80 transition-colors"
+                           title="{{ __('studio.download') }}">
+                            <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </a>
+
+                        {{-- Delete --}}
+                        <button wire:click="confirmDelete({{ $lightboxTryOnId }})"
+                                class="p-3 rounded-full bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                title="{{ __('history.delete') }}">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

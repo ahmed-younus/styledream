@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Setting;
 use App\Services\CurrencyService;
 use App\Services\PricingService;
+use App\Services\StripeService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -160,23 +161,29 @@ class Pricing extends Component
             $rules['planKey'] = 'required|string|max:30|alpha_dash';
         }
 
-        // Require Stripe Price IDs if any price > 0
-        $hasPrice = $this->planPrices['usd'] > 0 || $this->planPrices['gbp'] > 0 || $this->planPrices['eur'] > 0;
-        if ($hasPrice) {
-            if ($this->planPrices['usd'] > 0) {
-                $rules['planStripePriceIds.usd'] = 'required|string|max:100';
-            }
-            if ($this->planPrices['gbp'] > 0) {
-                $rules['planStripePriceIds.gbp'] = 'required|string|max:100';
-            }
-            if ($this->planPrices['eur'] > 0) {
-                $rules['planStripePriceIds.eur'] = 'required|string|max:100';
-            }
-        }
-
         $this->validate($rules);
 
         $key = $this->isNewPlan ? Str::slug($this->planKey, '_') : $this->editingPlanKey;
+        $hasPrice = $this->planPrices['usd'] > 0 || $this->planPrices['gbp'] > 0 || $this->planPrices['eur'] > 0;
+
+        // Auto-sync with Stripe if prices are set
+        $stripePriceIds = $this->planStripePriceIds;
+        if ($hasPrice) {
+            try {
+                $stripePriceIds = StripeService::syncPlanPrices(
+                    $key,
+                    $this->planName,
+                    [
+                        'usd' => (int) $this->planPrices['usd'],
+                        'gbp' => (int) $this->planPrices['gbp'],
+                        'eur' => (int) $this->planPrices['eur'],
+                    ],
+                    $this->planStripePriceIds
+                );
+            } catch (\Exception $e) {
+                session()->flash('warning', 'Failed to sync with Stripe: ' . $e->getMessage());
+            }
+        }
 
         // Filter out empty features
         $features = array_values(array_filter($this->planFeatures, fn($f) => !empty(trim($f))));
@@ -188,11 +195,7 @@ class Pricing extends Component
                 'gbp' => (int) $this->planPrices['gbp'],
                 'eur' => (int) $this->planPrices['eur'],
             ],
-            'stripe_price_ids' => [
-                'usd' => $this->planStripePriceIds['usd'],
-                'gbp' => $this->planStripePriceIds['gbp'],
-                'eur' => $this->planStripePriceIds['eur'],
-            ],
+            'stripe_price_ids' => $stripePriceIds,
             'credits_per_month' => $this->planCredits,
             'description' => $this->planDescription,
             'button_text' => $this->planButtonText ?: ($hasPrice ? "Upgrade to {$this->planName}" : 'Current Plan'),
@@ -201,7 +204,7 @@ class Pricing extends Component
         ];
 
         $this->savePlans();
-        session()->flash('success', $this->isNewPlan ? "Plan '{$this->planName}' created!" : "Plan '{$this->planName}' updated!");
+        session()->flash('success', $this->isNewPlan ? "Plan '{$this->planName}' created & synced with Stripe!" : "Plan '{$this->planName}' updated & synced with Stripe!");
         $this->closePlanModal();
     }
 
@@ -218,9 +221,11 @@ class Pricing extends Component
     protected function savePlans()
     {
         Setting::set('subscription_plans', $this->plans, Setting::GROUP_PRICING, Setting::TYPE_JSON);
-        PricingService::clearCache();
 
-        auth('admin')->user()->logActivity('update', Setting::class, null, 'Updated subscription plans');
+        // Clear ALL cache to ensure pricing page updates immediately
+        PricingService::flushAllCache();
+
+        auth('admin')->user()->logActivity('update', Setting::class, null, null, null, 'Updated subscription plans');
     }
 
     public function closePlanModal()
@@ -332,9 +337,11 @@ class Pricing extends Component
     protected function savePacks()
     {
         Setting::set('credit_packs', $this->creditPacks, Setting::GROUP_PRICING, Setting::TYPE_JSON);
-        PricingService::clearCache();
 
-        auth('admin')->user()->logActivity('update', Setting::class, null, 'Updated credit packs');
+        // Clear ALL cache to ensure pricing page updates immediately
+        PricingService::flushAllCache();
+
+        auth('admin')->user()->logActivity('update', Setting::class, null, null, null, 'Updated credit packs');
     }
 
     public function closePackModal()
@@ -379,15 +386,87 @@ class Pricing extends Component
         Setting::where('key', 'subscription_plans')->delete();
         Setting::where('key', 'credit_packs')->delete();
 
-        Cache::forget('setting_subscription_plans');
-        Cache::forget('setting_credit_packs');
-        PricingService::clearCache();
+        // Clear ALL cache
+        PricingService::flushAllCache();
 
         $this->plans = config('subscriptions.plans', []);
         $this->creditPacks = config('credits.packs', []);
 
-        auth('admin')->user()->logActivity('update', Setting::class, null, 'Reset pricing to defaults');
+        auth('admin')->user()->logActivity('update', Setting::class, null, null, null, 'Reset pricing to defaults');
         session()->flash('success', 'Pricing reset to default values!');
+    }
+
+    /**
+     * Sync all subscription plans with Stripe
+     * Creates/updates Stripe Prices for all plans
+     */
+    public function syncAllWithStripe()
+    {
+        $synced = 0;
+        $errors = [];
+
+        foreach ($this->plans as $key => $plan) {
+            $prices = $plan['prices'] ?? [];
+            $hasPrice = ($prices['usd'] ?? 0) > 0 || ($prices['gbp'] ?? 0) > 0 || ($prices['eur'] ?? 0) > 0;
+
+            if (!$hasPrice) {
+                continue; // Skip free plans
+            }
+
+            try {
+                $newPriceIds = StripeService::syncPlanPrices(
+                    $key,
+                    $plan['name'] ?? $key,
+                    $prices,
+                    $plan['stripe_price_ids'] ?? []
+                );
+
+                $this->plans[$key]['stripe_price_ids'] = $newPriceIds;
+                $synced++;
+            } catch (\Exception $e) {
+                $errors[] = "{$key}: {$e->getMessage()}";
+            }
+        }
+
+        $this->savePlans();
+
+        if (count($errors) > 0) {
+            session()->flash('warning', "Synced {$synced} plans. Errors: " . implode(', ', $errors));
+        } else {
+            session()->flash('success', "Successfully synced {$synced} plans with Stripe!");
+        }
+
+        auth('admin')->user()->logActivity('update', Setting::class, null, null, null, 'Synced all plans with Stripe');
+    }
+
+    /**
+     * Sync a single plan with Stripe
+     */
+    public function syncPlanWithStripe(string $planKey)
+    {
+        if (!isset($this->plans[$planKey])) {
+            session()->flash('error', 'Plan not found');
+            return;
+        }
+
+        $plan = $this->plans[$planKey];
+        $prices = $plan['prices'] ?? [];
+
+        try {
+            $newPriceIds = StripeService::syncPlanPrices(
+                $planKey,
+                $plan['name'] ?? $planKey,
+                $prices,
+                $plan['stripe_price_ids'] ?? []
+            );
+
+            $this->plans[$planKey]['stripe_price_ids'] = $newPriceIds;
+            $this->savePlans();
+
+            session()->flash('success', "Plan '{$plan['name']}' synced with Stripe!");
+        } catch (\Exception $e) {
+            session()->flash('error', 'Stripe sync failed: ' . $e->getMessage());
+        }
     }
 
     public function render()

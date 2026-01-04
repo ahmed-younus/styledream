@@ -123,4 +123,30 @@ return [
     'subscribe_promo' => 'Subscribe for Monthly Credits',
     'subscribe_promo_desc' => 'Get 100+ credits/month from $9.99',
     'maybe_later' => 'Maybe Later',
+
+    // User-Managed Queue
+    'add_to_queue' => 'Add to Queue',
+    'my_queue' => 'My Queue',
+    'queue_empty' => 'Your queue is empty',
+    'queue_empty_hint' => 'Add outfits to batch process them',
+    'queue_full' => 'Queue is full (max 5 outfits)',
+    'run_all' => 'Run All',
+    'clear_queue' => 'Clear Queue',
+    'outfits' => 'outfits',
+    'edit' => 'Edit',
+    'remove' => 'Remove',
+    'select_body_first' => 'Please select a body image first',
+    'added_to_queue' => 'Outfit added to queue! Credit deducted.',
+    'queue_item_removed' => 'Removed from queue. Credit refunded.',
+    'queue_item_updated' => 'Queue item updated!',
+    'queue_cleared' => 'Queue cleared. Credits refunded.',
+    'queue_started' => 'Processing all outfits in queue!',
+    'update_queue_item' => 'Update',
+    'generate_now' => 'Generate (1 credit)',
+
+    // Processing Results
+    'view_result' => 'View',
+    'dismiss' => 'Dismiss',
+    'failed' => 'Failed',
+    'queued' => 'Queued',
 ];

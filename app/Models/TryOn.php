@@ -10,6 +10,7 @@ class TryOn extends Model
 {
     use HasFactory;
 
+    const STATUS_QUEUED = 'queued';
     const STATUS_PENDING = 'pending';
     const STATUS_PROCESSING = 'processing';
     const STATUS_COMPLETED = 'completed';
@@ -21,7 +22,9 @@ class TryOn extends Model
         'garment_image_url',
         'garment_urls',
         'result_image_url',
+        'viewed_at',
         'status',
+        'queue_position',
         'attempts',
         'processing_started_at',
         'error_message',
@@ -35,11 +38,17 @@ class TryOn extends Model
     protected $casts = [
         'garment_urls' => 'array',
         'processing_started_at' => 'datetime',
+        'viewed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function scopeQueued($query)
+    {
+        return $query->where('status', self::STATUS_QUEUED);
     }
 
     public function scopePending($query)
@@ -108,5 +117,13 @@ class TryOn extends Model
 
         // Fallback to single garment URL
         return $this->garment_image_url ? [$this->garment_image_url] : [];
+    }
+
+    /**
+     * Check if this try-on is in user's queue
+     */
+    public function isQueued(): bool
+    {
+        return $this->status === self::STATUS_QUEUED;
     }
 }
