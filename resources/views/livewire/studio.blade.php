@@ -98,10 +98,12 @@
                     <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors overflow-hidden relative bg-background">
                         @if($bodyImagePreview)
                             <img src="{{ $bodyImagePreview }}" alt="Body preview" class="w-full h-full object-cover">
-                            <button type="button" wire:click="removeBodyImage"
-                                    class="absolute top-1 right-1 w-8 h-8 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 z-10 flex items-center justify-center"
-                                    style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <button type="button"
+                                    x-data
+                                    x-on:click.prevent.stop="$wire.removeBodyImage()"
+                                    class="absolute top-2 right-2 w-10 h-10 bg-destructive text-white rounded-full active:bg-destructive/80 z-10 flex items-center justify-center shadow-lg cursor-pointer select-none"
+                                    style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; font-size: 16px;">
+                                <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         @else
                             <label class="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground cursor-pointer p-4">
@@ -255,31 +257,35 @@
                     {{-- Selected Items Preview --}}
                     @if(count($garmentPreviews) > 0 || count($selectedWardrobeItems) > 0)
                         <div class="mt-4">
-                            <div class="flex flex-wrap gap-3 justify-center">
+                            <div class="flex flex-wrap gap-4 justify-center">
                                 {{-- Uploaded garments --}}
                                 @foreach($garmentPreviews as $index => $preview)
-                                    <div class="relative group">
+                                    <div class="relative">
                                         <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
                                             <img src="{{ $preview }}" alt="Garment" class="w-full h-full object-cover">
                                         </div>
-                                        <button type="button" wire:click="removeGarment({{ $index }})"
-                                                class="absolute -top-2 -right-2 w-6 h-6 bg-destructive hover:bg-destructive/90 rounded-full flex items-center justify-center shadow-lg z-10"
-                                                style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
-                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <button type="button"
+                                                x-data
+                                                x-on:click.prevent.stop="$wire.removeGarment({{ $index }})"
+                                                class="absolute -top-3 -right-3 w-8 h-8 bg-destructive active:bg-destructive/80 rounded-full flex items-center justify-center shadow-lg z-10 cursor-pointer select-none"
+                                                style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; font-size: 16px;">
+                                            <svg class="w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
                                     </div>
                                 @endforeach
 
                                 {{-- Wardrobe items --}}
                                 @foreach($selectedItems as $item)
-                                    <div class="relative group">
+                                    <div class="relative">
                                         <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
                                             <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover">
                                         </div>
-                                        <button type="button" wire:click="removeWardrobeItem({{ $item->id }})"
-                                                class="absolute -top-2 -right-2 w-6 h-6 bg-destructive hover:bg-destructive/90 rounded-full flex items-center justify-center shadow-lg z-10"
-                                                style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
-                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <button type="button"
+                                                x-data
+                                                x-on:click.prevent.stop="$wire.removeWardrobeItem({{ $item->id }})"
+                                                class="absolute -top-3 -right-3 w-8 h-8 bg-destructive active:bg-destructive/80 rounded-full flex items-center justify-center shadow-lg z-10 cursor-pointer select-none"
+                                                style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none; font-size: 16px;">
+                                            <svg class="w-4 h-4 text-white pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
                                     </div>
                                 @endforeach
