@@ -633,7 +633,7 @@ class Studio extends Component
     }
 
     /**
-     * Process all queued items - Step 1: Close UI and prepare.
+     * Process all queued items - dispatches jobs directly.
      */
     public function runQueue(): void
     {
@@ -646,29 +646,28 @@ class Studio extends Component
             return;
         }
 
-        // Update all items to pending status
+        // IMMEDIATELY close sidebar and clear local queue
+        $this->showQueuePanel = false;
+        $this->queueItems = [];
+
+        // Process each item directly (sync mode will run immediately)
         foreach ($queuedItems as $tryOn) {
             $tryOn->update([
                 'status' => TryOn::STATUS_PENDING,
                 'queue_position' => null,
             ]);
+
+            // Dispatch job - with sync driver this runs immediately
+            ProcessTryOn::dispatch($tryOn);
         }
 
-        // IMMEDIATELY close sidebar and clear local queue
-        $this->showQueuePanel = false;
-        $this->queueItems = [];
-
-        // Load processing results to show loaders
+        // Refresh results after processing
         $this->loadProcessingResults();
         $this->loadPendingJobs();
-
-        // Dispatch browser event to trigger job processing after UI updates
-        $this->dispatch('process-queue-jobs');
     }
 
     /**
-     * Process all queued items - Step 2: Actually dispatch jobs.
-     * Called from Alpine after UI has updated.
+     * Process all queued items - legacy method for backwards compatibility.
      */
     public function processQueueJobs(): void
     {
