@@ -98,7 +98,9 @@
                     <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors overflow-hidden relative bg-background">
                         @if($bodyImagePreview)
                             <img src="{{ $bodyImagePreview }}" alt="Body preview" class="w-full h-full object-cover">
-                            <button type="button" wire:click="removeBodyImage" class="absolute top-2 right-2 p-1.5 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 z-10">
+                            <button type="button" wire:click="removeBodyImage"
+                                    class="absolute top-1 right-1 w-8 h-8 bg-destructive text-destructive-foreground rounded-full hover:bg-destructive/90 z-10 flex items-center justify-center"
+                                    style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         @else
@@ -125,11 +127,14 @@
                         @endif
 
                         {{-- Loading overlay --}}
-                        <div wire:loading wire:target="bodyImage" class="absolute inset-0 bg-background/90 flex items-center justify-center">
-                            <svg class="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
+                        <div wire:loading wire:target="bodyImage" class="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-2xl z-20">
+                            <div class="text-center">
+                                <svg class="w-10 h-10 text-primary animate-spin mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <p class="text-sm font-medium text-foreground">{{ __('studio.uploading_photo') }}</p>
+                            </div>
                         </div>
                     </div>
 
@@ -193,7 +198,7 @@
                     </h3>
 
                     {{-- Upload Multiple --}}
-                    <label class="block cursor-pointer mb-3">
+                    <label class="block cursor-pointer mb-3 relative">
                         <div class="border-2 border-dashed border-border hover:border-primary transition-colors rounded-xl p-4 text-center">
                             <svg class="w-8 h-8 mx-auto mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -202,6 +207,16 @@
                             <span class="block text-xs text-muted-foreground mt-1">{{ __('studio.select_multiple') }}</span>
                         </div>
                         <input type="file" wire:model="garmentImages" accept="image/*" multiple class="hidden">
+                        {{-- Garment Upload Loading Overlay --}}
+                        <div wire:loading wire:target="garmentImages" class="absolute inset-0 bg-background/95 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
+                            <div class="text-center">
+                                <svg class="w-8 h-8 text-primary animate-spin mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <p class="text-xs font-medium text-foreground">{{ __('studio.uploading_clothing') }}</p>
+                            </div>
+                        </div>
                     </label>
 
                     {{-- URL Paste for Garments --}}
@@ -239,31 +254,41 @@
 
                     {{-- Selected Items Preview --}}
                     @if(count($garmentPreviews) > 0 || count($selectedWardrobeItems) > 0)
-                        <div class="mt-4 grid grid-cols-3 gap-3">
-                            {{-- Uploaded garments --}}
-                            @foreach($garmentPreviews as $index => $preview)
-                                <div class="relative aspect-square rounded-lg border border-border">
-                                    <img src="{{ $preview }}" alt="Garment" class="w-full h-full object-cover rounded-lg">
-                                    <button type="button" wire:click="removeGarment({{ $index }})" style="position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;">
-                                        <svg style="width: 12px; height: 12px; color: white;" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
-                                </div>
-                            @endforeach
+                        <div class="mt-4">
+                            <div class="flex flex-wrap gap-3 justify-center">
+                                {{-- Uploaded garments --}}
+                                @foreach($garmentPreviews as $index => $preview)
+                                    <div class="relative group">
+                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
+                                            <img src="{{ $preview }}" alt="Garment" class="w-full h-full object-cover">
+                                        </div>
+                                        <button type="button" wire:click="removeGarment({{ $index }})"
+                                                class="absolute -top-2 -right-2 w-6 h-6 bg-destructive hover:bg-destructive/90 rounded-full flex items-center justify-center shadow-lg z-10"
+                                                style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                @endforeach
 
-                            {{-- Wardrobe items --}}
-                            @foreach($selectedItems as $item)
-                                <div class="relative aspect-square rounded-lg border border-border">
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover rounded-lg">
-                                    <button type="button" wire:click="removeWardrobeItem({{ $item->id }})" style="position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;">
-                                        <svg style="width: 12px; height: 12px; color: white;" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
-                                </div>
-                            @endforeach
+                                {{-- Wardrobe items --}}
+                                @foreach($selectedItems as $item)
+                                    <div class="relative group">
+                                        <div class="w-20 h-24 rounded-xl border border-border overflow-hidden bg-secondary shadow-sm">
+                                            <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover">
+                                        </div>
+                                        <button type="button" wire:click="removeWardrobeItem({{ $item->id }})"
+                                                class="absolute -top-2 -right-2 w-6 h-6 bg-destructive hover:bg-destructive/90 rounded-full flex items-center justify-center shadow-lg z-10"
+                                                style="touch-action: manipulation; -webkit-tap-highlight-color: transparent;">
+                                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <p class="mt-4 text-xs text-muted-foreground text-center">
+                                {{ __('studio.all_combined') }}
+                            </p>
                         </div>
-
-                        <p class="mt-3 text-xs text-muted-foreground text-center">
-                            {{ __('studio.all_combined') }}
-                        </p>
                     @endif
 
                     {{-- Loading overlay --}}
@@ -302,7 +327,7 @@
                     <div class="flex gap-3">
                         {{-- Generate Now Button --}}
                         <button
-                            wire:click="generate"
+                            x-on:click="$dispatch('start-timer', { duration: 30 }); $wire.generate()"
                             wire:loading.attr="disabled"
                             wire:target="generate"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
@@ -319,6 +344,7 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                 </svg>
+                                {{ __('studio.generating_btn') }}
                             </span>
                         </button>
 
@@ -380,7 +406,61 @@
             </div>
 
             {{-- Right Column: Result --}}
-            <div class="bg-secondary rounded-2xl p-6" wire:poll.5s="pollJobStatus">
+            <div class="bg-secondary rounded-2xl p-6 relative" wire:poll.5s="pollJobStatus">
+                {{-- Generation Loading Overlay with Dynamic Timer --}}
+                <div wire:loading wire:target="generate, runQueue"
+                     class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30"
+                     x-data="{ seconds: 30, totalSeconds: 30, interval: null }"
+                     x-init="interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)"
+                     @start-timer.window="seconds = $event.detail.duration; totalSeconds = $event.detail.duration; clearInterval(interval); interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)">
+                    <div class="text-center p-6">
+                        {{-- Circular Progress with Timer --}}
+                        <div class="relative w-24 h-24 mx-auto mb-5">
+                            {{-- Background circle --}}
+                            <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor"
+                                        class="text-border" stroke-width="8"/>
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor"
+                                        class="text-primary transition-all duration-1000"
+                                        stroke-width="8"
+                                        stroke-linecap="round"
+                                        stroke-dasharray="283"
+                                        :stroke-dashoffset="seconds > 0 ? 283 - (283 * (totalSeconds - seconds) / totalSeconds) : 0"
+                                        :class="seconds <= 0 ? 'animate-pulse' : ''"/>
+                            </svg>
+                            {{-- Timer/Status in center --}}
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span x-show="seconds > 0" class="text-2xl font-bold text-primary" x-text="seconds + 's'"></span>
+                                <svg x-show="seconds <= 0" x-cloak class="w-8 h-8 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {{-- Dynamic text based on time --}}
+                        <div x-show="seconds > 10">
+                            <h4 class="text-lg font-semibold text-foreground mb-1">{{ __('studio.generating_outfit') }}</h4>
+                            <p class="text-sm text-muted-foreground" x-text="totalSeconds > 30 ? 'Processing ' + Math.ceil(totalSeconds/30) + ' outfits...' : '{{ __('studio.generation_time_hint') }}'"></p>
+                        </div>
+                        <div x-show="seconds <= 10 && seconds > 0" x-cloak>
+                            <h4 class="text-lg font-semibold text-foreground mb-1">Almost there...</h4>
+                            <p class="text-sm text-muted-foreground">Just a few more seconds</p>
+                        </div>
+                        <div x-show="seconds <= 0" x-cloak>
+                            <h4 class="text-lg font-semibold text-foreground mb-1">Finishing up...</h4>
+                            <p class="text-sm text-muted-foreground">Your outfit is almost ready</p>
+                        </div>
+
+                        {{-- Animated dots --}}
+                        <div class="flex justify-center gap-1.5 mt-5">
+                            <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                            <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                            <div class="w-2 h-2 bg-primary rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-foreground flex items-center gap-2">
                         <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">3</span>
@@ -934,12 +1014,22 @@
 
     {{-- User Queue Panel (Slideover) --}}
     @if($showQueuePanel)
-        <div class="fixed inset-0 z-40">
+        <div class="fixed inset-0 z-40"
+             x-data="{ visible: true }"
+             x-show="visible"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @close-queue-panel.window="visible = false; setTimeout(() => $wire.set('showQueuePanel', false), 300)">
             {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-black/50" wire:click="$set('showQueuePanel', false)"></div>
+            <div class="absolute inset-0 bg-black/50" wire:click="$set('showQueuePanel', false)" x-on:click="visible = false"></div>
 
             {{-- Panel --}}
-            <div class="absolute top-16 bottom-0 right-0 w-full max-w-sm bg-background shadow-2xl flex flex-col border-l border-border">
+            <div class="absolute top-16 bottom-0 right-0 w-full max-w-sm bg-background shadow-2xl flex flex-col border-l border-border"
+                 x-show="visible"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="translate-x-full">
 
                 {{-- Header --}}
                 <div class="p-4 bg-secondary border-b border-border">
@@ -1023,7 +1113,7 @@
                 {{-- Footer --}}
                 @if(count($queueItems) > 0)
                     <div class="p-4 bg-secondary border-t border-border">
-                        <button wire:click="runQueue"
+                        <button x-on:click="$dispatch('close-queue-panel'); $dispatch('start-timer', { duration: {{ count($queueItems) * 30 }} }); $wire.runQueue()"
                                 wire:loading.attr="disabled"
                                 wire:loading.class="opacity-75 cursor-wait"
                                 wire:target="runQueue"
@@ -1040,7 +1130,7 @@
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Processing...
+                                {{ __('studio.generating_btn') }}
                             </span>
                         </button>
                         <div class="flex items-center justify-between mt-3">

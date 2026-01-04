@@ -149,4 +149,14 @@ return [
     'dismiss' => 'Dismiss',
     'failed' => 'Failed',
     'queued' => 'Queued',
+
+    // Upload Loading
+    'uploading_photo' => 'Uploading photo...',
+    'uploading_clothing' => 'Uploading...',
+
+    // Generation Loading with Timer
+    'generating_outfit' => 'Creating your look...',
+    'generation_time_hint' => 'This usually takes about 30 seconds',
+    'generating_btn' => 'Generating...',
+    'please_wait' => 'Please wait',
 ];
