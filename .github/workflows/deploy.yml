@@ -34,10 +34,11 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
+            export PATH=/opt/alt/php82/usr/bin:$PATH
             cd /home/u361381946/domains/audioseals.com/public_html/style
             git pull origin main
             php -v
-            composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
+            composer install --no-dev --optimize-autoloader --no-interaction
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
