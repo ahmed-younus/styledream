@@ -34,11 +34,11 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            cd ~/domains/style.audioseals.com/public_html
+            cd /home/u361381946/domains/audioseals.com/public_html/style
             git pull origin main
-            composer install --no-dev --optimize-autoloader --no-interaction
-            php artisan migrate --force
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan optimize
+            /usr/bin/php8.3 /usr/bin/composer install --no-dev --optimize-autoloader --no-interaction
+            /usr/bin/php8.3 artisan migrate --force
+            /usr/bin/php8.3 artisan config:cache
+            /usr/bin/php8.3 artisan route:cache
+            /usr/bin/php8.3 artisan view:cache
+            /usr/bin/php8.3 artisan optimize
