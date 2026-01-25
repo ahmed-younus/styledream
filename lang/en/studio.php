@@ -171,8 +171,17 @@ return [
 
     // Product Scraper
     'product_detected' => 'Product detected',
-    'could_not_extract_image' => 'Could not extract product image. Right-click the product image and copy image URL instead.',
+    'could_not_extract_image' => 'This site uses JavaScript to load images. Please right-click the product image → "Copy Image Address" and paste that URL instead.',
     'fetching_product' => 'Fetching product...',
     'supported_sites' => 'Paste product page URL or direct image link',
     'cancel' => 'Cancel',
+
+    // Image Gallery Picker
+    'select_image' => 'Select Product Image',
+    'select_image_hint' => 'Click on the image you want to use for try-on',
+    'source' => 'Source',
+    'no_images_found' => 'No product images found',
+    'try_different_url' => 'Try pasting a different URL or copy the image URL directly',
+    'images_found' => 'images found',
+    'loading_images' => 'Loading images...',
 ];

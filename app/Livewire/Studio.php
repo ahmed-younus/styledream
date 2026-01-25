@@ -11,7 +11,6 @@ use App\Models\Avatar;
 use App\Jobs\ProcessTryOn;
 use App\Services\CreditService;
 use App\Services\PricingService;
-use App\Services\ProductScraperService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +61,7 @@ class Studio extends Component
     // Category selector for garments
     public array $garmentCategories = [];
 
-    // Product scraper preview
+    // Product scraper preview (legacy - kept for backwards compatibility)
     public ?array $scrapedProduct = null;
 
     // Saved body images for quick reuse
@@ -335,25 +334,8 @@ class Studio extends Component
         $this->error = '';
 
         $url = $this->garmentImageUrl;
-        $scraperService = app(ProductScraperService::class);
 
-        // Check if it's a product page or direct image
-        if ($scraperService->isProductUrl($url)) {
-            // Try to scrape product page
-            $result = $scraperService->scrapeProduct($url);
-
-            if ($result['success'] && !empty($result['image'])) {
-                $this->scrapedProduct = $result;
-                // Don't add yet - wait for user confirmation
-                return;
-            }
-
-            // Scraping failed, try as direct URL
-            $this->error = __('studio.could_not_extract_image');
-            return;
-        }
-
-        // Direct image URL - add immediately
+        // Try to add as direct image URL
         if (!$this->addDirectImageUrl($url, 'auto')) {
             // Error already set in addDirectImageUrl
             return;
