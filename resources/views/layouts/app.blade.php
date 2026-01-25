@@ -248,7 +248,7 @@
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-background/20 text-center text-sm text-background/50">
-                &copy; {{ date('Y') }} StyleDream. {{ __('home.footer_copyright') }} | v1.1
+                &copy; {{ date('Y') }} StyleDream. {{ __('home.footer_copyright') }}
             </div>
         </div>
     </footer>
