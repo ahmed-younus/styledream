@@ -30,7 +30,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen bg-background font-sans antialiased">
+<body class="min-h-screen bg-background font-sans antialiased overflow-x-hidden">
     <!-- Navigation -->
     <nav class="fixed top-0 left-0 right-0 z-[60] px-4 md:px-6 py-3 md:py-4 bg-background/95 backdrop-blur-sm border-b border-border">
         <div class="max-w-7xl mx-auto flex items-center justify-between">

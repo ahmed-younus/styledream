@@ -1,6 +1,6 @@
 <div x-data="tryOnDemo()" x-init="init()">
     {{-- Hero Section --}}
-    <section class="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16 bg-background">
+    <section class="relative min-h-[90vh] flex items-center overflow-x-hidden pt-20 pb-16 bg-background">
         {{-- Background --}}
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
@@ -45,27 +45,27 @@
                     </div>
 
                     {{-- Stats --}}
-                    <div class="mt-10 sm:mt-12 flex items-center gap-6 sm:gap-8 justify-center lg:justify-start">
+                    <div class="mt-10 sm:mt-12 flex items-center gap-4 sm:gap-8 justify-center lg:justify-start">
                         <div class="text-center lg:text-left">
-                            <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">30s</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.tryon_time') }}</div>
+                            <div class="text-xl sm:text-3xl font-bold text-foreground mb-1">30s</div>
+                            <div class="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.tryon_time') }}</div>
                         </div>
-                        <div class="w-px h-10 bg-border"></div>
+                        <div class="w-px h-8 sm:h-10 bg-border"></div>
                         <div class="text-center lg:text-left">
-                            <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">1000+</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.brands') }}</div>
+                            <div class="text-xl sm:text-3xl font-bold text-foreground mb-1">1000+</div>
+                            <div class="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.brands') }}</div>
                         </div>
-                        <div class="w-px h-10 bg-border"></div>
+                        <div class="w-px h-8 sm:h-10 bg-border"></div>
                         <div class="text-center lg:text-left">
-                            <div class="text-2xl sm:text-3xl font-bold text-foreground mb-1">Free</div>
-                            <div class="text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.to_start') }}</div>
+                            <div class="text-xl sm:text-3xl font-bold text-foreground mb-1">Free</div>
+                            <div class="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{{ __('home.to_start') }}</div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Right: Try-On Demo --}}
-                <div class="relative order-1 lg:order-2 flex justify-center px-4 lg:px-0">
-                    <div class="relative bg-card border border-border rounded-2xl shadow-xl w-full pb-4" style="max-width: 320px;">
+                <div class="relative order-1 lg:order-2 flex justify-center px-0 lg:px-0">
+                    <div class="relative bg-card border border-border rounded-2xl shadow-xl w-full pb-4" style="max-width: min(320px, calc(100vw - 32px));">
                         {{-- Demo indicator header --}}
                         <div class="flex items-center justify-between px-4 pt-4 pb-2">
                             <div class="flex items-center gap-2">

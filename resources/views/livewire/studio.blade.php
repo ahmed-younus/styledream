@@ -1,8 +1,8 @@
-<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background"
+<div class="min-h-screen pt-20 md:pt-24 pb-12 px-4 bg-background overflow-x-hidden"
      @if(count($pendingJobs) > 0 || count($processingResults) > 0) wire:poll.3s="pollJobStatus" @endif
      x-data
      @process-queue-jobs.window="setTimeout(() => $wire.processQueueJobs(), 100)">
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-6xl mx-auto w-full">
         {{-- Header --}}
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-foreground mb-2">{{ __('studio.title') }}</h1>
@@ -26,13 +26,13 @@
         @endif
 
         {{-- Main Content --}}
-        <div class="grid lg:grid-cols-3 gap-6">
+        <div class="grid lg:grid-cols-3 gap-6 overflow-hidden">
             {{-- Left Column: Body Image --}}
-            <div class="space-y-6">
+            <div class="space-y-6 overflow-hidden">
                 {{-- Body Image Upload --}}
-                <div class="bg-secondary rounded-2xl p-6 overflow-hidden">
+                <div class="bg-secondary rounded-2xl p-4 sm:p-6 overflow-hidden">
                     <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">1</span>
+                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">1</span>
                         {{ __('studio.step_photo') }}
                     </h3>
 
@@ -177,10 +177,10 @@
                             <div class="flex gap-2">
                                 <input type="url" wire:model="bodyImageUrl"
                                        placeholder="https://example.com/image.jpg"
-                                       class="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                       class="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                                 <button wire:click="addBodyFromUrl"
                                         wire:loading.attr="disabled"
-                                        class="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                                        class="px-3 sm:px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 flex-shrink-0">
                                     <span wire:loading.remove wire:target="addBodyFromUrl">{{ __('studio.add') }}</span>
                                     <svg wire:loading wire:target="addBodyFromUrl" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -217,12 +217,14 @@
             </div>
 
             {{-- Middle Column: Clothing Items --}}
-            <div class="space-y-6">
-                <div class="bg-secondary rounded-2xl p-6">
-                    <h3 class="font-semibold text-foreground mb-4 flex items-center gap-2">
-                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">2</span>
-                        {{ __('studio.step_clothing') }}
-                        <span class="ml-auto text-sm text-muted-foreground">{{ count($garmentPreviews) + count($selectedWardrobeItems) }} {{ __('studio.selected') }}</span>
+            <div class="space-y-6 overflow-hidden">
+                <div class="bg-secondary rounded-2xl p-4 sm:p-6 overflow-hidden">
+                    <h3 class="font-semibold text-foreground mb-4 flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2">
+                            <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">2</span>
+                            {{ __('studio.step_clothing') }}
+                        </span>
+                        <span class="text-sm text-muted-foreground whitespace-nowrap">{{ count($garmentPreviews) + count($selectedWardrobeItems) }} {{ __('studio.selected') }}</span>
                     </h3>
 
                     {{-- Upload Multiple --}}
@@ -285,10 +287,10 @@
                         <div class="flex gap-2">
                             <input type="url" wire:model="garmentImageUrl"
                                    placeholder="https://example.com/clothing.jpg"
-                                   class="flex-1 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                   class="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
                             <button wire:click="addGarmentFromUrl"
                                     wire:loading.attr="disabled"
-                                    class="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                                    class="px-3 sm:px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 flex-shrink-0">
                                 <span wire:loading.remove wire:target="addGarmentFromUrl">{{ __('studio.add') }}</span>
                                 <svg wire:loading wire:target="addGarmentFromUrl" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -560,7 +562,7 @@
             </div>
 
             {{-- Right Column: Result --}}
-            <div class="bg-secondary rounded-2xl p-6 relative">
+            <div class="bg-secondary rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                 {{-- Generation Loading Overlay with Dynamic Timer --}}
                 <div wire:loading wire:target="generate, runQueue"
                      class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30"
@@ -617,7 +619,7 @@
 
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="font-semibold text-foreground flex items-center gap-2">
-                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm">3</span>
+                        <span class="w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm flex-shrink-0">3</span>
                         {{ __('studio.step_result') }}
                     </h3>
                     @if(count($processingResults) > 0)
