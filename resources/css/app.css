@@ -54,3 +54,15 @@
 }
 
 html { scroll-behavior: smooth; }
+
+/* Global cursor pointer for interactive elements */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+select,
+label[for],
+.cursor-pointer {
+    cursor: pointer;
+}
