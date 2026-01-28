@@ -160,6 +160,17 @@ return [
     'generating_btn' => 'Generating...',
     'please_wait' => 'Please wait',
 
+    // Image Cropping
+    'crop_image' => 'Crop Image',
+    'aspect_ratio' => 'Ratio',
+    'free' => 'Free',
+    'zoom_in' => 'Zoom in',
+    'zoom_out' => 'Zoom out',
+    'rotate_left' => 'Rotate left',
+    'rotate_right' => 'Rotate right',
+    'reset' => 'Reset',
+    'apply_crop' => 'Apply Crop',
+
     // Category Selector
     'select_category' => 'Select type',
     'category_auto' => 'Auto',

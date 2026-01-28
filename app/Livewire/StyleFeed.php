@@ -42,6 +42,10 @@ class StyleFeed extends Component
     public $showShareModal = false;
     public $sharePostId = null;
 
+    // Comments state
+    public $showCommentsModal = false;
+    public $commentsPostId = null;
+
     protected $listeners = ['refreshFeed' => '$refresh'];
 
     public function mount()
@@ -200,6 +204,18 @@ class StyleFeed extends Component
     {
         $this->showShareModal = false;
         $this->sharePostId = null;
+    }
+
+    public function openCommentsModal($postId)
+    {
+        $this->commentsPostId = $postId;
+        $this->showCommentsModal = true;
+    }
+
+    public function closeCommentsModal()
+    {
+        $this->showCommentsModal = false;
+        $this->commentsPostId = null;
     }
 
     public function trackShare($platform)

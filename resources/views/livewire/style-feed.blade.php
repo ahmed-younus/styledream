@@ -143,7 +143,7 @@
 
                                 {{-- Comments Preview --}}
                                 @if($post->comments_count > 0)
-                                    <button class="text-sm text-muted-foreground mb-2">
+                                    <button wire:click="openCommentsModal({{ $post->id }})" class="text-sm text-muted-foreground mb-2 hover:text-foreground transition-colors cursor-pointer">
                                         {{ __('feed.view_all_comments', ['count' => $post->comments_count]) }}
                                     </button>
                                 @endif
@@ -216,8 +216,8 @@
 
     {{-- Rating Modal --}}
     @if($showRatingModal)
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" wire:click.self="closeRatingModal">
-            <div class="bg-card rounded-2xl p-6 max-w-sm w-full">
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closeRatingModal">
+            <div class="rounded-2xl p-6 max-w-sm w-full shadow-2xl" style="background: white;">
                 <h3 class="text-lg font-semibold text-foreground mb-4">{{ __('feed.rate_outfit') }}</h3>
                 <div class="flex justify-center gap-2 mb-6">
                     @for($i = 1; $i <= 5; $i++)
@@ -243,8 +243,8 @@
 
     {{-- Report Modal --}}
     @if($showReportModal)
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" wire:click.self="closeReportModal">
-            <div class="bg-card rounded-2xl p-6 max-w-sm w-full">
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closeReportModal">
+            <div class="rounded-2xl p-6 max-w-sm w-full shadow-2xl" style="background: white;">
                 <h3 class="text-lg font-semibold text-foreground mb-4">{{ __('feed.report_title') }}</h3>
                 <p class="text-sm text-muted-foreground mb-4">{{ __('feed.report_reason') }}</p>
                 <div class="space-y-2 mb-4">
@@ -275,8 +275,8 @@
 
     {{-- Share Modal --}}
     @if($showShareModal)
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" wire:click.self="closeShareModal">
-            <div class="bg-card rounded-2xl p-6 max-w-sm w-full">
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closeShareModal">
+            <div class="rounded-2xl p-6 max-w-sm w-full shadow-2xl" style="background: white;">
                 <h3 class="text-lg font-semibold text-foreground mb-4">{{ __('feed.share_to') }}</h3>
                 <div class="grid grid-cols-3 gap-4">
                     {{-- Instagram --}}
@@ -330,6 +330,73 @@
                 <button wire:click="closeShareModal" class="w-full mt-4 py-2 border border-border rounded-lg text-foreground hover:bg-secondary">
                     {{ __('app.close') }}
                 </button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Comments Modal --}}
+    @if($showCommentsModal && $commentsPostId)
+        @php
+            $commentsPost = \App\Models\OutfitPost::with(['comments.user'])->find($commentsPostId);
+        @endphp
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closeCommentsModal">
+            <div class="rounded-2xl max-w-md w-full max-h-[80vh] flex flex-col shadow-2xl" style="background: white;">
+                {{-- Header --}}
+                <div class="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
+                    <h3 class="text-lg font-semibold text-foreground">{{ __('feed.comments') }}</h3>
+                    <button wire:click="closeCommentsModal" class="p-1 hover:bg-secondary rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Comments List --}}
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    @if($commentsPost && $commentsPost->comments->count() > 0)
+                        @foreach($commentsPost->comments()->with('user')->latest()->get() as $comment)
+                            <div class="flex gap-3">
+                                @if($comment->user->avatar_url)
+                                    <img src="{{ $comment->user->avatar_url }}" alt="{{ $comment->user->display_name }}" class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+                                @else
+                                    <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                        <span class="text-primary-foreground font-semibold text-xs">{{ strtoupper(substr($comment->user->display_name, 0, 1)) }}</span>
+                                    </div>
+                                @endif
+                                <div class="flex-1">
+                                    <p class="text-sm">
+                                        <span class="font-semibold text-foreground">{{ $comment->user->display_name }}</span>
+                                        <span class="text-foreground">{{ $comment->content }}</span>
+                                    </p>
+                                    <p class="text-xs text-muted-foreground mt-1">{{ $comment->created_at->diffForHumans() }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-center text-muted-foreground py-8">{{ __('feed.no_comments') }}</p>
+                    @endif
+                </div>
+
+                {{-- Add Comment --}}
+                @auth
+                    <div class="p-4 border-t border-border flex-shrink-0">
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="text"
+                                wire:model.defer="commentInputs.{{ $commentsPostId }}"
+                                wire:keydown.enter="addComment({{ $commentsPostId }})"
+                                placeholder="{{ __('feed.add_comment') }}"
+                                class="flex-1 px-3 py-2 bg-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                            <button
+                                wire:click="addComment({{ $commentsPostId }})"
+                                class="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90"
+                            >
+                                {{ __('app.submit') }}
+                            </button>
+                        </div>
+                    </div>
+                @endauth
             </div>
         </div>
     @endif

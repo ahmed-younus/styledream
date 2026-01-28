@@ -1,4 +1,4 @@
-<div x-data="heroCarousel()" x-init="init()">
+<div x-data="tryOnDemo()" x-init="init()">
     {{-- Hero Section --}}
     <section class="relative min-h-[90vh] flex items-center overflow-hidden pt-20 pb-16 bg-background">
         {{-- Background --}}
@@ -63,87 +63,88 @@
                     </div>
                 </div>
 
-                {{-- Right: Try-On Demo Carousel --}}
-                <div class="relative order-1 lg:order-2">
-                    <div class="relative aspect-[3/4] max-w-[280px] sm:max-w-[320px] mx-auto">
-                        {{-- Main preview container --}}
-                        <div class="relative h-full bg-secondary overflow-hidden shadow-2xl rounded-2xl border border-border">
-                            {{-- Shimmer effect during transition --}}
-                            <div x-show="isTransitioning"
-                                 x-transition:enter="transition ease-out duration-300"
-                                 x-transition:enter-start="opacity-0"
-                                 x-transition:enter-end="opacity-100"
-                                 class="absolute inset-0 z-20 bg-gradient-to-r from-transparent via-background/30 to-transparent animate-shimmer"></div>
+                {{-- Right: Try-On Demo --}}
+                <div class="relative order-1 lg:order-2 flex justify-center px-4 lg:px-0">
+                    <div class="relative bg-card border border-border rounded-2xl shadow-xl w-full pb-4" style="max-width: 320px;">
+                        {{-- Demo indicator header --}}
+                        <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                <span class="text-[10px] tracking-wider uppercase text-muted-foreground font-medium">Live Demo</span>
+                            </div>
+                            <span class="text-sm font-semibold text-foreground">Step <span x-text="currentStep + 1"></span>/3</span>
+                        </div>
 
-                            {{-- Model images --}}
-                            <template x-for="(model, modelIndex) in models" :key="model.modelId">
-                                <template x-for="(outfit, outfitIndex) in model.outfits" :key="outfit.id">
-                                    <div x-show="currentModelIndex === modelIndex && currentOutfitIndex === outfitIndex"
-                                         x-transition:enter="transition ease-out duration-400"
-                                         x-transition:enter-start="opacity-0"
-                                         x-transition:enter-end="opacity-100"
-                                         class="absolute inset-0">
-                                        <img :src="outfit.image"
-                                             :alt="model.modelName + ' - ' + outfit.label"
-                                             loading="eager"
-                                             class="w-full h-full object-cover object-top">
+                        {{-- Step progress bar --}}
+                        <div class="flex gap-1.5 px-4 pb-3">
+                            <div class="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                                <div class="h-full bg-foreground transition-all duration-500" :class="currentStep >= 0 ? 'w-full' : 'w-0'"></div>
+                            </div>
+                            <div class="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                                <div class="h-full bg-foreground transition-all duration-500" :class="currentStep >= 1 ? 'w-full' : 'w-0'"></div>
+                            </div>
+                            <div class="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                                <div class="h-full bg-foreground transition-all duration-500" :class="currentStep >= 2 ? 'w-full' : 'w-0'"></div>
+                            </div>
+                        </div>
 
-                                        {{-- Clothing change indicator --}}
-                                        <div x-show="!outfit.isBase" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                                            <div class="w-24 h-24 border-2 border-foreground/20 rounded-full animate-ping-slow"></div>
-                                        </div>
+                        {{-- Main Demo Image --}}
+                        <div class="flex justify-center px-6">
+                            <div class="relative bg-secondary rounded-xl overflow-hidden" style="width: 160px; height: 280px;">
+                                <img :src="displayImage" alt="Try-on demo" class="w-full h-full object-cover transition-all duration-300"
+                                     :class="imageTransitioning ? 'opacity-0 scale-105' : 'opacity-100 scale-100'">
+
+                                {{-- Generating Overlay --}}
+                                <div x-show="isGenerating"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0"
+                                     x-transition:enter-end="opacity-100"
+                                     x-transition:leave="transition ease-in duration-200"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0"
+                                     class="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                                    <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full mb-2 animate-spin"></div>
+                                    <span class="text-xs font-medium">Generating...</span>
+                                </div>
+
+                                {{-- Outfit Preview overlay --}}
+                                <div x-show="currentStage === 'select' && !isGenerating"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 translate-x-2 scale-90"
+                                     x-transition:enter-end="opacity-100 translate-x-0 scale-100"
+                                     x-transition:leave="transition ease-in duration-200"
+                                     x-transition:leave-start="opacity-100"
+                                     x-transition:leave-end="opacity-0 -translate-x-2 scale-90"
+                                     class="absolute top-2 right-2 bg-background rounded-lg shadow-lg border-2 border-primary" style="width: 50px; height: 50px; overflow: hidden;">
+                                    <img :src="currentSequence.outfit" alt="Selected outfit" class="w-full h-full object-cover">
+                                    <div class="absolute bottom-0 left-0 right-0 bg-foreground py-0.5 text-center">
+                                        <span class="text-[6px] text-background font-medium">Selected</span>
                                     </div>
-                                </template>
-                            </template>
-
-                            {{-- Try-on indicator (top left) --}}
-                            <div class="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-background/95 backdrop-blur-sm rounded-full shadow-sm">
-                                <div :class="isTransitioning ? 'animate-pulse bg-yellow-500' : 'bg-green-500'"
-                                     class="w-2 h-2 rounded-full transition-colors"></div>
-                                <span class="text-[9px] font-medium text-muted-foreground" x-text="isTransitioning ? '{{ __('home.trying_on') }}' : '{{ __('home.live_demo') }}'"></span>
-                            </div>
-
-                            {{-- Style label (top right) --}}
-                            <div class="absolute top-3 right-3 px-3 py-1.5 bg-foreground/90 text-background rounded-full">
-                                <span class="text-[10px] font-medium tracking-wide" x-text="currentOutfit.label"></span>
-                            </div>
-
-                            {{-- Product tags (left side) --}}
-                            <div class="absolute left-3 bottom-20 space-y-1">
-                                <template x-for="(item, i) in currentOutfit.items" :key="i">
-                                    <div class="flex items-center gap-2 px-2 py-1 bg-background/95 backdrop-blur-sm rounded shadow-sm text-left max-w-[140px]"
-                                         x-transition:enter="transition ease-out duration-200"
-                                         x-transition:enter-start="opacity-0 -translate-x-4"
-                                         x-transition:enter-end="opacity-100 translate-x-0">
-                                        <div class="min-w-0">
-                                            <p class="text-[8px] text-muted-foreground truncate" x-text="item.retailer"></p>
-                                            <p class="text-[9px] text-foreground font-medium truncate" x-text="item.name"></p>
-                                            <p class="text-[9px] font-bold text-primary" x-text="item.price"></p>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            {{-- Total price bar --}}
-                            <div x-show="!currentOutfit.isBase"
-                                 x-transition:enter="transition ease-out duration-300 delay-200"
-                                 x-transition:enter-start="opacity-0 translate-y-4"
-                                 x-transition:enter-end="opacity-100 translate-y-0"
-                                 class="absolute bottom-10 left-3 right-3 px-3 py-2 bg-foreground/90 text-background rounded-lg">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-[9px] tracking-wide uppercase">{{ __('home.outfit_total') }}</span>
-                                    <span class="text-sm font-bold" x-text="'$' + totalPrice"></span>
                                 </div>
                             </div>
+                        </div>
 
-                            {{-- Progress dots --}}
-                            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                                <template x-for="(_, i) in totalSlides" :key="i">
-                                    <button @click="goToSlide(i)"
-                                            :class="i === currentSlideIndex ? 'bg-background w-4' : 'bg-background/40 w-1.5 hover:bg-background/60'"
-                                            class="h-1.5 rounded-full transition-all"></button>
-                                </template>
-                            </div>
+                        {{-- Step Indicators at bottom --}}
+                        <div class="flex items-center justify-center gap-1.5 px-4 py-4 mt-2">
+                            <template x-for="(label, index) in stepLabels" :key="label">
+                                <div :class="{
+                                        'bg-foreground text-background': index === currentStep,
+                                        'bg-secondary text-foreground': index < currentStep,
+                                        'bg-secondary/50 text-muted-foreground': index > currentStep
+                                     }"
+                                     class="flex items-center gap-1 px-2 py-1.5 rounded-full transition-all duration-300">
+                                    <svg x-show="index === 0" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    <svg x-show="index === 1" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                    </svg>
+                                    <svg x-show="index === 2" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                    </svg>
+                                    <span class="text-[9px] font-medium whitespace-nowrap" x-text="label"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -258,211 +259,116 @@
         </div>
     </section>
 
-    {{-- Alpine.js Carousel Script --}}
+    {{-- Alpine.js Try-On Demo Script (matches TryOnDemo.tsx exactly) --}}
     <script>
-    const TRANSLATIONS = {
-        yourPhoto: '{{ __('home.your_photo') }}',
-        yourWardrobe: '{{ __('home.your_wardrobe') }}'
-    };
-
-    function heroCarousel() {
+    function tryOnDemo() {
         return {
-            currentModelIndex: 0,
-            currentOutfitIndex: 0,
-            isTransitioning: false,
-            intervalId: null,
+            currentDemo: 0,
+            currentStep: 0,
+            isGenerating: false,
+            imageTransitioning: false,
+            isMounted: true,
 
-            models: [
+            // Demo sequences - exactly like Hero.tsx (using outfit2 where available)
+            demos: [
                 {
-                    modelId: 'black-male',
-                    modelName: 'Marcus',
-                    outfits: [
-                        {
-                            id: 0,
-                            image: '/images/demo/demo-black-male-base.jpg',
-                            label: TRANSLATIONS.yourPhoto,
-                            items: [
-                                { name: 'White T-Shirt', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'Light Jeans', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'White Sneakers', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                            ],
-                            isBase: true,
-                        },
-                        {
-                            id: 1,
-                            image: '/images/demo/demo-black-male-outfit1.jpg',
-                            label: 'Streetwear',
-                            items: [
-                                { name: 'Leather Jacket', retailer: 'AllSaints', price: '£349' },
-                                { name: 'Grey Hoodie', retailer: 'Nike', price: '£65' },
-                                { name: 'Dark Jeans', retailer: "Levi's", price: '£95' },
-                            ],
-                            isBase: false,
-                        },
-                        {
-                            id: 2,
-                            image: '/images/demo/demo-black-male-outfit2.jpg',
-                            label: 'Smart Casual',
-                            items: [
-                                { name: 'Navy Suit', retailer: 'Reiss', price: '£495' },
-                                { name: 'White Shirt', retailer: 'Charles Tyrwhitt', price: '£70' },
-                                { name: 'Leather Loafers', retailer: 'Grenson', price: '£195' },
-                            ],
-                            isBase: false,
-                        },
-                    ],
+                    base: '/images/demo/demo-asian-female-base.jpg',
+                    outfit: '/images/demo/demo-asian-female-outfit2.jpg',
+                    result: '/images/demo/demo-asian-female-result.jpg',
                 },
                 {
-                    modelId: 'asian-female',
-                    modelName: 'Yuki',
-                    outfits: [
-                        {
-                            id: 0,
-                            image: '/images/demo/demo-asian-female-base.jpg',
-                            label: TRANSLATIONS.yourPhoto,
-                            items: [
-                                { name: 'White Blouse', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'Beige Trousers', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'Nude Heels', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                            ],
-                            isBase: true,
-                        },
-                        {
-                            id: 1,
-                            image: '/images/demo/demo-asian-female-outfit1.jpg',
-                            label: 'Evening Glam',
-                            items: [
-                                { name: 'Black Midi Dress', retailer: 'Reformation', price: '£248' },
-                                { name: 'Gold Necklace', retailer: 'Monica Vinader', price: '£125' },
-                                { name: 'Strappy Heels', retailer: 'Stuart Weitzman', price: '£350' },
-                            ],
-                            isBase: false,
-                        },
-                        {
-                            id: 2,
-                            image: '/images/demo/demo-asian-female-outfit2.jpg',
-                            label: 'Cozy Chic',
-                            items: [
-                                { name: 'Cable Knit Sweater', retailer: '& Other Stories', price: '£89' },
-                                { name: 'High-Rise Jeans', retailer: 'Agolde', price: '£245' },
-                                { name: 'White Trainers', retailer: 'Veja', price: '£120' },
-                            ],
-                            isBase: false,
-                        },
-                    ],
+                    base: '/images/demo/demo-black-male-base.jpg',
+                    outfit: '/images/demo/demo-black-male-outfit2.jpg',
+                    result: '/images/demo/demo-black-male-result.jpg',
                 },
                 {
-                    modelId: 'latina-female',
-                    modelName: 'Sofia',
-                    outfits: [
-                        {
-                            id: 0,
-                            image: '/images/demo/demo-latina-female-base.jpg',
-                            label: TRANSLATIONS.yourPhoto,
-                            items: [
-                                { name: 'Grey Crop Top', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'Black Leggings', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                                { name: 'Training Shoes', retailer: TRANSLATIONS.yourWardrobe, price: '—' },
-                            ],
-                            isBase: true,
-                        },
-                        {
-                            id: 1,
-                            image: '/images/demo/demo-latina-female-outfit1.jpg',
-                            label: 'Active Vibes',
-                            items: [
-                                { name: 'Geometric Sports Bra', retailer: 'Nike', price: '£45' },
-                                { name: 'Matching Leggings', retailer: 'Nike', price: '£65' },
-                                { name: 'Air Max 90', retailer: 'Nike', price: '£130' },
-                            ],
-                            isBase: false,
-                        },
-                        {
-                            id: 2,
-                            image: '/images/demo/demo-latina-female-outfit2.jpg',
-                            label: 'Boss Babe',
-                            items: [
-                                { name: 'Cropped Blazer', retailer: 'Zara', price: '£69' },
-                                { name: 'Silk Blouse', retailer: 'Massimo Dutti', price: '£89' },
-                                { name: 'Tailored Trousers', retailer: 'Arket', price: '£95' },
-                            ],
-                            isBase: false,
-                        },
-                    ],
+                    base: '/images/demo/demo-indian-female-base.jpg',
+                    outfit: '/images/demo/demo-indian-female-outfit1.jpg',
+                    result: '/images/demo/demo-indian-female-result.jpg',
+                },
+                {
+                    base: '/images/demo/demo-white-male-base.jpg',
+                    outfit: '/images/demo/demo-white-male-outfit1.jpg',
+                    result: '/images/demo/demo-white-male-result.jpg',
+                },
+                {
+                    base: '/images/demo/demo-black-female-base.jpg',
+                    outfit: '/images/demo/demo-black-female-outfit1.jpg',
+                    result: '/images/demo/demo-black-female-result.jpg',
+                },
+                {
+                    base: '/images/demo/demo-latina-female-base.jpg',
+                    outfit: '/images/demo/demo-latina-female-outfit2.jpg',
+                    result: '/images/demo/demo-latina-female-result.jpg',
                 },
             ],
 
-            get currentModel() {
-                return this.models[this.currentModelIndex];
+            stepLabels: ['Upload Photo', 'Select Outfit', 'Try-On Complete!'],
+            stepStages: ['upload', 'select', 'result'],
+
+            get currentSequence() {
+                return this.demos[this.currentDemo];
             },
 
-            get currentOutfit() {
-                return this.currentModel.outfits[this.currentOutfitIndex];
+            get currentStage() {
+                return this.stepStages[this.currentStep];
             },
 
-            get totalSlides() {
-                return this.models.reduce((acc, m) => acc + m.outfits.length, 0);
-            },
-
-            get currentSlideIndex() {
-                return this.models.slice(0, this.currentModelIndex).reduce((acc, m) => acc + m.outfits.length, 0) + this.currentOutfitIndex;
-            },
-
-            get totalPrice() {
-                return this.currentOutfit.items.reduce((sum, item) => {
-                    const price = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
-                    return sum + price;
-                }, 0);
+            get displayImage() {
+                if (this.currentStage === 'upload' || this.currentStage === 'select') {
+                    return this.currentSequence.base;
+                }
+                return this.currentSequence.result;
             },
 
             init() {
-                this.startAutoPlay();
+                this.isMounted = true;
+                this.runSequence();
             },
 
-            startAutoPlay() {
-                this.intervalId = setInterval(() => {
-                    this.nextSlide();
-                }, 3000);
+            async runSequence() {
+                if (!this.isMounted) return;
+
+                // Reset state for new demo
+                this.isGenerating = false;
+                this.currentStep = 0;
+
+                // Step 0: Upload (show for 2.5s)
+                await this.sleep(2500);
+                if (!this.isMounted) return;
+
+                // Step 1: Select outfit (show for 2s)
+                this.currentStep = 1;
+                await this.sleep(2000);
+                if (!this.isMounted) return;
+
+                // Generating animation (show for 1.5s)
+                this.isGenerating = true;
+                await this.sleep(1500);
+                if (!this.isMounted) return;
+
+                // Step 2: Result (show for 3s)
+                this.isGenerating = false;
+                this.imageTransitioning = true;
+                await this.sleep(50);
+                this.currentStep = 2;
+                this.imageTransitioning = false;
+                await this.sleep(3000);
+                if (!this.isMounted) return;
+
+                // Move to next demo
+                this.currentDemo = (this.currentDemo + 1) % this.demos.length;
+
+                // Run next sequence
+                this.runSequence();
             },
 
-            stopAutoPlay() {
-                if (this.intervalId) {
-                    clearInterval(this.intervalId);
-                }
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             },
 
-            nextSlide() {
-                this.isTransitioning = true;
-
-                setTimeout(() => {
-                    const nextOutfitIndex = this.currentOutfitIndex + 1;
-
-                    if (nextOutfitIndex >= this.currentModel.outfits.length) {
-                        this.currentModelIndex = (this.currentModelIndex + 1) % this.models.length;
-                        this.currentOutfitIndex = 0;
-                    } else {
-                        this.currentOutfitIndex = nextOutfitIndex;
-                    }
-
-                    this.isTransitioning = false;
-                }, 400);
-            },
-
-            goToSlide(slideIndex) {
-                this.stopAutoPlay();
-
-                let accumulated = 0;
-                for (let modelIdx = 0; modelIdx < this.models.length; modelIdx++) {
-                    const model = this.models[modelIdx];
-                    if (slideIndex < accumulated + model.outfits.length) {
-                        this.currentModelIndex = modelIdx;
-                        this.currentOutfitIndex = slideIndex - accumulated;
-                        break;
-                    }
-                    accumulated += model.outfits.length;
-                }
-
-                this.startAutoPlay();
+            destroy() {
+                this.isMounted = false;
             }
         };
     }

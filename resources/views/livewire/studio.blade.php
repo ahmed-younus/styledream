@@ -98,6 +98,18 @@
                     <div class="aspect-[3/4] rounded-xl border-2 border-dashed border-border hover:border-primary transition-colors overflow-hidden relative bg-background">
                         @if($bodyImagePreview)
                             <img src="{{ $bodyImagePreview }}" alt="Body preview" class="w-full h-full object-cover">
+                            {{-- Crop button --}}
+                            <button type="button"
+                                    x-on:click.prevent.stop="$dispatch('open-crop-modal', { type: 'body', src: '{{ $bodyImagePreview }}', index: null })"
+                                    class="absolute top-2 left-2 w-10 h-10 bg-primary text-primary-foreground rounded-full active:bg-primary/80 z-10 flex items-center justify-center shadow-lg cursor-pointer select-none"
+                                    style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none;"
+                                    title="{{ __('studio.crop_image') }}">
+                                <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10M7 17V7h10"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4M7 3v4M17 21v-4M21 17h-4"/>
+                                </svg>
+                            </button>
+                            {{-- Remove button --}}
                             <button type="button"
                                     x-data
                                     x-on:click.prevent.stop="$wire.removeBodyImage()"
@@ -379,6 +391,17 @@
                                                 <option value="shoes">{{ __('studio.category_shoes') }}</option>
                                             </select>
                                         </div>
+                                        {{-- Crop button --}}
+                                        <button type="button"
+                                                x-on:click.prevent.stop="$dispatch('open-crop-modal', { type: 'garment', src: '{{ $preview }}', index: {{ $index }} })"
+                                                class="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground active:bg-primary/80 rounded-full flex items-center justify-center shadow-lg z-10 cursor-pointer select-none"
+                                                style="touch-action: manipulation; -webkit-touch-callout: none; -webkit-user-select: none;"
+                                                title="{{ __('studio.crop_image') }}">
+                                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10M7 17V7h10"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h4M7 3v4M17 21v-4M21 17h-4"/>
+                                            </svg>
+                                        </button>
                                         {{-- X button - always visible for interaction --}}
                                         <button type="button"
                                                 x-on:click.prevent.stop="$wire.removeGarment({{ $index }})"
@@ -1385,5 +1408,230 @@
             </div>
         </div>
     @endif
+
+    {{-- Image Crop Modal - teleported to body for proper z-index stacking --}}
+    <div wire:ignore x-data="cropperModal()" @open-crop-modal.window="openModal($event.detail)">
+        <template x-teleport="body">
+            <div x-show="isOpen"
+                 x-cloak
+                 class="fixed inset-0 flex items-center justify-center p-4"
+                 style="z-index: 999999;">
+                {{-- Backdrop --}}
+                <div class="fixed inset-0 bg-black/90" @click="closeModal()"></div>
+
+                {{-- Modal Content --}}
+                <div class="relative bg-background rounded-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden" @click.stop>
+            {{-- Header --}}
+            <div class="p-4 border-b border-border flex items-center justify-between flex-shrink-0">
+                <h3 class="text-lg font-bold text-foreground">{{ __('studio.crop_image') }}</h3>
+                <button @click="closeModal()" class="p-2 hover:bg-secondary rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Crop Area - fixed height container --}}
+            <div class="p-3 bg-secondary/50 flex-shrink-0">
+                <div class="crop-container bg-black/10 rounded-lg">
+                    <img id="cropper-image" :src="imageSrc" style="display: block; max-width: 100%;">
+                </div>
+            </div>
+
+            {{-- Controls --}}
+            <div class="p-3 border-t border-border space-y-3 flex-shrink-0">
+                {{-- Aspect Ratio Buttons --}}
+                <div class="flex items-center justify-center gap-2 flex-wrap">
+                    <span class="text-xs text-muted-foreground mr-1">{{ __('studio.aspect_ratio') }}:</span>
+                    <button @click="setAspectRatio(NaN)"
+                            :class="aspectRatio === null ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/80'"
+                            class="px-2.5 py-1 text-xs font-medium rounded-lg transition-colors">
+                        {{ __('studio.free') }}
+                    </button>
+                    <button @click="setAspectRatio(3/4)"
+                            :class="aspectRatio === 3/4 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/80'"
+                            class="px-2.5 py-1 text-xs font-medium rounded-lg transition-colors">
+                        3:4
+                    </button>
+                    <button @click="setAspectRatio(1)"
+                            :class="aspectRatio === 1 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/80'"
+                            class="px-2.5 py-1 text-xs font-medium rounded-lg transition-colors">
+                        1:1
+                    </button>
+                    <button @click="setAspectRatio(4/3)"
+                            :class="aspectRatio === 4/3 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground hover:bg-secondary/80'"
+                            class="px-2.5 py-1 text-xs font-medium rounded-lg transition-colors">
+                        4:3
+                    </button>
+                </div>
+
+                {{-- Zoom & Rotate Controls --}}
+                <div class="flex items-center justify-center gap-2">
+                    <button @click="zoom(-0.1)" class="p-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors" title="{{ __('studio.zoom_out') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                        </svg>
+                    </button>
+                    <button @click="zoom(0.1)" class="p-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors" title="{{ __('studio.zoom_in') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                        </svg>
+                    </button>
+                    <div class="w-px h-5 bg-border"></div>
+                    <button @click="rotate(-90)" class="p-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors" title="{{ __('studio.rotate_left') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h7a4 4 0 014 4v7M3 10l4-4m-4 4l4 4"/>
+                        </svg>
+                    </button>
+                    <button @click="rotate(90)" class="p-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors" title="{{ __('studio.rotate_right') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-7a4 4 0 00-4 4v7m11-11l-4-4m4 4l-4 4"/>
+                        </svg>
+                    </button>
+                    <div class="w-px h-5 bg-border"></div>
+                    <button @click="reset()" class="p-1.5 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors" title="{{ __('studio.reset') }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="p-3 border-t border-border flex justify-end gap-3 flex-shrink-0">
+                <button @click="closeModal()" class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors">
+                    {{ __('app.cancel') }}
+                </button>
+                <button @click="applyCrop()" class="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
+                    {{ __('studio.apply_crop') }}
+                </button>
+            </div>
+        </div>
+    </div>
+        </template>
+    </div>
+
+    {{-- Cropper.js Styles --}}
+    <style>
+        .crop-container {
+            height: 300px;
+            max-height: 50vh;
+            width: 100%;
+            overflow: hidden;
+        }
+        @media (min-width: 640px) {
+            .crop-container {
+                height: 350px;
+            }
+        }
+        .crop-container .cropper-container {
+            max-height: 100% !important;
+            max-width: 100% !important;
+        }
+        .crop-container img {
+            max-height: 100%;
+            display: block;
+        }
+    </style>
+
+    {{-- Cropper.js Alpine Component --}}
+    <script>
+        function cropperModal() {
+            return {
+                isOpen: false,
+                cropper: null,
+                imageSrc: '',
+                imageType: '',
+                imageIndex: null,
+                aspectRatio: null,
+
+                openModal(detail) {
+                    this.imageSrc = detail.src;
+                    this.imageType = detail.type;
+                    this.imageIndex = detail.index;
+                    this.isOpen = true;
+                    this.aspectRatio = null;
+
+                    // Use setTimeout to ensure teleported content is rendered
+                    setTimeout(() => {
+                        const image = document.getElementById('cropper-image');
+                        if (!image) return;
+
+                        if (this.cropper) {
+                            this.cropper.destroy();
+                        }
+                        this.cropper = new Cropper(image, {
+                            viewMode: 1,
+                            dragMode: 'move',
+                            aspectRatio: NaN,
+                            autoCropArea: 0.9,
+                            restore: false,
+                            guides: true,
+                            center: true,
+                            highlight: false,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                            background: true,
+                        });
+                    }, 100);
+                },
+
+                closeModal() {
+                    this.isOpen = false;
+                    if (this.cropper) {
+                        this.cropper.destroy();
+                        this.cropper = null;
+                    }
+                },
+
+                setAspectRatio(ratio) {
+                    this.aspectRatio = isNaN(ratio) ? null : ratio;
+                    if (this.cropper) {
+                        this.cropper.setAspectRatio(ratio);
+                    }
+                },
+
+                zoom(amount) {
+                    if (this.cropper) {
+                        this.cropper.zoom(amount);
+                    }
+                },
+
+                rotate(degree) {
+                    if (this.cropper) {
+                        this.cropper.rotate(degree);
+                    }
+                },
+
+                reset() {
+                    if (this.cropper) {
+                        this.cropper.reset();
+                    }
+                },
+
+                applyCrop() {
+                    if (this.cropper) {
+                        const canvas = this.cropper.getCroppedCanvas({
+                            maxWidth: 1200,
+                            maxHeight: 1600,
+                            imageSmoothingEnabled: true,
+                            imageSmoothingQuality: 'high',
+                        });
+
+                        const croppedData = canvas.toDataURL('image/jpeg', 0.9);
+
+                        if (this.imageType === 'body') {
+                            @this.call('setCroppedBodyImage', croppedData);
+                        } else if (this.imageType === 'garment') {
+                            @this.call('setCroppedGarmentImage', this.imageIndex, croppedData);
+                        }
+
+                        this.closeModal();
+                    }
+                }
+            }
+        }
+    </script>
 
 </div>

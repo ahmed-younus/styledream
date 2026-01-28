@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'StyleDream' }} - AI Virtual Try-On</title>
+    <title>{{ $title ?? 'Stylely' }} - AI Virtual Try-On</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -14,6 +18,10 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" defer></script>
 
     <style>
         @keyframes spin {
@@ -27,8 +35,13 @@
     <nav class="fixed top-0 left-0 right-0 z-[60] px-4 md:px-6 py-3 md:py-4 bg-background/95 backdrop-blur-sm border-b border-border">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <!-- Logo -->
-            <a href="{{ route('home') }}" class="font-display text-lg md:text-xl font-bold tracking-tight text-foreground uppercase">
-                StyleDream
+            <a href="{{ route('home') }}" class="flex items-center gap-2">
+                <svg class="w-6 h-6 text-[#C0C0C0]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>
+                </svg>
+                <span class="font-display text-xl font-bold tracking-[0.15em] text-foreground">
+                    Stylely
+                </span>
             </a>
 
             <!-- Desktop Nav -->
@@ -172,18 +185,28 @@
                             <a href="{{ route('wardrobe') }}" class="block py-2 text-foreground font-medium">{{ __('nav.wardrobe') }}</a>
                             <a href="{{ route('my-outfits') }}" class="block py-2 text-foreground font-medium">{{ __('nav.my_outfits') }}</a>
                             <a href="{{ route('profile') }}" class="block py-2 text-foreground font-medium">{{ __('nav.profile') }}</a>
-                            <div class="pt-2 border-t border-border">
-                                <p class="text-xs text-muted-foreground uppercase mb-2">{{ __('profile.language') }}</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="?lang=en" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'en' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">EN</a>
-                                    <a href="?lang=es" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'es' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">ES</a>
-                                    <a href="?lang=fr" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">FR</a>
-                                    <a href="?lang=de" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'de' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">DE</a>
-                                    <a href="?lang=it" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'it' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">IT</a>
-                                    <a href="?lang=pt" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'pt' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">PT</a>
+                            <div class="pt-2 border-t border-border" x-data="{ langOpen: false }">
+                                <button @click="langOpen = !langOpen" class="flex items-center justify-between w-full py-2 text-foreground font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                        </svg>
+                                        <span>{{ __('profile.language') }}</span>
+                                    </div>
+                                    <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="langOpen" x-collapse class="pl-7 space-y-1 pb-2">
+                                    <a href="?lang=en" class="block py-1.5 text-sm {{ app()->getLocale() === 'en' ? 'text-primary font-medium' : 'text-muted-foreground' }}">English</a>
+                                    <a href="?lang=es" class="block py-1.5 text-sm {{ app()->getLocale() === 'es' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Español</a>
+                                    <a href="?lang=fr" class="block py-1.5 text-sm {{ app()->getLocale() === 'fr' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Français</a>
+                                    <a href="?lang=de" class="block py-1.5 text-sm {{ app()->getLocale() === 'de' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Deutsch</a>
+                                    <a href="?lang=it" class="block py-1.5 text-sm {{ app()->getLocale() === 'it' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Italiano</a>
+                                    <a href="?lang=pt" class="block py-1.5 text-sm {{ app()->getLocale() === 'pt' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Português</a>
                                 </div>
                             </div>
-                            <div class="pt-2 border-t border-border mt-2">
+                            <div class="pt-2 border-t border-border">
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" class="text-destructive font-medium">{{ __('app.sign_out') }}</button>
@@ -192,13 +215,27 @@
                         @else
                             <a href="{{ route('feed') }}" class="block py-2 text-foreground font-medium">{{ __('nav.feed') }}</a>
                             <a href="{{ route('brands') }}" class="block py-2 text-foreground font-medium">{{ __('nav.brands') }}</a>
-                            <div class="pt-2 border-t border-border">
-                                <p class="text-xs text-muted-foreground uppercase mb-2">{{ __('profile.language') }}</p>
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="?lang=en" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'en' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">EN</a>
-                                    <a href="?lang=es" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'es' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">ES</a>
-                                    <a href="?lang=fr" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'fr' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">FR</a>
-                                    <a href="?lang=de" class="px-3 py-1 text-xs rounded-full {{ app()->getLocale() === 'de' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-foreground' }}">DE</a>
+                            <a href="{{ route('pricing') }}" class="block py-2 text-foreground font-medium">{{ __('nav.pricing') }}</a>
+                            <div class="pt-2 border-t border-border" x-data="{ langOpen: false }">
+                                <button @click="langOpen = !langOpen" class="flex items-center justify-between w-full py-2 text-foreground font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                        </svg>
+                                        <span>{{ __('profile.language') }}</span>
+                                    </div>
+                                    <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="langOpen" x-collapse class="pl-7 space-y-1 pb-2">
+                                    <a href="?lang=en" class="block py-1.5 text-sm {{ app()->getLocale() === 'en' ? 'text-primary font-medium' : 'text-muted-foreground' }}">English</a>
+                                    <a href="?lang=es" class="block py-1.5 text-sm {{ app()->getLocale() === 'es' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Español</a>
+                                    <a href="?lang=fr" class="block py-1.5 text-sm {{ app()->getLocale() === 'fr' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Français</a>
+                                    <a href="?lang=de" class="block py-1.5 text-sm {{ app()->getLocale() === 'de' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Deutsch</a>
+                                    <a href="?lang=it" class="block py-1.5 text-sm {{ app()->getLocale() === 'it' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Italiano</a>
+                                    <a href="?lang=pt" class="block py-1.5 text-sm {{ app()->getLocale() === 'pt' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Português</a>
+                                    <a href="?lang=nl" class="block py-1.5 text-sm {{ app()->getLocale() === 'nl' ? 'text-primary font-medium' : 'text-muted-foreground' }}">Nederlands</a>
                                 </div>
                             </div>
                             <div class="pt-3 space-y-2">
@@ -222,7 +259,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div class="col-span-2 md:col-span-1">
-                    <h3 class="font-display text-lg font-bold tracking-tight uppercase mb-4">StyleDream</h3>
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-5 h-5 text-[#C0C0C0]" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>
+                        </svg>
+                        <span class="font-display text-lg font-bold tracking-[0.15em]">Stylely</span>
+                    </div>
                     <p class="text-sm text-background/70">{{ __('home.footer_tagline') }}</p>
                 </div>
                 <div>
@@ -248,7 +290,7 @@
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-background/20 text-center text-sm text-background/50">
-                &copy; {{ date('Y') }} StyleDream. {{ __('home.footer_copyright') }}
+                &copy; {{ date('Y') }} Stylely. {{ __('home.footer_copyright') }}
             </div>
         </div>
     </footer>

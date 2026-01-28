@@ -460,6 +460,63 @@ class Studio extends Component
         $this->bodyImageBase64 = null;
     }
 
+    // ============ CROPPING METHODS ============
+
+    /**
+     * Set cropped body image from Cropper.js.
+     */
+    public function setCroppedBodyImage(string $croppedData): void
+    {
+        // croppedData is base64 data URI (data:image/png;base64,...)
+        $this->bodyImagePreview = $croppedData;
+
+        // Extract base64 part for generation
+        if (str_contains($croppedData, ',')) {
+            $this->bodyImageBase64 = explode(',', $croppedData)[1];
+        } else {
+            $this->bodyImageBase64 = $croppedData;
+        }
+
+        // Clear file upload since we now have cropped version
+        $this->bodyImage = null;
+    }
+
+    /**
+     * Set cropped garment image from Cropper.js.
+     */
+    public function setCroppedGarmentImage(int $index, string $croppedData): void
+    {
+        // Update preview
+        if (isset($this->garmentPreviews[$index])) {
+            $this->garmentPreviews[$index] = $croppedData;
+        }
+
+        // Extract base64 part
+        $base64 = $croppedData;
+        if (str_contains($croppedData, ',')) {
+            $base64 = explode(',', $croppedData)[1];
+        }
+
+        // Update base64 array or uploaded garments depending on source
+        // Count uploaded garments to determine if this index is from URL paste
+        $uploadedCount = count($this->uploadedGarments);
+
+        if ($index < $uploadedCount) {
+            // This was a file upload - clear the file and store as base64 instead
+            unset($this->uploadedGarments[$index]);
+            $this->uploadedGarments = array_values($this->uploadedGarments);
+
+            // Insert into base64 array at appropriate position
+            array_splice($this->garmentBase64Array, 0, 0, [$base64]);
+        } else {
+            // This is from URL paste - update the base64 array
+            $base64Index = $index - $uploadedCount;
+            if (isset($this->garmentBase64Array[$base64Index])) {
+                $this->garmentBase64Array[$base64Index] = $base64;
+            }
+        }
+    }
+
     public function generate()
     {
         // Validate body image - either file upload or URL paste
