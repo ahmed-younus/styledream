@@ -115,10 +115,10 @@
                                      x-transition:leave="transition ease-in duration-200"
                                      x-transition:leave-start="opacity-100"
                                      x-transition:leave-end="opacity-0 -translate-x-2 scale-90"
-                                     class="absolute top-2 right-2 bg-background rounded-lg shadow-lg border-2 border-primary" style="width: 50px; height: 50px; overflow: hidden;">
+                                     class="absolute top-2 right-2 bg-background rounded-lg shadow-lg border-2 border-primary" style="width: 65px; height: 65px; overflow: hidden;">
                                     <img :src="currentSequence.outfit" alt="Selected outfit" class="w-full h-full object-cover">
-                                    <div class="absolute bottom-0 left-0 right-0 bg-foreground py-0.5 text-center">
-                                        <span class="text-[6px] text-background font-medium">Selected</span>
+                                    <div class="absolute bottom-0 left-0 right-0 bg-foreground/90 py-0.5 text-center">
+                                        <span style="font-size: 8px;" class="text-background font-medium">Selected</span>
                                     </div>
                                 </div>
                             </div>
