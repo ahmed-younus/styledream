@@ -14,6 +14,8 @@ use App\Livewire\BrandPromo;
 use App\Livewire\TryOnHistory;
 use App\Livewire\Terms;
 use App\Livewire\Privacy;
+use App\Livewire\About;
+use App\Livewire\Contact;
 use App\Livewire\Onboarding;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\PaymentController;
@@ -25,6 +27,8 @@ Route::get('/feed', StyleFeed::class)->name('feed');
 Route::get('/brands', BrandPromo::class)->name('brands');
 Route::get('/terms', Terms::class)->name('terms');
 Route::get('/privacy', Privacy::class)->name('privacy');
+Route::get('/about', About::class)->name('about');
+Route::get('/contact', Contact::class)->name('contact');
 
 // Guest routes
 Route::middleware('guest')->group(function () {

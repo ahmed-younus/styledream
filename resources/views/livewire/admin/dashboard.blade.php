@@ -1,159 +1,219 @@
-<div class="space-y-6">
-    {{-- Stats Grid --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {{-- Total Users --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['total_users']) }}</p>
-                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">+{{ $stats['users_today'] }} today</p>
-                </div>
-            </div>
-        </div>
+<div class="max-w-5xl">
+    {{-- Today Header --}}
+    <div class="mb-8">
+        <h1 class="text-[22px] font-semibold text-[#1a1f36] tracking-tight">Today</h1>
+        <p class="text-sm text-[#697386] mt-0.5">{{ now()->format('F j, Y') }}</p>
+    </div>
 
-        {{-- Try-Ons --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Try-Ons</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['total_tryons']) }}</p>
-                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">+{{ $stats['tryons_today'] }} today</p>
-                </div>
+    {{-- Top Stats Row --}}
+    <div class="flex flex-wrap gap-x-16 gap-y-6 mb-8">
+        <div>
+            <div class="flex items-center gap-1 mb-0.5">
+                <span class="text-sm text-[#697386]">Total Users</span>
+                <svg class="w-3.5 h-3.5 text-[#697386]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
             </div>
+            <p class="text-[28px] font-semibold text-[#1a1f36] tabular-nums tracking-tight">{{ number_format($stats['total_users']) }}</p>
+            <p class="text-[13px] text-[#697386] mt-0.5"><span class="text-[#00a67d] font-medium">+{{ $stats['users_this_month'] }}</span> this month</p>
         </div>
+        <div>
+            <div class="flex items-center gap-1 mb-0.5">
+                <span class="text-sm text-[#697386]">Revenue</span>
+                <svg class="w-3.5 h-3.5 text-[#697386]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </div>
+            <p class="text-[28px] font-semibold text-[#1a1f36] tabular-nums tracking-tight">${{ number_format($stats['revenue_this_month'], 2) }}</p>
+            <p class="text-[13px] text-[#697386] mt-0.5"><span class="text-[#00a67d] font-medium">${{ number_format($stats['revenue_today'], 2) }}</span> today</p>
+        </div>
+    </div>
 
+    {{-- Line Chart --}}
+    <div class="mb-8 bg-white rounded-lg border border-[#e3e8ee] p-5">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-[#1a1f36]">User Growth</h3>
+            <span class="text-xs text-[#697386]">Last 7 days</span>
+        </div>
+    <div class="mb-8 bg-white rounded-lg border border-[#e3e8ee] p-5">
+        <div class="h-32">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#635bff;stop-opacity:0.12"/>
+                        <stop offset="100%" style="stop-color:#635bff;stop-opacity:0"/>
+                    </linearGradient>
+                </defs>
+                @php
+                    $maxUsers = max(array_column($userGrowth, 'count')) ?: 1;
+                    $points = [];
+                    $totalPoints = count($userGrowth);
+                    $width = $totalPoints > 1 ? 100 / ($totalPoints - 1) : 100;
+                    foreach($userGrowth as $i => $day) {
+                        $x = $i * $width;
+                        $y = 100 - (($day['count'] / $maxUsers) * 70 + 15);
+                        $points[] = "$x,$y";
+                    }
+                    $polylinePoints = implode(' ', $points);
+                    $areaPoints = "0,100 " . $polylinePoints . " 100,100";
+                @endphp
+                <polygon points="{{ $areaPoints }}" fill="url(#chartGradient)"/>
+                <polyline points="{{ $polylinePoints }}" fill="none" stroke="#635bff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="flex justify-between pt-2 border-t border-[#e3e8ee]">
+            <span class="text-xs text-[#697386]">{{ $userGrowth[0]['date'] ?? '' }}</span>
+            <span class="text-xs text-[#697386]">{{ $userGrowth[count($userGrowth)-1]['date'] ?? '' }}</span>
+        </div>
+    </div>
+
+    {{-- Balance Row --}}
+    <div class="flex flex-wrap gap-8 mb-8 pb-8 border-b border-[#e3e8ee]">
+        <div>
+            <div class="flex items-center gap-3 mb-0.5">
+                <span class="text-sm font-medium text-[#1a1f36]">Total Try-Ons</span>
+                <a href="{{ route('admin.analytics') }}" class="text-sm text-[#635bff] hover:text-[#5248f0] font-medium">View</a>
+            </div>
+            <p class="text-xl font-semibold text-[#1a1f36] tabular-nums">{{ number_format($stats['total_tryons']) }}</p>
+        </div>
+        <div>
+            <div class="flex items-center gap-3 mb-0.5">
+                <span class="text-sm font-medium text-[#1a1f36]">Credits Used</span>
+                <a href="{{ route('admin.analytics') }}" class="text-sm text-[#635bff] hover:text-[#5248f0] font-medium">View</a>
+            </div>
+            <p class="text-xl font-semibold text-[#1a1f36] tabular-nums">{{ number_format(abs($stats['total_credits_used'])) }}</p>
+        </div>
+    </div>
+
+    {{-- Your Overview --}}
+    <h2 class="text-base font-semibold text-[#1a1f36]">Your overview</h2>
+
+    {{-- Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         {{-- Subscriptions --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                    </svg>
+        <div class="bg-white rounded-lg border border-[#e3e8ee] p-5">
+            <span class="text-sm font-medium text-[#1a1f36]">Subscriptions</span>
+            <div class="h-1.5 bg-[#e3e8ee] rounded-full mt-3 mb-3 overflow-hidden">
+                @php
+                    $total = $stats['active_subscriptions'] ?: 1;
+                    $proPercent = ($stats['pro_subscriptions'] / $total) * 100;
+                    $premiumPercent = ($stats['premium_subscriptions'] / $total) * 100;
+                @endphp
+                <div class="h-full flex">
+                    <div class="bg-[#635bff]" style="width: {{ $proPercent }}%"></div>
+                    <div class="bg-[#00d4ff]" style="width: {{ $premiumPercent }}%"></div>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Subs</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ number_format($stats['active_subscriptions']) }}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{{ $stats['pro_subscriptions'] }} Pro, {{ $stats['premium_subscriptions'] }} Premium</p>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[#635bff]"></span>
+                        <span class="text-[#1a1f36]">Pro</span>
+                    </div>
+                    <span class="font-medium text-[#1a1f36]">{{ $stats['pro_subscriptions'] }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[#00d4ff]"></span>
+                        <span class="text-[#1a1f36]">Premium</span>
+                    </div>
+                    <span class="font-medium text-[#1a1f36]">{{ $stats['premium_subscriptions'] }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[#e3e8ee]"></span>
+                        <span class="text-[#697386]">Free</span>
+                    </div>
+                    <span class="text-[#697386]">{{ $stats['total_users'] - $stats['active_subscriptions'] }}</span>
                 </div>
             </div>
         </div>
 
         {{-- Revenue --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+        <div class="bg-white rounded-lg border border-[#e3e8ee] p-5">
+            <span class="text-sm font-medium text-[#1a1f36]">Revenue</span>
+            <div class="flex items-baseline gap-2 mt-2">
+                <span class="text-2xl font-semibold text-[#1a1f36] tabular-nums">${{ number_format($stats['revenue_this_month'], 2) }}</span>
+                @if($stats['revenue_this_month'] > 0)
+                    <span class="text-sm font-medium text-[#00a67d]">+100%</span>
+                @endif
+            </div>
+            <p class="text-xs text-[#697386] mb-3">This month</p>
+            <div class="h-12">
+                <svg class="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                    @php
+                        $maxRev = max(array_column($revenueChart, 'amount')) ?: 1;
+                        $revPoints = [];
+                        $revTotal = count($revenueChart);
+                        $revWidth = $revTotal > 1 ? 100 / ($revTotal - 1) : 100;
+                        foreach($revenueChart as $i => $day) {
+                            $x = $i * $revWidth;
+                            $y = 40 - (($day['amount'] / $maxRev) * 32 + 4);
+                            $revPoints[] = "$x,$y";
+                        }
+                        $revPolyline = implode(' ', $revPoints);
+                    @endphp
+                    <polyline points="{{ $revPolyline }}" fill="none" stroke="#635bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+
+        {{-- Try-Ons --}}
+        <div class="bg-white rounded-lg border border-[#e3e8ee] p-5">
+            <span class="text-sm font-medium text-[#1a1f36]">Try-Ons</span>
+            <div class="mt-2">
+                <span class="text-2xl font-semibold text-[#1a1f36] tabular-nums">{{ number_format($stats['total_tryons']) }}</span>
+            </div>
+            <p class="text-xs text-[#697386] mb-3">Total generations</p>
+            <div class="h-12">
+                <svg class="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                    @php
+                        $maxU = max(array_column($userGrowth, 'count')) ?: 1;
+                        $uPoints = [];
+                        $uTotal = count($userGrowth);
+                        $uWidth = $uTotal > 1 ? 100 / ($uTotal - 1) : 100;
+                        foreach($userGrowth as $i => $day) {
+                            $x = $i * $uWidth;
+                            $y = 40 - (($day['count'] / $maxU) * 32 + 4);
+                            $uPoints[] = "$x,$y";
+                        }
+                        $uPolyline = implode(' ', $uPoints);
+                    @endphp
+                    <polyline points="{{ $uPolyline }}" fill="none" stroke="#635bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    {{-- Recent Activity --}}
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-semibold text-[#1a1f36]">Recent activity</h2>
+        <a href="{{ route('admin.logs') }}" class="text-sm text-[#635bff] hover:text-[#5248f0] font-medium">View all</a>
+    </div>
+
+    <div class="bg-white rounded-lg border border-[#e3e8ee]">
+        @forelse($recentActivity as $activity)
+            <div class="px-5 py-3.5 flex items-center gap-3 hover:bg-[#f9fafb] transition-colors {{ !$loop->last ? 'border-b border-[#e3e8ee]' : '' }}">
+                <div class="w-8 h-8 rounded-full bg-[#f0f3f7] flex items-center justify-center flex-shrink-0">
+                    <span class="text-xs font-medium text-[#697386]">{{ strtoupper(substr($activity['admin'], 0, 1)) }}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">This Month</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">${{ number_format($stats['revenue_this_month'], 2) }}</p>
-                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">+${{ number_format($stats['revenue_today'], 2) }} today</p>
+                    <p class="text-sm text-[#1a1f36]">
+                        <span class="font-medium">{{ $activity['admin'] }}</span>
+                        <span class="text-[#697386]">{{ $activity['action'] }}</span>
+                    </p>
+                    @if($activity['description'])
+                        <p class="text-xs text-[#697386] truncate">{{ $activity['description'] }}</p>
+                    @endif
                 </div>
+                <span class="text-xs text-[#697386] flex-shrink-0 tabular-nums">{{ $activity['time'] }}</span>
             </div>
-        </div>
-    </div>
-
-    {{-- Charts Row --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {{-- User Growth --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">User Growth (Last 7 Days)</h3>
-            <div class="h-48 flex items-end justify-between gap-2">
-                @php $maxUsers = max(array_column($userGrowth, 'count')) ?: 1; @endphp
-                @foreach($userGrowth as $day)
-                    <div class="flex-1 flex flex-col items-center">
-                        <div class="w-full max-w-[40px] mx-auto bg-purple-500 rounded-t hover:bg-purple-600 transition-colors"
-                             style="height: {{ max(4, ($day['count'] / $maxUsers) * 140) }}px"></div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">{{ $day['date'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        {{-- Revenue Chart --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Revenue (Last 7 Days)</h3>
-            <div class="h-48 flex items-end justify-between gap-2">
-                @php $maxRevenue = max(array_column($revenueChart, 'amount')) ?: 1; @endphp
-                @foreach($revenueChart as $day)
-                    <div class="flex-1 flex flex-col items-center">
-                        <div class="w-full max-w-[40px] mx-auto bg-green-500 rounded-t hover:bg-green-600 transition-colors"
-                             style="height: {{ max(4, ($day['amount'] / $maxRevenue) * 140) }}px"></div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">{{ $day['date'] }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- Bottom Row --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {{-- Quick Stats --}}
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Quick Stats</h3>
-            <div class="space-y-3">
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Users This Month</span>
-                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format($stats['users_this_month']) }}</span>
-                </div>
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Credits Used</span>
-                    <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ number_format(abs($stats['total_credits_used'])) }}</span>
-                </div>
-                <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Pro Subscribers</span>
-                    <span class="text-sm font-semibold text-purple-600 dark:text-purple-400">{{ $stats['pro_subscriptions'] }}</span>
-                </div>
-                <div class="flex items-center justify-between py-2">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Premium Subscribers</span>
-                    <span class="text-sm font-semibold text-purple-600 dark:text-purple-400">{{ $stats['premium_subscriptions'] }}</span>
-                </div>
-            </div>
-        </div>
-
-        {{-- Recent Activity --}}
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Recent Admin Activity</h3>
-                <a href="{{ route('admin.logs') }}" class="text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 font-medium">View All</a>
-            </div>
-
-            @if(count($recentActivity) > 0)
-                <div class="space-y-3">
-                    @foreach($recentActivity as $activity)
-                        <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                            <div class="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                                <span class="text-xs font-semibold text-purple-600 dark:text-purple-400">{{ strtoupper(substr($activity['admin'], 0, 1)) }}</span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-gray-900 dark:text-white">
-                                    <span class="font-medium">{{ $activity['admin'] }}</span>
-                                    <span class="text-gray-500 dark:text-gray-400 ml-1">{{ $activity['action'] }}</span>
-                                </p>
-                                @if($activity['description'])
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $activity['description'] }}</p>
-                                @endif
-                            </div>
-                            <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 whitespace-nowrap">{{ $activity['time'] }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <p class="text-gray-500 dark:text-gray-400 text-center py-8">No recent activity</p>
-            @endif
-        </div>
+        @empty
+            <div class="px-5 py-10 text-center">
+                <svg class="w-10 h-10 text-[#d1d5db] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm text-[#697386]">No recent activity</p></div>
+        @endforelse
     </div>
 </div>

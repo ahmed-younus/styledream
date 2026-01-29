@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\BrandRegistration;
+use App\Models\Setting;
 use App\Mail\BrandRegistrationNotification;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -32,14 +34,32 @@ class BrandPromo extends Component
     #[Rule('nullable|string|max:1000')]
     public $message = '';
 
+    public $turnstileToken = '';
     public $submitted = false;
     public $isSubmitting = false;
+    public $error = '';
 
     public function submit()
     {
         $this->validate();
-
+        $this->error = '';
         $this->isSubmitting = true;
+
+        // Verify Turnstile if configured
+        $secretKey = Setting::get('turnstile_secret_key');
+        if ($secretKey && $this->turnstileToken) {
+            $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                'secret' => $secretKey,
+                'response' => $this->turnstileToken,
+            ]);
+
+            if (!$response->json('success')) {
+                $this->isSubmitting = false;
+                $this->error = 'Captcha verification failed. Please try again.';
+                $this->dispatch('resetBrandsTurnstile');
+                return;
+            }
+        }
 
         $registration = BrandRegistration::create([
             'brand_name' => $this->brandName,
@@ -52,7 +72,7 @@ class BrandPromo extends Component
 
         // Send notification email to admin
         try {
-            $adminEmail = config('mail.admin_email', 'admin@styledream.com');
+            $adminEmail = config('mail.admin_email', 'info@stylely.ai');
             Mail::to($adminEmail)->send(new BrandRegistrationNotification($registration));
         } catch (\Exception $e) {
             // Log error but don't fail the registration
@@ -65,11 +85,14 @@ class BrandPromo extends Component
 
     public function resetForm()
     {
-        $this->reset(['brandName', 'website', 'contactEmail', 'contactName', 'phone', 'message', 'submitted']);
+        $this->reset(['brandName', 'website', 'contactEmail', 'contactName', 'phone', 'message', 'submitted', 'error', 'turnstileToken']);
+        $this->dispatch('resetBrandsTurnstile');
     }
 
     public function render()
     {
-        return view('livewire.brand-promo');
+        return view('livewire.brand-promo', [
+            'turnstileSiteKey' => Setting::get('turnstile_site_key', ''),
+        ]);
     }
 }

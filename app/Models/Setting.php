@@ -145,6 +145,8 @@ class Setting extends Model
             ['key' => 'stripe_public_key', 'value' => '', 'group' => 'api', 'type' => 'password', 'label' => 'Stripe Public Key', 'is_encrypted' => true],
             ['key' => 'stripe_secret_key', 'value' => '', 'group' => 'api', 'type' => 'password', 'label' => 'Stripe Secret Key', 'is_encrypted' => true],
             ['key' => 'stripe_webhook_secret', 'value' => '', 'group' => 'api', 'type' => 'password', 'label' => 'Stripe Webhook Secret', 'is_encrypted' => true],
+            ['key' => 'turnstile_site_key', 'value' => '', 'group' => 'api', 'type' => 'text', 'label' => 'Turnstile Site Key'],
+            ['key' => 'turnstile_secret_key', 'value' => '', 'group' => 'api', 'type' => 'password', 'label' => 'Turnstile Secret Key', 'is_encrypted' => true],
 
             // SMTP
             ['key' => 'smtp_host', 'value' => '', 'group' => 'smtp', 'type' => 'text', 'label' => 'SMTP Host'],
@@ -152,8 +154,8 @@ class Setting extends Model
             ['key' => 'smtp_username', 'value' => '', 'group' => 'smtp', 'type' => 'text', 'label' => 'SMTP Username'],
             ['key' => 'smtp_password', 'value' => '', 'group' => 'smtp', 'type' => 'password', 'label' => 'SMTP Password', 'is_encrypted' => true],
             ['key' => 'smtp_encryption', 'value' => 'tls', 'group' => 'smtp', 'type' => 'text', 'label' => 'SMTP Encryption'],
-            ['key' => 'mail_from_address', 'value' => 'hello@styledream.com', 'group' => 'smtp', 'type' => 'text', 'label' => 'From Email Address'],
-            ['key' => 'mail_from_name', 'value' => 'StyleDream', 'group' => 'smtp', 'type' => 'text', 'label' => 'From Name'],
+            ['key' => 'mail_from_address', 'value' => 'info@stylely.ai', 'group' => 'smtp', 'type' => 'text', 'label' => 'From Email Address'],
+            ['key' => 'mail_from_name', 'value' => 'Stylely', 'group' => 'smtp', 'type' => 'text', 'label' => 'From Name'],
 
             // Features
             ['key' => 'signup_credits', 'value' => '3', 'group' => 'features', 'type' => 'number', 'label' => 'Free Credits on Signup'],

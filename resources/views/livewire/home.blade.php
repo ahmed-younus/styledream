@@ -232,6 +232,137 @@
         </div>
     </section>
 
+    {{-- Wardrobe Section --}}
+    <section class="py-12 sm:py-20 bg-secondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+                {{-- Text Content --}}
+                <div class="text-center lg:text-left">
+                    <span class="inline-flex items-center gap-2 px-3 py-1 mb-4 text-xs font-medium uppercase tracking-wider text-primary bg-primary/10 rounded-full">
+                        {{ __('home.wardrobe_badge') }}
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
+                        {{ __('home.wardrobe_title') }}
+                    </h2>
+                    <p class="text-muted-foreground mb-6 max-w-lg mx-auto lg:mx-0">
+                        {{ __('home.wardrobe_description') }}
+                    </p>
+
+                    <ul class="space-y-3 mb-8 text-left max-w-md mx-auto lg:mx-0">
+                        <li class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg class="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-foreground">{{ __('home.wardrobe_feature1') }}</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg class="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-foreground">{{ __('home.wardrobe_feature2') }}</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <svg class="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-foreground">{{ __('home.wardrobe_feature3') }}</span>
+                        </li>
+                    </ul>
+
+                    @auth
+                        <a href="{{ route('wardrobe') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+                            {{ __('home.wardrobe_cta') }}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+                            {{ __('home.wardrobe_cta_guest') }}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    @endauth
+                </div>
+
+                {{-- Visual/Illustration --}}
+                <div class="relative flex justify-center lg:justify-end">
+                    <div class="relative w-full max-w-md">
+                        {{-- Main wardrobe card --}}
+                        <div class="bg-background rounded-2xl shadow-xl border border-border p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="font-semibold text-foreground">{{ __('home.my_wardrobe') }}</h3>
+                                <span class="text-xs text-muted-foreground">12 {{ __('home.items') }}</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="aspect-square bg-secondary rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="aspect-square bg-secondary rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="aspect-square bg-secondary rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="aspect-square bg-secondary rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="aspect-square bg-secondary rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-muted-foreground">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="aspect-square bg-primary/10 rounded-lg overflow-hidden">
+                                    <div class="w-full h-full flex items-center justify-center text-primary">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Floating badges --}}
+                        <div class="absolute -top-3 -right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-xs font-medium shadow-lg">
+                            {{ __('home.organized') }}
+                        </div>
+                        <div class="absolute -bottom-3 -left-3 bg-background border border-border px-3 py-1.5 rounded-full text-xs font-medium shadow-lg flex items-center gap-1.5">
+                            <svg class="w-3 h-3 text-primary" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
+                            </svg>
+                            {{ __('home.ai_powered') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- CTA Section --}}
     <section class="py-12 sm:py-20 bg-primary">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

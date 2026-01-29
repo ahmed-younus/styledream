@@ -6,11 +6,11 @@
                 <h1 class="text-3xl font-bold text-foreground mb-2">{{ __('wardrobe.title') }}</h1>
                 <p class="text-muted-foreground">{{ __('wardrobe.items_saved', ['count' => $items->count()]) }}</p>
             </div>
-            <button wire:click="$set('showAddModal', true)" class="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2">
+            <button wire:click="$set('showAddModal', true)" class="p-2.5 md:px-5 md:py-2.5 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                {{ __('wardrobe.add_item') }}
+                <span class="hidden md:inline">{{ __('wardrobe.add_item') }}</span>
             </button>
         </div>
 
@@ -98,8 +98,8 @@
 
     {{-- Add Item Modal --}}
     @if($showAddModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showAddModal', false)">
-            <div class="bg-background rounded-2xl max-w-md w-full overflow-hidden">
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-20 pb-4 overflow-y-auto" wire:click.self="$set('showAddModal', false)">
+            <div class="bg-background rounded-2xl max-w-md w-full max-h-[calc(100vh-6rem)] overflow-hidden flex flex-col my-auto">
                 <div class="p-6 border-b border-border flex items-center justify-between">
                     <h3 class="text-lg font-bold text-foreground">{{ __('wardrobe.add_title') }}</h3>
                     <button wire:click="$set('showAddModal', false)" class="p-2 hover:bg-secondary rounded-lg">
@@ -107,7 +107,7 @@
                     </button>
                 </div>
 
-                <form wire:submit="addItem" class="p-6 space-y-4">
+                <form wire:submit="addItem" class="p-6 space-y-4 overflow-y-auto flex-1">
                     {{-- Error Display --}}
                     @if($error)
                         <div class="p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
@@ -176,10 +176,10 @@
                         <label class="block text-sm font-medium text-foreground mb-2">{{ __('wardrobe.category') }} *</label>
                         <select wire:model="category" class="w-full px-4 py-3 bg-secondary border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
                             <option value="">{{ __('wardrobe.select_category') }}</option>
-                            @foreach($categoryGroups as $group => $items)
-                                <optgroup label="{{ __('wardrobe.category_' . $group) }}">
-                                    @foreach($items as $key => $label)
-                                        <option value="{{ $key }}">{{ $label }}</option>
+                            @foreach($categoryGroups as $group => $groupItems)
+                                <optgroup label="{{ $group }}">
+                                    @foreach($groupItems as $catKey)
+                                        <option value="{{ $catKey }}">{{ $categories[$catKey] ?? ucfirst(str_replace("-", " ", $catKey)) }}</option>
                                     @endforeach
                                 </optgroup>
                             @endforeach

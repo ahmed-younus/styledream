@@ -3,7 +3,9 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Setting;
+use App\Models\SeoSetting;
 use App\Models\AdminActivityLog;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -14,12 +16,15 @@ class Settings extends Component
 {
     public string $activeTab = 'api';
     public array $settings = [];
+    public array $seoSettings = [];
     public string $testEmailTo = '';
 
     public function mount()
     {
         Setting::initializeDefaults();
+        SeoSetting::initializeDefaults();
         $this->loadSettings();
+        $this->loadSeoSettings();
     }
 
     protected function loadSettings()
@@ -29,6 +34,8 @@ class Settings extends Component
             'stripe_public_key' => Setting::get('stripe_public_key', ''),
             'stripe_secret_key' => Setting::get('stripe_secret_key', ''),
             'stripe_webhook_secret' => Setting::get('stripe_webhook_secret', ''),
+            'turnstile_site_key' => Setting::get('turnstile_site_key', ''),
+            'turnstile_secret_key' => Setting::get('turnstile_secret_key', ''),
             'smtp_host' => Setting::get('smtp_host', ''),
             'smtp_port' => Setting::get('smtp_port', '587'),
             'smtp_username' => Setting::get('smtp_username', ''),
@@ -49,6 +56,8 @@ class Settings extends Component
         Setting::set('stripe_public_key', $this->settings['stripe_public_key'], 'api', 'password', true);
         Setting::set('stripe_secret_key', $this->settings['stripe_secret_key'], 'api', 'password', true);
         Setting::set('stripe_webhook_secret', $this->settings['stripe_webhook_secret'], 'api', 'password', true);
+        Setting::set('turnstile_site_key', $this->settings['turnstile_site_key'], 'api', 'text');
+        Setting::set('turnstile_secret_key', $this->settings['turnstile_secret_key'], 'api', 'password', true);
 
         auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'API settings updated');
         $this->dispatch('notify', message: 'API settings saved successfully');
@@ -77,6 +86,44 @@ class Settings extends Component
 
         auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'General settings updated');
         $this->dispatch('notify', message: 'General settings saved successfully');
+    }
+
+    protected function loadSeoSettings()
+    {
+        // Check if table exists before querying
+        if (!Schema::hasTable('seo_settings')) {
+            return;
+        }
+
+        $seoPages = SeoSetting::all();
+        foreach ($seoPages as $page) {
+            $this->seoSettings[$page->page_key] = [
+                'meta_title' => $page->meta_title ?? '',
+                'meta_description' => $page->meta_description ?? '',
+                'meta_keywords' => $page->meta_keywords ?? '',
+            ];
+        }
+    }
+
+    public function saveSeoSettings()
+    {
+        // Check if table exists before saving
+        if (!Schema::hasTable('seo_settings')) {
+            $this->dispatch('notify', message: 'SEO settings table not found. Please run migrations.', type: 'error');
+            return;
+        }
+
+        foreach ($this->seoSettings as $pageKey => $data) {
+            SeoSetting::where('page_key', $pageKey)->update([
+                'meta_title' => $data['meta_title'],
+                'meta_description' => $data['meta_description'],
+                'meta_keywords' => $data['meta_keywords'],
+            ]);
+            SeoSetting::clearCache($pageKey);
+        }
+
+        auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'SEO settings updated');
+        $this->dispatch('notify', message: 'SEO settings saved successfully');
     }
 
     public function render()

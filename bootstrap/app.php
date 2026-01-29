@@ -11,9 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
         then: function () {
-            // Secure admin panel with custom URL prefix (not guessable)
+            // Admin panel
             Route::middleware('web')
-                ->prefix('sd-control-panel')
+                ->prefix('management')
                 ->group(base_path('routes/admin.php'));
         },
     )

@@ -30,6 +30,20 @@ return [
     'step3_title' => 'See The Magic',
     'step3_description' => 'AI generates you wearing the outfit in seconds',
 
+    // Wardrobe Section
+    'wardrobe_badge' => 'Digital Wardrobe',
+    'wardrobe_title' => 'Your Personal Digital Closet',
+    'wardrobe_description' => 'Save your favorite try-ons and build a curated collection of outfits you love. Access your virtual wardrobe anytime, anywhere.',
+    'wardrobe_feature1' => 'Save unlimited try-on results to your personal collection',
+    'wardrobe_feature2' => 'Organize by category, brand, or occasion',
+    'wardrobe_feature3' => 'Quick access to re-try or share your favorite looks',
+    'wardrobe_cta' => 'View My Wardrobe',
+    'wardrobe_cta_guest' => 'Create Your Wardrobe',
+    'my_wardrobe' => 'My Wardrobe',
+    'items' => 'items',
+    'organized' => 'Organized',
+    'ai_powered' => 'AI Powered',
+
     // CTA Section
     'cta_title' => 'Ready to Transform Your Shopping?',
     'cta_description' => 'Join thousands of users who shop smarter with virtual try-on. Start with 5 free credits today!',

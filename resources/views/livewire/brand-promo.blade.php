@@ -149,6 +149,12 @@
                     <p class="text-muted-foreground mb-8 text-center">{{ __('brands.form_subtitle') }}</p>
 
                     <form wire:submit="submit" class="space-y-6">
+                        @if($error)
+                            <div class="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                                {{ $error }}
+                            </div>
+                        @endif
+
                         {{-- Brand Name --}}
                         <div>
                             <label class="block text-sm font-medium text-foreground mb-2">{{ __('brands.brand_name') }} *</label>
@@ -216,6 +222,13 @@
                             ></textarea>
                         </div>
 
+                        {{-- Turnstile Widget --}}
+                        @if($turnstileSiteKey)
+                            <div wire:ignore>
+                                <div id="turnstile-brands-widget"></div>
+                            </div>
+                        @endif
+
                         {{-- Submit --}}
                         <button
                             type="submit"
@@ -230,4 +243,32 @@
             @endif
         </div>
     </section>
+
+    {{-- Turnstile Script --}}
+    @if($turnstileSiteKey)
+        @push('scripts')
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <script>
+            document.addEventListener('livewire:navigated', initBrandsTurnstile);
+            document.addEventListener('DOMContentLoaded', initBrandsTurnstile);
+
+            function initBrandsTurnstile() {
+                if (typeof turnstile !== 'undefined' && document.getElementById('turnstile-brands-widget')) {
+                    turnstile.render('#turnstile-brands-widget', {
+                        sitekey: '{{ $turnstileSiteKey }}',
+                        callback: function(token) {
+                            @this.set('turnstileToken', token);
+                        },
+                    });
+                }
+            }
+
+            Livewire.on('resetBrandsTurnstile', () => {
+                if (typeof turnstile !== 'undefined') {
+                    turnstile.reset('#turnstile-brands-widget');
+                }
+            });
+        </script>
+        @endpush
+    @endif
 </div>

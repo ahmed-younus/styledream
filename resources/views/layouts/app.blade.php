@@ -1,11 +1,47 @@
+@php
+    $routeName = Route::currentRouteName();
+    $pageKey = match($routeName) {
+        'home' => 'home',
+        'pricing' => 'pricing',
+        'studio', 'try-on' => 'studio',
+        'wardrobe' => 'wardrobe',
+        'feed' => 'feed',
+        'brands' => 'brands',
+        'about' => 'about',
+        'contact' => 'contact',
+        'login' => 'login',
+        'register' => 'register',
+        'terms' => 'terms',
+        'privacy' => 'privacy',
+        default => 'home',
+    };
+    $seo = \App\Models\SeoSetting::getForPage($pageKey);
+    $metaTitle = $seo?->meta_title ?? ($title ?? 'Stylely') . ' - AI Virtual Try-On';
+    $metaDescription = $seo?->meta_description ?? 'Try on clothes virtually with AI. See how outfits look on you before buying.';
+    $metaKeywords = $seo?->meta_keywords ?? 'virtual try-on, AI fashion, online shopping, clothing preview';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="{{ $metaDescription }}">
+    <meta name="keywords" content="{{ $metaKeywords }}">
 
-    <title>{{ $title ?? 'Stylely' }} - AI Virtual Try-On</title>
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ $metaTitle }}">
+    <meta property="og:description" content="{{ $metaDescription }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $metaTitle }}">
+    <meta name="twitter:description" content="{{ $metaDescription }}">
+
+    <title>{{ $metaTitle }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -58,6 +94,9 @@
                     </a>
                     <a href="{{ route('my-outfits') }}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         {{ __('nav.my_outfits') }}
+                    </a>
+                    <a href="{{ route('brands') }}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                        {{ __('nav.brands') }}
                     </a>
 
                     <!-- Credits with Upgrade -->
@@ -184,6 +223,7 @@
                             <a href="{{ route('studio') }}" class="block py-2 text-foreground font-medium">{{ __('nav.studio') }}</a>
                             <a href="{{ route('wardrobe') }}" class="block py-2 text-foreground font-medium">{{ __('nav.wardrobe') }}</a>
                             <a href="{{ route('my-outfits') }}" class="block py-2 text-foreground font-medium">{{ __('nav.my_outfits') }}</a>
+                            <a href="{{ route('brands') }}" class="block py-2 text-foreground font-medium">{{ __('nav.brands') }}</a>
                             <a href="{{ route('profile') }}" class="block py-2 text-foreground font-medium">{{ __('nav.profile') }}</a>
                             <div class="pt-2 border-t border-border" x-data="{ langOpen: false }">
                                 <button @click="langOpen = !langOpen" class="flex items-center justify-between w-full py-2 text-foreground font-medium">
@@ -277,8 +317,8 @@
                 <div>
                     <h4 class="font-semibold mb-3">{{ __('home.footer_company') }}</h4>
                     <ul class="space-y-2 text-sm text-background/70">
-                        <li><a href="#" class="hover:text-background transition-colors">{{ __('home.footer_about') }}</a></li>
-                        <li><a href="#" class="hover:text-background transition-colors">{{ __('home.footer_contact') }}</a></li>
+                        <li><a href="{{ route('about') }}" class="hover:text-background transition-colors">{{ __('home.footer_about') }}</a></li>
+                        <li><a href="{{ route('contact') }}" class="hover:text-background transition-colors">{{ __('home.footer_contact') }}</a></li>
                     </ul>
                 </div>
                 <div>
@@ -296,5 +336,6 @@
     </footer>
 
     @livewireScripts
+    @stack('scripts')
 </body>
 </html>
