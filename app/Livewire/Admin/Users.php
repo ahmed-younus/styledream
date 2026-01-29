@@ -98,6 +98,10 @@ class Users extends Component
     public function render()
     {
         $query = User::query()
+            ->withSum('creditPurchases', 'credits')
+            ->withSum(['creditTransactions as credits_used' => function ($q) {
+                $q->where('amount', '<', 0);
+            }], 'amount')
             ->when($this->search, function ($q) {
                 $q->where(function ($q) {
                     $q->where('name', 'like', "%{$this->search}%")

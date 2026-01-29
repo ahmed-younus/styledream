@@ -32,7 +32,7 @@
                     {{ $revenueStats['growth_rate'] >= 0 ? '+' : '' }}{{ $revenueStats['growth_rate'] }}%
                 </span>
             </div>
-            <p class="text-3xl font-semibold text-[#1a1f36] mt-3 tabular-nums">${{ number_format($revenueStats['total'], 2) }}</p>
+            <p class="text-3xl font-semibold text-[#1a1f36] mt-3 tabular-nums">£{{ number_format($revenueStats['total'], 2) }}</p>
             <p class="text-sm text-[#697386] mt-2">vs previous period</p>
         </div>
 
@@ -103,7 +103,7 @@
                                  style="height: {{ max(4, ($day['amount'] / $maxRevenue) * 180) }}px">
                             </div>
                             <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#1a1f36] text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                                ${{ number_format($day['amount'], 2) }}
+                                £{{ number_format($day['amount'], 2) }}
                             </div>
                         </div>
                         @if($loop->index % max(1, floor(count($revenueStats['chart']) / 7)) === 0)

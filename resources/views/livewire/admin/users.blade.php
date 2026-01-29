@@ -40,10 +40,16 @@
                             @endif
                         </th>
                         <th class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase tracking-wider cursor-pointer hover:bg-[#f0f3f7] transition-colors" wire:click="sortBy('credits')">
-                            Credits
+                            Balance
                             @if($sortBy === 'credits')
                                 <span class="ml-1">{{ $sortDir === 'asc' ? '↑' : '↓' }}</span>
                             @endif
+                        </th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase tracking-wider">
+                            Purchased
+                        </th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase tracking-wider">
+                            Used
                         </th>
                         <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase tracking-wider">
                             Plan
@@ -71,7 +77,11 @@
                                         <p class="font-medium text-[#1a1f36] text-sm truncate max-w-[120px] sm:max-w-none">{{ $user->name }}</p>
                                         <p class="text-xs text-[#697386] truncate max-w-[120px] sm:max-w-none">{{ $user->email }}</p>
                                         {{-- Show credits on mobile --}}
-                                        <p class="text-xs text-[#1a1f36] sm:hidden">{{ number_format($user->credits) }} credits</p>
+                                        <p class="text-xs text-[#697386] sm:hidden">
+                                            <span class="text-[#1a1f36]">{{ number_format($user->credits) }}</span> bal
+                                            <span class="text-[#30b566] ml-1">+{{ number_format($user->credit_purchases_sum_credits ?? 0) }}</span>
+                                            <span class="text-[#df1b41] ml-1">-{{ number_format(abs($user->credits_used ?? 0)) }}</span>
+                                        </p>
                                     </div>
                                     @if($user->is_banned ?? false)
                                         <span class="hidden sm:inline-block px-2 py-0.5 text-xs font-medium bg-[#df1b41]/10 text-[#df1b41] rounded-full">Banned</span>
@@ -80,6 +90,12 @@
                             </td>
                             <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                                 <span class="font-medium text-[#1a1f36] text-sm tabular-nums">{{ number_format($user->credits) }}</span>
+                            </td>
+                            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                                <span class="text-[#30b566] text-sm tabular-nums">{{ number_format($user->credit_purchases_sum_credits ?? 0) }}</span>
+                            </td>
+                            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                                <span class="text-[#df1b41] text-sm tabular-nums">{{ number_format(abs($user->credits_used ?? 0)) }}</span>
                             </td>
                             <td class="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                 @php $subscription = $user->activeSubscription(); @endphp
@@ -119,7 +135,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-[#697386] text-sm">
+                            <td colspan="7" class="px-6 py-12 text-center text-[#697386] text-sm">
                                 No users found
                             </td>
                         </tr>

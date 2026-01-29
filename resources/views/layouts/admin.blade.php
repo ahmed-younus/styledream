@@ -226,13 +226,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                {{-- Search --}}
-                <div class="hidden lg:flex items-center gap-2 text-[#697386] bg-[#f6f8fa] rounded-md px-3 py-2 w-64">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <span class="text-sm">Search</span>
-                </div>
             </div>
 
             <div class="flex items-center gap-2">

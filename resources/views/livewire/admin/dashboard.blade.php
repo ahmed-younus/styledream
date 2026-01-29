@@ -1,4 +1,4 @@
-<div class="max-w-5xl">
+<div class="max-w-7xl">
     {{-- Today Header --}}
     <div class="mb-8">
         <h1 class="text-[22px] font-semibold text-[#1a1f36] tracking-tight">Today</h1>
@@ -6,13 +6,10 @@
     </div>
 
     {{-- Top Stats Row --}}
-    <div class="flex flex-wrap gap-x-16 gap-y-6 mb-8">
+    <div class="flex flex-wrap gap-x-12 gap-y-6 mb-8">
         <div>
             <div class="flex items-center gap-1 mb-0.5">
                 <span class="text-sm text-[#697386]">Total Users</span>
-                <svg class="w-3.5 h-3.5 text-[#697386]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
             </div>
             <p class="text-[28px] font-semibold text-[#1a1f36] tabular-nums tracking-tight">{{ number_format($stats['total_users']) }}</p>
             <p class="text-[13px] text-[#697386] mt-0.5"><span class="text-[#00a67d] font-medium">+{{ $stats['users_this_month'] }}</span> this month</p>
@@ -20,12 +17,24 @@
         <div>
             <div class="flex items-center gap-1 mb-0.5">
                 <span class="text-sm text-[#697386]">Revenue</span>
-                <svg class="w-3.5 h-3.5 text-[#697386]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
             </div>
-            <p class="text-[28px] font-semibold text-[#1a1f36] tabular-nums tracking-tight">${{ number_format($stats['revenue_this_month'], 2) }}</p>
-            <p class="text-[13px] text-[#697386] mt-0.5"><span class="text-[#00a67d] font-medium">${{ number_format($stats['revenue_today'], 2) }}</span> today</p>
+            <p class="text-[28px] font-semibold text-[#1a1f36] tabular-nums tracking-tight">£{{ number_format($stats['revenue_this_month'], 2) }}</p>
+            <p class="text-[13px] text-[#697386] mt-0.5"><span class="text-[#00a67d] font-medium">£{{ number_format($stats['revenue_today'], 2) }}</span> today</p>
+        </div>
+        <div>
+            <div class="flex items-center gap-1 mb-0.5">
+                <span class="text-sm text-[#697386]">API Costs</span>
+            </div>
+            <p class="text-[28px] font-semibold text-[#df1b41] tabular-nums tracking-tight">£{{ number_format($stats['api_cost_this_month'] ?? 0, 2) }}</p>
+            <p class="text-[13px] text-[#697386] mt-0.5">{{ $stats['tryons_this_month'] ?? 0 }} try-ons @ £0.12</p>
+        </div>
+        <div>
+            <div class="flex items-center gap-1 mb-0.5">
+                <span class="text-sm text-[#697386]">Net Profit</span>
+            </div>
+            @php $profit = $stats['profit_this_month'] ?? 0; @endphp
+            <p class="text-[28px] font-semibold {{ $profit >= 0 ? 'text-[#00a67d]' : 'text-[#df1b41]' }} tabular-nums tracking-tight">{{ $profit >= 0 ? '' : '-' }}£{{ number_format(abs($profit), 2) }}</p>
+            <p class="text-[13px] text-[#697386] mt-0.5">after fees this month</p>
         </div>
     </div>
 
@@ -133,7 +142,7 @@
         <div class="bg-white rounded-lg border border-[#e3e8ee] p-5">
             <span class="text-sm font-medium text-[#1a1f36]">Revenue</span>
             <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-2xl font-semibold text-[#1a1f36] tabular-nums">${{ number_format($stats['revenue_this_month'], 2) }}</span>
+                <span class="text-2xl font-semibold text-[#1a1f36] tabular-nums">£{{ number_format($stats['revenue_this_month'], 2) }}</span>
                 @if($stats['revenue_this_month'] > 0)
                     <span class="text-sm font-medium text-[#00a67d]">+100%</span>
                 @endif
