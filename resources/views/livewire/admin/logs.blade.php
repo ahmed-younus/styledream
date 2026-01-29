@@ -36,35 +36,39 @@
             <table class="w-full">
                 <thead class="bg-[#f6f8fa]">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Admin</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Action</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Model</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">IP Address</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Time</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Admin</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Action</th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Model</th>
+                        <th class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Description</th>
+                        <th class="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">IP Address</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-[#697386] uppercase">Time</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#e3e8ee]">
                     @forelse($logs as $log)
                         <tr class="hover:bg-[#f6f8fa] transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-[#f0f3f7] rounded-full flex items-center justify-center">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4">
+                                <div class="flex items-center gap-2 sm:gap-3">
+                                    <div class="w-7 h-7 sm:w-8 sm:h-8 bg-[#f0f3f7] rounded-full flex items-center justify-center flex-shrink-0">
                                         <span class="text-xs font-medium text-[#1a1f36]">
                                             {{ substr($log->adminUser?->name ?? '?', 0, 1) }}
                                         </span>
                                     </div>
-                                    <span class="text-sm font-medium text-[#1a1f36]">
-                                        {{ $log->adminUser?->name ?? 'System' }}
-                                    </span>
+                                    <div class="min-w-0">
+                                        <span class="text-sm font-medium text-[#1a1f36] block truncate max-w-[80px] sm:max-w-none">
+                                            {{ $log->adminUser?->name ?? 'System' }}
+                                        </span>
+                                        {{-- Show description on mobile under name --}}
+                                        <p class="text-xs text-[#697386] truncate max-w-[100px] sm:hidden">{{ Str::limit($log->description ?? '-', 30) }}</p>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4">
                                 <span class="px-2 py-1 text-xs font-medium bg-[#f0f3f7] text-[#1a1f36] rounded-full">
                                     {{ ucfirst($log->action) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-[#697386]">
+                            <td class="hidden lg:table-cell px-6 py-4 text-sm text-[#697386]">
                                 @if($log->model_type)
                                     {{ class_basename($log->model_type) }}
                                     @if($log->model_id)
@@ -74,7 +78,7 @@
                                     -
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="hidden sm:table-cell px-6 py-4">
                                 <p class="text-sm text-[#1a1f36] max-w-xs truncate">
                                     {{ $log->description ?? '-' }}
                                 </p>
@@ -86,10 +90,10 @@
                                     </button>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-sm text-[#697386]">
+                            <td class="hidden xl:table-cell px-6 py-4 text-sm text-[#697386]">
                                 {{ $log->ip_address ?? '-' }}
                             </td>
-                            <td class="px-6 py-4 text-sm text-[#697386]">
+                            <td class="px-3 sm:px-6 py-3 sm:py-4 text-sm text-[#697386]">
                                 <span title="{{ $log->created_at->format('M d, Y H:i:s') }}">
                                     {{ $log->created_at->diffForHumans() }}
                                 </span>
