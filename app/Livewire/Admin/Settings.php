@@ -77,6 +77,42 @@ class Settings extends Component
         $this->dispatch('notify', message: 'SMTP settings saved successfully');
     }
 
+    public function sendTestEmail()
+    {
+        $this->validate([
+            'testEmailTo' => 'required|email',
+        ]);
+
+        try {
+            // Configure mail settings dynamically
+            config([
+                'mail.mailers.smtp.host' => $this->settings['smtp_host'],
+                'mail.mailers.smtp.port' => $this->settings['smtp_port'],
+                'mail.mailers.smtp.username' => $this->settings['smtp_username'],
+                'mail.mailers.smtp.password' => $this->settings['smtp_password'],
+                'mail.mailers.smtp.encryption' => $this->settings['smtp_encryption'],
+                'mail.from.address' => $this->settings['mail_from_address'],
+                'mail.from.name' => $this->settings['mail_from_name'],
+            ]);
+
+            // Send test email
+            \Illuminate\Support\Facades\Mail::raw(
+                "This is a test email from StyleDream.\n\nIf you received this email, your SMTP configuration is working correctly!\n\n---\nSent from StyleDream Admin Panel",
+                function ($message) {
+                    $message->to($this->testEmailTo)
+                        ->subject('Test Email - StyleDream SMTP Configuration');
+                }
+            );
+
+            auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'Test email sent to ' . $this->testEmailTo);
+            $this->dispatch('notify', message: 'Test email sent successfully to ' . $this->testEmailTo, type: 'success');
+            $this->testEmailTo = '';
+        } catch (\Exception $e) {
+            \Log::error('Test email failed: ' . $e->getMessage());
+            $this->dispatch('notify', message: 'Failed to send test email: ' . $e->getMessage(), type: 'error');
+        }
+    }
+
     public function saveGeneralSettings()
     {
         Setting::set('site_name', $this->settings['site_name'], 'general');

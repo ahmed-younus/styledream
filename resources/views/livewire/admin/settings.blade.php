@@ -108,6 +108,34 @@
                     Save SMTP Settings
                 </button>
             </div>
+
+            {{-- Test Email Section --}}
+            <div class="mt-6 pt-6 border-t border-[#e3e8ee]">
+                <h4 class="text-sm font-semibold text-[#1a1f36] mb-2">Test Email Configuration</h4>
+                <p class="text-sm text-[#697386] mb-4">Send a test email to verify your SMTP settings are working correctly.</p>
+
+                <div class="flex gap-3">
+                    <div class="flex-1">
+                        <input
+                            type="email"
+                            wire:model="testEmailTo"
+                            placeholder="Enter email address to receive test email"
+                            class="w-full px-3 py-2 border border-[#e3e8ee] rounded-lg bg-white text-[#1a1f36] placeholder-[#697386] focus:ring-2 focus:ring-[#635bff]/20 focus:border-[#635bff] outline-none transition-colors text-sm"
+                        >
+                        @error('testEmailTo')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <button
+                        wire:click="sendTestEmail"
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                        <span wire:loading.remove wire:target="sendTestEmail">Send Test Email</span>
+                        <span wire:loading wire:target="sendTestEmail">Sending...</span>
+                    </button>
+                </div>
+            </div>
         </div>
     @endif
 
