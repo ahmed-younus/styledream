@@ -34,6 +34,9 @@ class BrandPromo extends Component
     #[Rule('nullable|string|max:1000')]
     public $message = '';
 
+    #[Rule('required|string|max:2')]
+    public $country = '';
+
     public $turnstileToken = '';
     public $submitted = false;
     public $isSubmitting = false;
@@ -68,6 +71,7 @@ class BrandPromo extends Component
             'contact_name' => $this->contactName,
             'phone' => $this->phone,
             'message' => $this->message,
+            'country_code' => $this->country,
         ]);
 
         // Send notification email to admin
@@ -85,14 +89,41 @@ class BrandPromo extends Component
 
     public function resetForm()
     {
-        $this->reset(['brandName', 'website', 'contactEmail', 'contactName', 'phone', 'message', 'submitted', 'error', 'turnstileToken']);
+        $this->reset(['brandName', 'website', 'contactEmail', 'contactName', 'phone', 'message', 'country', 'submitted', 'error', 'turnstileToken']);
         $this->dispatch('resetBrandsTurnstile');
+    }
+
+    private function getCountries()
+    {
+        return [
+            'US' => 'United States',
+            'GB' => 'United Kingdom',
+            'CA' => 'Canada',
+            'AU' => 'Australia',
+            'DE' => 'Germany',
+            'FR' => 'France',
+            'ES' => 'Spain',
+            'IT' => 'Italy',
+            'IN' => 'India',
+            'PK' => 'Pakistan',
+            'AE' => 'United Arab Emirates',
+            'SA' => 'Saudi Arabia',
+            'JP' => 'Japan',
+            'CN' => 'China',
+            'BR' => 'Brazil',
+            'MX' => 'Mexico',
+            'NL' => 'Netherlands',
+            'SE' => 'Sweden',
+            'NO' => 'Norway',
+            'DK' => 'Denmark',
+        ];
     }
 
     public function render()
     {
         return view('livewire.brand-promo', [
             'turnstileSiteKey' => Setting::get('turnstile_site_key', ''),
+            'countries' => $this->getCountries(),
         ]);
     }
 }

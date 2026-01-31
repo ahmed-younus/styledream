@@ -16,6 +16,7 @@ class BrandRegistration extends Model
         'contact_name',
         'phone',
         'message',
+        'country_code',
         'status',
         'admin_notes',
     ];
