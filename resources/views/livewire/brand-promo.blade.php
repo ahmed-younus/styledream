@@ -3,7 +3,7 @@
     <section class="py-16 sm:py-24 px-4 bg-background">
         <div class="max-w-4xl mx-auto text-center">
             <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                test
+                Partner with StyleDream
             </h1>
             <p class="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Showcase your fashion brand through AI-powered virtual try-ons and reach engaged shoppers ready to buy.
