@@ -9,6 +9,9 @@ return [
     // Actions
     'save_outfit' => 'Save Outfit',
     'delete_outfit' => 'Delete',
+    'delete' => 'Delete',
+    'download' => 'Download',
+    'share' => 'Share',
     'post_to_feed' => 'Post to Feed',
     'try_again' => 'Try Again',
     'view_details' => 'View Details',

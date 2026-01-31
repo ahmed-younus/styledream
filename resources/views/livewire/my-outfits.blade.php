@@ -33,38 +33,27 @@
                     <div class="group relative bg-card rounded-xl overflow-hidden border border-border shadow-sm">
                         {{-- Image Container --}}
                         <div class="aspect-[3/4] bg-secondary relative">
-                            <img src="{{ $outfit->image_url }}" alt="{{ $outfit->name ?? 'Saved outfit' }}" class="w-full h-full object-cover">
+                            {{-- Mobile/Tablet: Tap to open view modal --}}
+                            <button
+                                wire:click="openViewModal({{ $outfit->id }})"
+                                class="w-full h-full lg:hidden cursor-pointer"
+                            >
+                                <img src="{{ $outfit->image_url }}" alt="{{ $outfit->name ?? 'Saved outfit' }}" class="w-full h-full object-cover">
+                            </button>
 
-                            {{-- Mobile/Tablet Actions (icon buttons in top-right) --}}
-                            <div class="absolute top-2 right-2 flex gap-1.5 lg:hidden">
-                                {{-- Post to Feed --}}
-                                @if(!$outfit->outfit_post_id)
-                                    <button
-                                        wire:click="openPostModal({{ $outfit->id }})"
-                                        class="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm active:scale-95 transition-transform"
-                                    >
-                                        <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                                        </svg>
-                                    </button>
-                                @else
-                                    <span class="p-2 bg-green-500/30 backdrop-blur-sm rounded-full">
-                                        <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                            {{-- Desktop: Just show image (hover overlay handles actions) --}}
+                            <img src="{{ $outfit->image_url }}" alt="{{ $outfit->name ?? 'Saved outfit' }}" class="w-full h-full object-cover hidden lg:block">
+
+                            {{-- Posted badge (mobile/tablet) --}}
+                            @if($outfit->outfit_post_id)
+                                <div class="absolute top-2 right-2 lg:hidden">
+                                    <span class="p-1.5 bg-green-500/80 backdrop-blur-sm rounded-full">
+                                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                         </svg>
                                     </span>
-                                @endif
-
-                                {{-- Delete --}}
-                                <button
-                                    wire:click="deleteOutfit({{ $outfit->id }})"
-                                    class="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm active:scale-95 transition-transform"
-                                >
-                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
-                            </div>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Desktop Overlay on Hover (lg and up) --}}
@@ -192,6 +181,84 @@
                     <button wire:click="postToFeed" class="flex-1 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
                         <span wire:loading.remove wire:target="postToFeed">{{ __('feed.post_to_feed') }}</span>
                         <span wire:loading wire:target="postToFeed">{{ __('outfits.posting') }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- View Outfit Modal (Mobile/Tablet) --}}
+    @if($showViewModal && $viewOutfit)
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.95);" wire:click.self="closeViewModal">
+            <div class="relative max-w-lg w-full max-h-[90vh] flex flex-col">
+                {{-- Close Button --}}
+                <button
+                    wire:click="closeViewModal"
+                    class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white transition-colors"
+                >
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                {{-- Image --}}
+                <div class="rounded-2xl overflow-hidden bg-black flex-1 flex items-center justify-center">
+                    <img src="{{ $viewOutfit->image_url }}" alt="{{ $viewOutfit->name ?? 'Saved outfit' }}" class="max-w-full max-h-[70vh] object-contain">
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="flex justify-center gap-4 mt-4">
+                    {{-- Download --}}
+                    <a
+                        href="{{ $viewOutfit->image_url }}"
+                        download="outfit-{{ $viewOutfit->id }}.jpg"
+                        class="flex flex-col items-center gap-1 p-3 text-white/80 hover:text-white transition-colors"
+                    >
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs">{{ __('outfits.download') }}</span>
+                    </a>
+
+                    {{-- Share/Post --}}
+                    @if(!$viewOutfit->outfit_post_id)
+                        <button
+                            wire:click="closeViewModal"
+                            x-on:click="$nextTick(() => $wire.openPostModal({{ $viewOutfit->id }}))"
+                            class="flex flex-col items-center gap-1 p-3 text-white/80 hover:text-white transition-colors"
+                        >
+                            <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs">{{ __('outfits.share') }}</span>
+                        </button>
+                    @else
+                        <div class="flex flex-col items-center gap-1 p-3 text-green-400">
+                            <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs">{{ __('feed.posted') }}</span>
+                        </div>
+                    @endif
+
+                    {{-- Delete --}}
+                    <button
+                        wire:click="closeViewModal"
+                        x-on:click="$nextTick(() => $wire.deleteOutfit({{ $viewOutfit->id }}))"
+                        class="flex flex-col items-center gap-1 p-3 text-white/80 hover:text-red-400 transition-colors"
+                    >
+                        <div class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </div>
+                        <span class="text-xs">{{ __('outfits.delete') }}</span>
                     </button>
                 </div>
             </div>

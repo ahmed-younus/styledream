@@ -13,6 +13,10 @@ use Livewire\Attributes\Title;
 #[Title('My Outfits')]
 class MyOutfits extends Component
 {
+    // View modal (for mobile/tablet)
+    public $showViewModal = false;
+    public $viewOutfit = null;
+
     // Delete modal
     public $showDeleteModal = false;
     public $deleteOutfitId = null;
@@ -22,6 +26,20 @@ class MyOutfits extends Component
     public $postOutfitId = null;
     public $postCaption = '';
     public $postVisibility = 'public';
+
+    public function openViewModal($id)
+    {
+        $this->viewOutfit = SavedOutfit::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->first();
+        $this->showViewModal = true;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->viewOutfit = null;
+    }
 
     public function deleteOutfit($id)
     {
