@@ -39,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
+            // Set app name from database settings (used in emails)
+            $siteName = Setting::get('site_name', 'Stylely');
+            config(['app.name' => $siteName]);
+
             $smtpHost = Setting::get('smtp_host');
 
             // Only configure if SMTP settings are saved in database
