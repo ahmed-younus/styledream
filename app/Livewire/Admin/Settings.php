@@ -83,21 +83,41 @@ class Settings extends Component
             'testEmailTo' => 'required|email',
         ]);
 
+        // Clear previous results
+        session()->forget(['testEmailResult', 'testEmailSuccess', 'testEmailTip']);
+
+        // Validate SMTP settings before attempting
+        $missingFields = [];
+        if (empty($this->settings['smtp_host'])) $missingFields[] = 'SMTP Host';
+        if (empty($this->settings['smtp_port'])) $missingFields[] = 'Port';
+        if (empty($this->settings['mail_from_address'])) $missingFields[] = 'From Address';
+
+        if (!empty($missingFields)) {
+            session()->flash('testEmailResult', 'Missing required fields: ' . implode(', ', $missingFields));
+            session()->flash('testEmailSuccess', false);
+            session()->flash('testEmailTip', 'Please fill in all required SMTP settings and save them before testing.');
+            return;
+        }
+
         try {
             // Configure mail settings dynamically
             config([
+                'mail.default' => 'smtp',
                 'mail.mailers.smtp.host' => $this->settings['smtp_host'],
-                'mail.mailers.smtp.port' => $this->settings['smtp_port'],
+                'mail.mailers.smtp.port' => (int) $this->settings['smtp_port'],
                 'mail.mailers.smtp.username' => $this->settings['smtp_username'],
                 'mail.mailers.smtp.password' => $this->settings['smtp_password'],
-                'mail.mailers.smtp.encryption' => $this->settings['smtp_encryption'],
+                'mail.mailers.smtp.encryption' => $this->settings['smtp_encryption'] ?: 'tls',
                 'mail.from.address' => $this->settings['mail_from_address'],
-                'mail.from.name' => $this->settings['mail_from_name'],
+                'mail.from.name' => $this->settings['mail_from_name'] ?: 'StyleDream',
             ]);
+
+            // Clear the mail manager cache to use new config
+            app()->forgetInstance('mail.manager');
 
             // Send test email
             \Illuminate\Support\Facades\Mail::raw(
-                "This is a test email from StyleDream.\n\nIf you received this email, your SMTP configuration is working correctly!\n\n---\nSent from StyleDream Admin Panel",
+                "This is a test email from StyleDream.\n\nIf you received this email, your SMTP configuration is working correctly!\n\nSMTP Host: {$this->settings['smtp_host']}\nPort: {$this->settings['smtp_port']}\nFrom: {$this->settings['mail_from_address']}\n\n---\nSent from StyleDream Admin Panel at " . now()->format('Y-m-d H:i:s'),
                 function ($message) {
                     $message->to($this->testEmailTo)
                         ->subject('Test Email - StyleDream SMTP Configuration');
@@ -105,12 +125,53 @@ class Settings extends Component
             );
 
             auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'Test email sent to ' . $this->testEmailTo);
-            $this->dispatch('notify', message: 'Test email sent successfully to ' . $this->testEmailTo, type: 'success');
+
+            session()->flash('testEmailResult', "Test email sent to {$this->testEmailTo}. Please check your inbox (and spam folder).");
+            session()->flash('testEmailSuccess', true);
+            $this->dispatch('notify', message: 'Test email sent successfully!', type: 'success');
             $this->testEmailTo = '';
+
+        } catch (\Swift_TransportException $e) {
+            $this->handleSmtpError($e);
+        } catch (\Symfony\Component\Mailer\Exception\TransportException $e) {
+            $this->handleSmtpError($e);
         } catch (\Exception $e) {
-            \Log::error('Test email failed: ' . $e->getMessage());
-            $this->dispatch('notify', message: 'Failed to send test email: ' . $e->getMessage(), type: 'error');
+            \Log::error('Test email failed: ' . $e->getMessage(), ['exception' => $e]);
+            session()->flash('testEmailResult', $e->getMessage());
+            session()->flash('testEmailSuccess', false);
+            session()->flash('testEmailTip', 'Check your SMTP settings and try again. Make sure to save settings before testing.');
+            $this->dispatch('notify', message: 'Failed to send test email', type: 'error');
         }
+    }
+
+    protected function handleSmtpError(\Exception $e)
+    {
+        $errorMessage = $e->getMessage();
+        $tip = '';
+
+        \Log::error('SMTP Error: ' . $errorMessage, ['exception' => $e]);
+
+        // Parse common SMTP errors and provide helpful tips
+        if (str_contains($errorMessage, 'Connection refused') || str_contains($errorMessage, 'Connection could not be established')) {
+            $tip = "Cannot connect to SMTP server. Check if the host '{$this->settings['smtp_host']}' and port '{$this->settings['smtp_port']}' are correct. Common ports: 587 (TLS), 465 (SSL), 25 (unencrypted).";
+        } elseif (str_contains($errorMessage, 'Authentication') || str_contains($errorMessage, '535') || str_contains($errorMessage, 'credentials')) {
+            $tip = "Authentication failed. Check your username and password. For Gmail, you need to use an 'App Password' (not your regular password). For other providers, check their SMTP documentation.";
+        } elseif (str_contains($errorMessage, 'SSL') || str_contains($errorMessage, 'TLS') || str_contains($errorMessage, 'certificate')) {
+            $tip = "SSL/TLS error. Try changing encryption from 'tls' to 'ssl' or vice versa. Port 587 typically uses TLS, port 465 uses SSL.";
+        } elseif (str_contains($errorMessage, 'timed out') || str_contains($errorMessage, 'timeout')) {
+            $tip = "Connection timed out. The SMTP server may be slow or unreachable. Check your internet connection and verify the host address.";
+        } elseif (str_contains($errorMessage, '550') || str_contains($errorMessage, 'relay')) {
+            $tip = "The server rejected the email. Make sure the 'From Address' is valid and you're authorized to send from this address.";
+        } elseif (str_contains($errorMessage, 'getaddrinfo') || str_contains($errorMessage, 'No such host')) {
+            $tip = "Cannot find the SMTP server. Check if the hostname is spelled correctly. Example: 'smtp.gmail.com' for Gmail.";
+        } else {
+            $tip = "Check all your SMTP settings. Common issues: incorrect host, wrong port, invalid credentials, or firewall blocking the connection.";
+        }
+
+        session()->flash('testEmailResult', $errorMessage);
+        session()->flash('testEmailSuccess', false);
+        session()->flash('testEmailTip', $tip);
+        $this->dispatch('notify', message: 'Failed to send test email', type: 'error');
     }
 
     public function saveGeneralSettings()
