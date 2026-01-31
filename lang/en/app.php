@@ -2,7 +2,7 @@
 
 return [
     // General
-    'app_name' => 'StyleDream',
+    'app_name' => 'Stylely',
     'tagline' => 'Virtual Try-On Powered by AI',
     'welcome' => 'Welcome',
     'home' => 'Home',

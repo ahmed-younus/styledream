@@ -130,7 +130,7 @@
                     <h2 class="text-xl font-bold mb-3">13. {{ __('privacy.section13_title') }}</h2>
                     <p class="text-muted-foreground mb-3">{{ __('privacy.section13_p1') }}</p>
                     <p class="text-muted-foreground">
-                        <strong>{{ __('privacy.email') }}:</strong> privacy@styledream.app
+                        <strong>{{ __('privacy.email') }}:</strong> privacy@stylely.ai
                     </p>
                 </section>
 

@@ -1,7 +1,7 @@
 <x-mail::message>
 # New Brand Registration
 
-A new brand has registered on StyleDream.
+A new brand has registered on Stylely.
 
 **Brand Details:**
 

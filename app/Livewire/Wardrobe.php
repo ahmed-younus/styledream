@@ -103,7 +103,7 @@ class Wardrobe extends Component
 
         try {
             $response = Http::timeout(30)
-                ->withHeaders(['User-Agent' => 'Mozilla/5.0 StyleDream/1.0'])
+                ->withHeaders(['User-Agent' => 'Mozilla/5.0 Stylely/1.0'])
                 ->get($this->imageUrl);
 
             if (!$response->successful()) {

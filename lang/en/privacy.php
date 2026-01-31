@@ -7,8 +7,8 @@ return [
 
     // Section 1: Introduction
     'section1_title' => 'Introduction',
-    'section1_p1' => 'StyleDream ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.',
-    'section1_p2' => 'Please read this Privacy Policy carefully. By using StyleDream, you consent to the data practices described in this policy.',
+    'section1_p1' => 'Stylely ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.',
+    'section1_p2' => 'Please read this Privacy Policy carefully. By using Stylely, you consent to the data practices described in this policy.',
 
     // Section 2: Information We Collect
     'section2_title' => 'Information We Collect',
@@ -69,7 +69,7 @@ return [
     'section7_desc4' => 'Receive your data in a portable format',
     'section7_right5' => 'Right to Object',
     'section7_desc5' => 'Object to processing of your personal data',
-    'section7_p2' => 'To exercise any of these rights, please contact us at privacy@styledream.app.',
+    'section7_p2' => 'To exercise any of these rights, please contact us at privacy@stylely.ai.',
 
     // Section 8: Cookies
     'section8_title' => 'Cookies & Tracking',

@@ -21,7 +21,7 @@ class CreateStripeProducts extends Command
         // Create Pro Plan
         $proProduct = Product::create([
             'name' => 'Pro Plan',
-            'description' => 'StyleDream Pro - 100 credits/month, HD quality, Priority processing',
+            'description' => 'Stylely Pro - 100 credits/month, HD quality, Priority processing',
         ]);
 
         $proPrice = Price::create([
@@ -38,7 +38,7 @@ class CreateStripeProducts extends Command
         // Create Premium Plan
         $premiumProduct = Product::create([
             'name' => 'Premium Plan',
-            'description' => 'StyleDream Premium - 500 credits/month, 4K quality, API access, Priority support',
+            'description' => 'Stylely Premium - 500 credits/month, 4K quality, API access, Priority support',
         ]);
 
         $premiumPrice = Price::create([

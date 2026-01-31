@@ -29,7 +29,7 @@ class StripeService
     {
         self::init();
 
-        $productId = "styledream_{$planKey}";
+        $productId = "stylely_{$planKey}";
 
         try {
             // Try to retrieve existing product
@@ -47,7 +47,7 @@ class StripeService
                 $product = Product::create([
                     'id' => $productId,
                     'name' => $planName,
-                    'description' => "StyleDream {$planName} Subscription Plan",
+                    'description' => "Stylely {$planName} Subscription Plan",
                 ]);
                 return $product->id;
             } catch (\Exception $createError) {

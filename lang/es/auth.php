@@ -3,7 +3,7 @@
 return [
     // Login
     'welcome_back' => 'Bienvenido de nuevo',
-    'sign_in_to_continue' => 'Inicia sesión para continuar en StyleDream',
+    'sign_in_to_continue' => 'Inicia sesión para continuar en Stylely',
     'continue_with_google' => 'Continuar con Google',
     'or_continue_email' => 'o continúa con email',
     'email' => 'Correo electrónico',

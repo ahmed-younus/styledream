@@ -2,7 +2,7 @@
 
 return [
     // Hero
-    'title' => 'Partner with StyleDream',
+    'title' => 'Partner with Stylely',
     'subtitle' => 'Join the virtual try-on revolution. Let customers try your products before they buy.',
     'hero_cta' => 'Get Started',
     'hero_secondary' => 'Learn More',

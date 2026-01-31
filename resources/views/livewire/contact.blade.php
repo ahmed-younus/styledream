@@ -19,7 +19,7 @@
                         </svg>
                     </div>
                     <h3 class="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:support@styledream.ai" class="text-muted-foreground hover:text-primary transition-colors">support@styledream.ai</a>
+                    <a href="mailto:support@stylely.ai" class="text-muted-foreground hover:text-primary transition-colors">support@stylely.ai</a>
                 </div>
 
                 {{-- Response Time --}}
@@ -41,7 +41,7 @@
                         </svg>
                     </div>
                     <h3 class="font-semibold text-foreground mb-1">Social</h3>
-                    <p class="text-muted-foreground">@styledream</p>
+                    <p class="text-muted-foreground">@stylely</p>
                 </div>
             </div>
 

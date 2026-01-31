@@ -3,7 +3,7 @@
     <section class="py-16 sm:py-24 bg-background">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                About StyleDream
+                About Stylely
             </h1>
             <p class="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
                 We're on a mission to transform the way you shop for clothes online with AI-powered virtual try-ons.
@@ -18,7 +18,7 @@
                 <div>
                     <h2 class="text-3xl font-bold text-foreground mb-6">Our Mission</h2>
                     <p class="text-muted-foreground mb-4">
-                        At StyleDream, we believe everyone deserves to know how clothes will look on them before making a purchase. No more guessing, no more returns, no more disappointment.
+                        At Stylely, we believe everyone deserves to know how clothes will look on them before making a purchase. No more guessing, no more returns, no more disappointment.
                     </p>
                     <p class="text-muted-foreground">
                         Using cutting-edge AI technology, we've created a virtual try-on experience that's fast, accurate, and incredibly easy to use. Simply upload your photo, choose any clothing item, and see yourself wearing it in seconds.
@@ -59,7 +59,7 @@
                         </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-foreground mb-2">Simplicity</h3>
-                    <p class="text-muted-foreground">Complex technology, simple experience. Anyone can use StyleDream in seconds.</p>
+                    <p class="text-muted-foreground">Complex technology, simple experience. Anyone can use Stylely in seconds.</p>
                 </div>
 
                 {{-- Trust --}}
@@ -83,7 +83,7 @@
                 Ready to transform your shopping experience?
             </h2>
             <p class="text-primary-foreground/80 mb-8">
-                Join thousands of users who shop smarter with StyleDream.
+                Join thousands of users who shop smarter with Stylely.
             </p>
             <a href="{{ route('register') }}" class="inline-flex items-center px-8 py-4 bg-background hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors">
                 Get Started Free

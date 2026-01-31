@@ -12,7 +12,7 @@ return [
     // Free plan
     'free_name' => 'Free',
     'free_price' => '$0',
-    'free_description' => 'Perfect for trying out StyleDream',
+    'free_description' => 'Perfect for trying out Stylely',
     'free_feature1' => '5 credits on signup',
     'free_feature2' => '1 free credit daily',
     'free_feature3' => 'Basic AI try-on',

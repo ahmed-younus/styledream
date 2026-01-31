@@ -3,7 +3,7 @@
     <section class="py-16 sm:py-24 px-4 bg-background">
         <div class="max-w-4xl mx-auto text-center">
             <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                Partner with StyleDream
+                Partner with Stylely
             </h1>
             <p class="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Showcase your fashion brand through AI-powered virtual try-ons and reach engaged shoppers ready to buy.
@@ -223,7 +223,7 @@
                         </svg>
                     </div>
                     <p class="text-foreground mb-6">
-                        StyleDream's virtual try-on has transformed our online sales. Customers love seeing themselves in our pieces before buying.
+                        Stylely's virtual try-on has transformed our online sales. Customers love seeing themselves in our pieces before buying.
                     </p>
                     <div class="mb-4">
                         <p class="text-2xl font-bold text-primary">45% increase</p>
@@ -609,7 +609,7 @@
                 Calculate Your ROI
             </h2>
             <p class="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-                See how StyleDream can impact your bottom line. Our partners see an average 35% increase in conversion rates.
+                See how Stylely can impact your bottom line. Our partners see an average 35% increase in conversion rates.
             </p>
 
             <div class="bg-card p-8 rounded-2xl border border-border">
@@ -779,7 +779,7 @@
                         </svg>
                     </button>
                     <div x-show="open" x-collapse class="px-6 pb-4">
-                        <p class="text-muted-foreground">Yes! Our dashboard shows clear attribution from try-on to purchase, helping you measure exact ROI from the partnership. You'll see real-time data on how StyleDream is impacting your bottom line.</p>
+                        <p class="text-muted-foreground">Yes! Our dashboard shows clear attribution from try-on to purchase, helping you measure exact ROI from the partnership. You'll see real-time data on how Stylely is impacting your bottom line.</p>
                     </div>
                 </div>
 

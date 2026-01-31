@@ -15,7 +15,7 @@ class SuperAdminSeeder extends Seeder
     {
         // Create the first super admin
         AdminUser::updateOrCreate(
-            ['email' => 'admin@styledream.com'],
+            ['email' => 'admin@stylely.ai'],
             [
                 'name' => 'Super Admin',
                 'password' => Hash::make('Admin@123!'),
@@ -24,7 +24,7 @@ class SuperAdminSeeder extends Seeder
         );
 
         $this->command->info('Super admin created successfully!');
-        $this->command->info('Email: admin@styledream.com');
+        $this->command->info('Email: admin@stylely.ai');
         $this->command->info('Password: Admin@123!');
         $this->command->warn('Please change this password immediately after first login!');
     }

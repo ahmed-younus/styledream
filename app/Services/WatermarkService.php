@@ -20,7 +20,7 @@ class WatermarkService
      */
     public function addWatermark(string $imagePath, ?string $watermarkText = null): string
     {
-        $watermarkText = $watermarkText ?? 'Made with StyleDream';
+        $watermarkText = $watermarkText ?? 'Made with Stylely';
 
         // Determine if it's a URL or a storage path
         if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
@@ -85,7 +85,7 @@ class WatermarkService
      */
     public function addWatermarkBase64(string $imagePath, ?string $watermarkText = null): string
     {
-        $watermarkText = $watermarkText ?? 'Made with StyleDream';
+        $watermarkText = $watermarkText ?? 'Made with Stylely';
 
         // Determine if it's a URL or a storage path
         if (filter_var($imagePath, FILTER_VALIDATE_URL)) {

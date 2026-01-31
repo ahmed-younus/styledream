@@ -64,7 +64,7 @@ class PaymentController extends Controller
                     'currency' => $currency,
                     'product_data' => [
                         'name' => $pack['label'] ?? ($pack['credits'] . ' Credits'),
-                        'description' => "StyleDream Credit Pack - {$pack['credits']} credits for virtual try-on",
+                        'description' => "Stylely Credit Pack - {$pack['credits']} credits for virtual try-on",
                         'images' => [config('app.url') . '/images/logo.png'],
                     ],
                     'unit_amount' => $price,

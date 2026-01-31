@@ -42,9 +42,9 @@ class Settings extends Component
             'smtp_password' => Setting::get('smtp_password', ''),
             'smtp_encryption' => Setting::get('smtp_encryption', 'tls'),
             'mail_from_address' => Setting::get('mail_from_address', ''),
-            'mail_from_name' => Setting::get('mail_from_name', 'StyleDream'),
+            'mail_from_name' => Setting::get('mail_from_name', 'Stylely'),
             'admin_email' => Setting::get('admin_email', 'info@stylely.ai'),
-            'site_name' => Setting::get('site_name', 'StyleDream'),
+            'site_name' => Setting::get('site_name', 'Stylely'),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
             'signup_credits' => Setting::get('signup_credits', 3),
             'daily_free_credits' => Setting::get('daily_free_credits', 1),
@@ -114,7 +114,7 @@ class Settings extends Component
                 'mail.mailers.smtp.password' => $this->settings['smtp_password'],
                 'mail.mailers.smtp.encryption' => $this->settings['smtp_encryption'] ?: 'tls',
                 'mail.from.address' => $this->settings['mail_from_address'],
-                'mail.from.name' => $this->settings['mail_from_name'] ?: 'StyleDream',
+                'mail.from.name' => $this->settings['mail_from_name'] ?: 'Stylely',
             ]);
 
             // Clear the mail manager cache to use new config
@@ -122,10 +122,10 @@ class Settings extends Component
 
             // Send test email
             \Illuminate\Support\Facades\Mail::raw(
-                "This is a test email from StyleDream.\n\nIf you received this email, your SMTP configuration is working correctly!\n\nSMTP Host: {$this->settings['smtp_host']}\nPort: {$this->settings['smtp_port']}\nFrom: {$this->settings['mail_from_address']}\n\n---\nSent from StyleDream Admin Panel at " . now()->format('Y-m-d H:i:s'),
+                "This is a test email from Stylely.\n\nIf you received this email, your SMTP configuration is working correctly!\n\nSMTP Host: {$this->settings['smtp_host']}\nPort: {$this->settings['smtp_port']}\nFrom: {$this->settings['mail_from_address']}\n\n---\nSent from Stylely Admin Panel at " . now()->format('Y-m-d H:i:s'),
                 function ($message) {
                     $message->to($this->testEmailTo)
-                        ->subject('Test Email - StyleDream SMTP Configuration');
+                        ->subject('Test Email - Stylely SMTP Configuration');
                 }
             );
 

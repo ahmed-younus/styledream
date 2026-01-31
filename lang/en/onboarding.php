@@ -4,7 +4,7 @@ return [
     'title' => 'Create Your Avatar',
 
     // Welcome Step
-    'welcome_title' => 'Welcome to StyleDream!',
+    'welcome_title' => 'Welcome to Stylely!',
     'welcome_subtitle' => 'Create your avatar for faster virtual try-ons',
     'what_is_avatar' => 'What is an Avatar?',
     'benefit_1' => 'Save your full body photo for quick reuse',

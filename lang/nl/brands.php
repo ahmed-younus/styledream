@@ -2,7 +2,7 @@
 
 return [
     // Page
-    'title' => 'List Your Products on StyleDream',
+    'title' => 'List Your Products on Stylely',
     'subtitle' => 'Let millions of users try them on instantly. Boost conversions and reach fashion-forward customers.',
 
     // Hero
@@ -10,7 +10,7 @@ return [
     'hero_secondary' => 'Learn More',
 
     // Features
-    'features_title' => 'Why Partner With StyleDream?',
+    'features_title' => 'Why Partner With Stylely?',
 
     'feature_tryon_title' => 'Instant AI Try-On',
     'feature_tryon_desc' => 'Users can virtually try on your products in seconds. No friction, AI-powered realism.',

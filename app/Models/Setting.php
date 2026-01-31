@@ -135,7 +135,7 @@ class Setting extends Model
     {
         $defaults = [
             // General
-            ['key' => 'site_name', 'value' => 'StyleDream', 'group' => 'general', 'type' => 'text', 'label' => 'Site Name'],
+            ['key' => 'site_name', 'value' => 'Stylely', 'group' => 'general', 'type' => 'text', 'label' => 'Site Name'],
             ['key' => 'site_tagline', 'value' => 'AI Virtual Try-On', 'group' => 'general', 'type' => 'text', 'label' => 'Site Tagline'],
             ['key' => 'maintenance_mode', 'value' => '0', 'group' => 'general', 'type' => 'boolean', 'label' => 'Maintenance Mode'],
             ['key' => 'default_language', 'value' => 'en', 'group' => 'general', 'type' => 'text', 'label' => 'Default Language'],

@@ -145,7 +145,7 @@
                     <h2 class="text-xl font-bold mb-3">18. {{ __('terms.section18_title') }}</h2>
                     <p class="text-muted-foreground mb-3">{{ __('terms.section18_p1') }}</p>
                     <p class="text-muted-foreground">
-                        <strong>{{ __('terms.email') }}:</strong> support@styledream.app
+                        <strong>{{ __('terms.email') }}:</strong> support@stylely.ai
                     </p>
                 </section>
 

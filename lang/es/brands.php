@@ -2,7 +2,7 @@
 
 return [
     // Hero
-    'title' => 'Asóciate con StyleDream',
+    'title' => 'Asóciate con Stylely',
     'subtitle' => 'Únete a la revolución de la prueba virtual. Deja que los clientes prueben tus productos antes de comprar.',
     'hero_cta' => 'Comenzar',
     'hero_secondary' => 'Saber Más',

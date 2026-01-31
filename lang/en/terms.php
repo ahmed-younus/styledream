@@ -7,12 +7,12 @@ return [
 
     // Section 1: Introduction
     'section1_title' => 'Introduction & Acceptance of Terms',
-    'section1_p1' => 'Welcome to StyleDream ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your access to and use of the StyleDream website, mobile application, and services (collectively, the "Service"). By accessing or using our Service, you agree to be bound by these Terms.',
+    'section1_p1' => 'Welcome to Stylely ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your access to and use of the Stylely website, mobile application, and services (collectively, the "Service"). By accessing or using our Service, you agree to be bound by these Terms.',
     'section1_p2' => 'If you do not agree to these Terms, you may not access or use the Service. We reserve the right to modify these Terms at any time, and your continued use of the Service constitutes acceptance of any modifications.',
 
     // Section 2: Description of Services
     'section2_title' => 'Description of Services',
-    'section2_p1' => 'StyleDream provides an AI-powered virtual try-on service that allows users to visualize how clothing items would look on them. Our Service includes:',
+    'section2_p1' => 'Stylely provides an AI-powered virtual try-on service that allows users to visualize how clothing items would look on them. Our Service includes:',
     'section2_li1' => 'Virtual try-on technology using artificial intelligence',
     'section2_li2' => 'Personal wardrobe management and organization',
     'section2_li3' => 'Outfit saving and sharing capabilities',
@@ -25,19 +25,19 @@ return [
 
     // Section 4: AI-Generated Content
     'section4_title' => 'AI-Generated Content Disclaimer',
-    'section4_p1' => 'StyleDream uses artificial intelligence to generate virtual try-on images. You acknowledge and agree that:',
+    'section4_p1' => 'Stylely uses artificial intelligence to generate virtual try-on images. You acknowledge and agree that:',
     'section4_p2' => 'AI-generated images are approximations and may not accurately represent how clothing will look in real life. Factors such as lighting, fabric texture, fit, and body proportions may differ from the generated results. We do not guarantee the accuracy, quality, or suitability of any AI-generated content.',
     'section4_p3' => 'The AI technology is provided "as is" and we make no warranties regarding its performance, accuracy, or reliability. Results may vary and should be used for entertainment and reference purposes only.',
 
     // Section 5: Image Usage
     'section5_title' => 'Image Usage & User Rights',
-    'section5_p1' => 'By uploading images to our Service, you grant StyleDream a non-exclusive, worldwide, royalty-free license to use, process, and store such images solely for the purpose of providing the Service to you.',
+    'section5_p1' => 'By uploading images to our Service, you grant Stylely a non-exclusive, worldwide, royalty-free license to use, process, and store such images solely for the purpose of providing the Service to you.',
     'section5_p2' => 'You represent and warrant that you own all rights to the images you upload, or have obtained all necessary permissions to upload and use such images. You must not upload images of other individuals without their explicit consent.',
     'section5_p3' => 'We may retain AI-generated images to improve our services, but we will not sell or share your personal images with third parties for marketing purposes without your consent.',
 
     // Section 6: Credits & Payments
     'section6_title' => 'Credits, Payments & Billing',
-    'section6_p1' => 'StyleDream operates on a credit-based system. Credits are required to generate virtual try-on images. Credits can be obtained through free daily claims, signup bonuses, streak rewards, or purchased credit packs.',
+    'section6_p1' => 'Stylely operates on a credit-based system. Credits are required to generate virtual try-on images. Credits can be obtained through free daily claims, signup bonuses, streak rewards, or purchased credit packs.',
     'section6_p2' => 'All payments are processed securely through Stripe. By making a purchase, you agree to Stripe\'s terms of service. Prices are displayed in USD unless otherwise specified and may be subject to applicable taxes.',
     'section6_p3' => 'Purchased credits do not expire and remain in your account until used. Credits are non-transferable between accounts.',
 
@@ -58,7 +58,7 @@ return [
 
     // Section 9: Intellectual Property
     'section9_title' => 'Intellectual Property Rights',
-    'section9_p1' => 'The Service and its original content, features, and functionality are owned by StyleDream and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.',
+    'section9_p1' => 'The Service and its original content, features, and functionality are owned by Stylely and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.',
     'section9_p2' => 'You retain ownership of any images you upload to the Service. However, the AI-generated try-on images created using our technology are provided for your personal use only and may not be used for commercial purposes without our written consent.',
 
     // Section 10: Third-Party Services
@@ -74,12 +74,12 @@ return [
 
     // Section 12: Limitation of Liability
     'section12_title' => 'Limitation of Liability',
-    'section12_p1' => 'TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, STYLEDREAM SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES.',
+    'section12_p1' => 'TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, STYLELY SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS OR REVENUES.',
     'section12_p2' => 'In no event shall our total liability exceed the amount you paid to us in the twelve (12) months preceding the claim.',
 
     // Section 13: Indemnification
     'section13_title' => 'Indemnification',
-    'section13_p1' => 'You agree to indemnify, defend, and hold harmless StyleDream and its officers, directors, employees, agents, and affiliates from and against any claims, liabilities, damages, losses, and expenses arising out of or in any way connected with your access to or use of the Service, your violation of these Terms, or your violation of any rights of any third party.',
+    'section13_p1' => 'You agree to indemnify, defend, and hold harmless Stylely and its officers, directors, employees, agents, and affiliates from and against any claims, liabilities, damages, losses, and expenses arising out of or in any way connected with your access to or use of the Service, your violation of these Terms, or your violation of any rights of any third party.',
 
     // Section 14: Termination
     'section14_title' => 'Termination of Service',
@@ -88,7 +88,7 @@ return [
 
     // Section 15: Governing Law
     'section15_title' => 'Governing Law & Jurisdiction',
-    'section15_p1' => 'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which StyleDream operates, without regard to its conflict of law provisions. Any disputes arising from these Terms or the Service shall be resolved in the courts of that jurisdiction.',
+    'section15_p1' => 'These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which Stylely operates, without regard to its conflict of law provisions. Any disputes arising from these Terms or the Service shall be resolved in the courts of that jurisdiction.',
 
     // Section 16: Dispute Resolution
     'section16_title' => 'Dispute Resolution',

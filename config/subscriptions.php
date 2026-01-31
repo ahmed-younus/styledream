@@ -41,7 +41,7 @@ return [
                 'eur' => '',
             ],
             'credits_per_month' => 0,
-            'description' => 'Perfect for trying out StyleDream',
+            'description' => 'Perfect for trying out Stylely',
             'button_text' => 'Current Plan',
             'badge' => '',
             'features' => [

@@ -12,7 +12,7 @@ return [
     // Free plan
     'free_name' => 'Gratis',
     'free_price' => '$0',
-    'free_description' => 'Perfecto para probar StyleDream',
+    'free_description' => 'Perfecto para probar Stylely',
     'free_feature1' => '5 créditos al registrarte',
     'free_feature2' => '1 crédito gratis diario',
     'free_feature3' => 'Prueba virtual básica',
