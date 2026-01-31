@@ -3,10 +3,10 @@
     <section class="py-16 sm:py-24 bg-background">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-                {{ __('about.hero_title', ['default' => 'About Stylely']) }}
+                About StyleDream
             </h1>
             <p class="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-                {{ __('about.hero_subtitle', ['default' => 'We\'re on a mission to transform the way you shop for clothes online.']) }}
+                We're on a mission to transform the way you shop for clothes online with AI-powered virtual try-ons.
             </p>
         </div>
     </section>
@@ -16,12 +16,12 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             <div class="grid md:grid-cols-2 gap-12 items-center">
                 <div>
-                    <h2 class="text-3xl font-bold text-foreground mb-6">{{ __('about.mission_title', ['default' => 'Our Mission']) }}</h2>
+                    <h2 class="text-3xl font-bold text-foreground mb-6">Our Mission</h2>
                     <p class="text-muted-foreground mb-4">
-                        {{ __('about.mission_p1', ['default' => 'At Stylely, we believe everyone deserves to know how clothes will look on them before making a purchase. No more guessing, no more returns, no more disappointment.']) }}
+                        At StyleDream, we believe everyone deserves to know how clothes will look on them before making a purchase. No more guessing, no more returns, no more disappointment.
                     </p>
                     <p class="text-muted-foreground">
-                        {{ __('about.mission_p2', ['default' => 'Using cutting-edge AI technology, we\'ve created a virtual try-on experience that\'s fast, accurate, and incredibly easy to use. Simply upload your photo, choose any clothing item, and see yourself wearing it in seconds.']) }}
+                        Using cutting-edge AI technology, we've created a virtual try-on experience that's fast, accurate, and incredibly easy to use. Simply upload your photo, choose any clothing item, and see yourself wearing it in seconds.
                     </p>
                 </div>
                 <div class="flex justify-center">
@@ -38,7 +38,7 @@
     {{-- Values Section --}}
     <section class="py-16 bg-background">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
-            <h2 class="text-3xl font-bold text-foreground text-center mb-12">{{ __('about.values_title', ['default' => 'Our Values']) }}</h2>
+            <h2 class="text-3xl font-bold text-foreground text-center mb-12">Our Values</h2>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {{-- Innovation --}}
                 <div class="text-center p-6">
@@ -47,8 +47,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-foreground mb-2">{{ __('about.value1_title', ['default' => 'Innovation']) }}</h3>
-                    <p class="text-muted-foreground">{{ __('about.value1_desc', ['default' => 'We push the boundaries of AI technology to deliver the most realistic virtual try-on experience.']) }}</p>
+                    <h3 class="text-xl font-semibold text-foreground mb-2">Innovation</h3>
+                    <p class="text-muted-foreground">We push the boundaries of AI technology to deliver the most realistic virtual try-on experience.</p>
                 </div>
 
                 {{-- Simplicity --}}
@@ -58,8 +58,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-foreground mb-2">{{ __('about.value2_title', ['default' => 'Simplicity']) }}</h3>
-                    <p class="text-muted-foreground">{{ __('about.value2_desc', ['default' => 'Complex technology, simple experience. Anyone can use Stylely in seconds.']) }}</p>
+                    <h3 class="text-xl font-semibold text-foreground mb-2">Simplicity</h3>
+                    <p class="text-muted-foreground">Complex technology, simple experience. Anyone can use StyleDream in seconds.</p>
                 </div>
 
                 {{-- Trust --}}
@@ -69,8 +69,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-foreground mb-2">{{ __('about.value3_title', ['default' => 'Trust']) }}</h3>
-                    <p class="text-muted-foreground">{{ __('about.value3_desc', ['default' => 'Your privacy matters. We never share your photos and delete them when you ask.']) }}</p>
+                    <h3 class="text-xl font-semibold text-foreground mb-2">Privacy & Trust</h3>
+                    <p class="text-muted-foreground">Your privacy matters. We never share your photos and delete them when you ask.</p>
                 </div>
             </div>
         </div>
@@ -80,13 +80,13 @@
     <section class="py-16 bg-primary">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
             <h2 class="text-2xl sm:text-3xl font-bold text-primary-foreground mb-4">
-                {{ __('about.cta_title', ['default' => 'Ready to transform your shopping experience?']) }}
+                Ready to transform your shopping experience?
             </h2>
             <p class="text-primary-foreground/80 mb-8">
-                {{ __('about.cta_subtitle', ['default' => 'Join thousands of users who shop smarter with Stylely.']) }}
+                Join thousands of users who shop smarter with StyleDream.
             </p>
             <a href="{{ route('register') }}" class="inline-flex items-center px-8 py-4 bg-background hover:bg-secondary text-foreground font-semibold rounded-lg transition-colors">
-                {{ __('about.cta_button', ['default' => 'Get Started Free']) }}
+                Get Started Free
                 <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>

@@ -3,10 +3,10 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6">
             <div class="text-center mb-12">
                 <h1 class="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-                    {{ __('contact.title', ['default' => 'Contact Us']) }}
+                    Get in Touch
                 </h1>
                 <p class="text-lg text-muted-foreground">
-                    {{ __('contact.subtitle', ['default' => 'Have a question or feedback? We\'d love to hear from you.']) }}
+                    Have a question or feedback? We'd love to hear from you.
                 </p>
             </div>
 
@@ -19,7 +19,7 @@
                         </svg>
                     </div>
                     <h3 class="font-semibold text-foreground mb-1">Email</h3>
-                    <a href="mailto:info@stylely.ai" class="text-muted-foreground hover:text-primary transition-colors">info@stylely.ai</a>
+                    <a href="mailto:support@styledream.ai" class="text-muted-foreground hover:text-primary transition-colors">support@styledream.ai</a>
                 </div>
 
                 {{-- Response Time --}}
@@ -41,7 +41,7 @@
                         </svg>
                     </div>
                     <h3 class="font-semibold text-foreground mb-1">Social</h3>
-                    <p class="text-muted-foreground">@stylely</p>
+                    <p class="text-muted-foreground">@styledream</p>
                 </div>
             </div>
 
