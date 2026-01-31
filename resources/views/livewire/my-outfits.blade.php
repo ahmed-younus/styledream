@@ -36,8 +36,8 @@
                             <img src="{{ $outfit->image_url }}" alt="{{ $outfit->name ?? 'Saved outfit' }}" class="w-full h-full object-cover">
                         </div>
 
-                        {{-- Overlay on Hover --}}
-                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 p-4">
+                        {{-- Desktop Overlay on Hover --}}
+                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex flex-col items-center justify-center gap-3 p-4">
                             {{-- Try Again --}}
                             <button
                                 wire:click="tryAgain({{ $outfit->id }})"
@@ -76,6 +76,49 @@
                                 </svg>
                                 {{ __('outfits.delete_outfit') }}
                             </button>
+                        </div>
+
+                        {{-- Mobile Actions (always visible) --}}
+                        <div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent md:hidden">
+                            <div class="flex gap-1.5">
+                                {{-- Try Again --}}
+                                <button
+                                    wire:click="tryAgain({{ $outfit->id }})"
+                                    class="flex-1 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                    </svg>
+                                    {{ __('outfits.try_again') }}
+                                </button>
+
+                                {{-- Post to Feed --}}
+                                @if(!$outfit->outfit_post_id)
+                                    <button
+                                        wire:click="openPostModal({{ $outfit->id }})"
+                                        class="flex-1 py-2 bg-white text-foreground rounded-lg text-xs font-medium flex items-center justify-center gap-1 active:scale-95 transition-transform"
+                                    >
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                        </svg>
+                                        {{ __('feed.post') }}
+                                    </button>
+                                @else
+                                    <span class="flex-1 py-2 bg-green-500/30 text-green-400 rounded-lg text-xs font-medium text-center">
+                                        {{ __('feed.posted') }}
+                                    </span>
+                                @endif
+
+                                {{-- Delete --}}
+                                <button
+                                    wire:click="deleteOutfit({{ $outfit->id }})"
+                                    class="p-2 bg-red-500/80 text-white rounded-lg active:scale-95 transition-transform"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Info --}}

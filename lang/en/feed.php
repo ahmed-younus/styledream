@@ -18,6 +18,7 @@ return [
     'saved' => 'Saved',
     'report' => 'Report',
     'post_to_feed' => 'Post to Feed',
+    'post' => 'Post',
 
     // Comments
     'add_comment' => 'Add a comment...',
