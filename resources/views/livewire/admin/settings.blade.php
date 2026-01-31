@@ -103,6 +103,16 @@
                 </div>
             </div>
 
+            {{-- Admin Email Section --}}
+            <div class="mt-6 pt-6 border-t border-[#e3e8ee]">
+                <h4 class="text-sm font-medium text-[#1a1f36] mb-2">Notification Email</h4>
+                <p class="text-sm text-[#697386] mb-4">This email will receive contact form submissions and brand registration notifications.</p>
+                <div>
+                    <label class="block text-sm font-medium text-[#1a1f36] mb-1">Admin Email</label>
+                    <input type="email" wire:model="settings.admin_email" class="w-full md:w-1/2 px-3 py-2 border border-[#e3e8ee] rounded-lg bg-white text-[#1a1f36] placeholder-[#697386] focus:ring-2 focus:ring-[#635bff]/20 focus:border-[#635bff] outline-none transition-colors text-sm" placeholder="info@stylely.ai">
+                </div>
+            </div>
+
             <div class="pt-6">
                 <button wire:click="saveSmtpSettings" class="px-4 py-2 bg-[#635bff] text-white rounded-lg hover:bg-[#5248f0] transition-colors text-sm font-medium">
                     Save SMTP Settings

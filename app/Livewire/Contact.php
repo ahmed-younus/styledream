@@ -65,10 +65,10 @@ class Contact extends Component
 
         // Send notification email
         try {
-            $adminEmail = config('mail.admin_email', 'info@stylely.ai');
+            $adminEmail = Setting::get('admin_email', 'info@stylely.ai');
             Mail::to($adminEmail)->send(new ContactNotification($inquiry));
         } catch (\Exception $e) {
-            \Log::error('Failed to send contact notification: ' . $e->getMessage());
+            \Log::error('Failed to send contact notification to ' . ($adminEmail ?? 'unknown') . ': ' . $e->getMessage());
         }
 
         $this->isSubmitting = false;

@@ -76,11 +76,11 @@ class BrandPromo extends Component
 
         // Send notification email to admin
         try {
-            $adminEmail = config('mail.admin_email', 'info@stylely.ai');
+            $adminEmail = Setting::get('admin_email', 'info@stylely.ai');
             Mail::to($adminEmail)->send(new BrandRegistrationNotification($registration));
         } catch (\Exception $e) {
             // Log error but don't fail the registration
-            \Log::error('Failed to send brand registration email: ' . $e->getMessage());
+            \Log::error('Failed to send brand registration email to ' . ($adminEmail ?? 'unknown') . ': ' . $e->getMessage());
         }
 
         $this->isSubmitting = false;

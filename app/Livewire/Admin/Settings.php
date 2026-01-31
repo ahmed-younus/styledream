@@ -43,6 +43,7 @@ class Settings extends Component
             'smtp_encryption' => Setting::get('smtp_encryption', 'tls'),
             'mail_from_address' => Setting::get('mail_from_address', ''),
             'mail_from_name' => Setting::get('mail_from_name', 'StyleDream'),
+            'admin_email' => Setting::get('admin_email', 'info@stylely.ai'),
             'site_name' => Setting::get('site_name', 'StyleDream'),
             'maintenance_mode' => Setting::get('maintenance_mode', false),
             'signup_credits' => Setting::get('signup_credits', 3),
@@ -72,6 +73,10 @@ class Settings extends Component
         Setting::set('smtp_encryption', $this->settings['smtp_encryption'], 'smtp');
         Setting::set('mail_from_address', $this->settings['mail_from_address'], 'smtp');
         Setting::set('mail_from_name', $this->settings['mail_from_name'], 'smtp');
+        Setting::set('admin_email', $this->settings['admin_email'], 'smtp');
+
+        // Clear mail manager cache so new settings take effect immediately
+        app()->forgetInstance('mail.manager');
 
         auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'SMTP settings updated');
         $this->dispatch('notify', message: 'SMTP settings saved successfully');
