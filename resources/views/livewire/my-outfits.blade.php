@@ -93,8 +93,8 @@
 
     {{-- Delete Confirmation Modal --}}
     @if($showDeleteModal)
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" wire:click.self="closeDeleteModal">
-            <div class="bg-card rounded-2xl p-6 max-w-sm w-full">
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closeDeleteModal">
+            <div class="rounded-2xl p-6 max-w-sm w-full shadow-2xl" style="background: white;">
                 <div class="text-center mb-6">
                     <div class="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg class="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,8 +118,8 @@
 
     {{-- Post to Feed Modal --}}
     @if($showPostModal)
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" wire:click.self="closePostModal">
-            <div class="bg-card rounded-2xl p-6 max-w-md w-full">
+        <div class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999; background: rgba(0,0,0,0.9);" wire:click.self="closePostModal">
+            <div class="rounded-2xl p-6 max-w-md w-full shadow-2xl" style="background: white;">
                 <h3 class="text-lg font-semibold text-foreground mb-4">{{ __('outfits.post_title') }}</h3>
 
                 {{-- Caption --}}
