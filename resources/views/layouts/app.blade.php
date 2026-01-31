@@ -80,8 +80,8 @@
                 </span>
             </a>
 
-            <!-- Desktop Nav -->
-            <div class="hidden md:flex items-center gap-6">
+            <!-- Desktop Nav (lg and up) -->
+            <div class="hidden lg:flex items-center gap-6">
                 @auth
                     <a href="{{ route('feed') }}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         {{ __('nav.feed') }}
@@ -192,8 +192,8 @@
                 @endauth
             </div>
 
-            <!-- Mobile Menu Button -->
-            <div class="md:hidden" x-data="{ mobileOpen: false }">
+            <!-- Mobile/Tablet Menu Button (below lg) -->
+            <div class="lg:hidden" x-data="{ mobileOpen: false }">
                 <button @click="mobileOpen = !mobileOpen" class="p-2 text-foreground">
                     <svg x-show="!mobileOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>

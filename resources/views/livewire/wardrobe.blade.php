@@ -37,8 +37,8 @@
                         <div class="aspect-square overflow-hidden relative">
                             <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform">
 
-                            {{-- Desktop Hover Actions --}}
-                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center justify-center gap-2">
+                            {{-- Desktop Hover Actions (lg and up) --}}
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hidden lg:flex items-center justify-center gap-2">
                                 <button wire:click="toggleFavorite({{ $item->id }})" class="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors">
                                     @if($item->is_favorite)
                                         <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
@@ -57,8 +57,8 @@
                                 </button>
                             </div>
 
-                            {{-- Mobile Actions (always visible) --}}
-                            <div class="absolute top-2 right-2 flex gap-1.5 md:hidden">
+                            {{-- Mobile/Tablet Actions (always visible, hidden on lg+) --}}
+                            <div class="absolute top-2 right-2 flex gap-1.5 lg:hidden">
                                 <button wire:click="toggleFavorite({{ $item->id }})" class="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm active:scale-95 transition-transform">
                                     @if($item->is_favorite)
                                         <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
@@ -77,9 +77,9 @@
                                 </button>
                             </div>
 
-                            {{-- Favorite Badge --}}
+                            {{-- Favorite Badge (desktop only - mobile has buttons) --}}
                             @if($item->is_favorite)
-                                <div class="absolute top-2 right-2">
+                                <div class="absolute top-2 right-2 hidden lg:block">
                                     <svg class="w-5 h-5 text-red-500 drop-shadow" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                                     </svg>
