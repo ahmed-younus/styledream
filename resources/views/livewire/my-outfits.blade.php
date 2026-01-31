@@ -189,7 +189,7 @@
 
     {{-- View Outfit Lightbox (Studio style) --}}
     @if($showViewModal && $viewOutfit)
-        <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+        <div class="fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4 pt-20"
              wire:click.self="closeViewModal">
             <div class="relative max-w-[90vw] sm:max-w-md bg-background rounded-2xl overflow-hidden shadow-2xl">
                 {{-- Close Button --}}
