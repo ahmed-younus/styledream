@@ -299,6 +299,15 @@ class PaymentController extends Controller
                         'plan' => $plan,
                         'subscription_id' => $session->subscription->id,
                     ]);
+
+                    // Send subscription confirmation email
+                    try {
+                        \Mail::to(auth()->user()->email)->send(
+                            new \App\Mail\SubscriptionConfirmationEmail(auth()->user(), $subscription)
+                        );
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send subscription confirmation email', ['error' => $e->getMessage()]);
+                    }
                 }
 
                 return redirect()->route('pricing')->with('success', __('pricing.subscription_activated'));
@@ -492,6 +501,18 @@ class PaymentController extends Controller
             'credits' => $credits,
             'session_id' => $session->id,
         ]);
+
+        // Send purchase confirmation email
+        try {
+            $purchase = CreditPurchase::where('stripe_session_id', $session->id)->first();
+            if ($purchase) {
+                \Mail::to($user->email)->send(
+                    new \App\Mail\PurchaseConfirmationEmail($user, $purchase)
+                );
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send purchase confirmation email', ['error' => $e->getMessage()]);
+        }
     }
 
     /**
