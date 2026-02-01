@@ -393,15 +393,29 @@ class PaymentController extends Controller
 
     /**
      * Get or create a Stripe customer for the user
+     * Handles case where customer ID exists but customer was deleted or belongs to different Stripe account
      */
     protected function getOrCreateStripeCustomer(User $user): string
     {
-        if ($user->stripe_customer_id) {
-            return $user->stripe_customer_id;
-        }
-
         Stripe::setApiKey(config('services.stripe.secret'));
 
+        // If user has a customer ID, verify it exists in Stripe
+        if ($user->stripe_customer_id) {
+            try {
+                $customer = Customer::retrieve($user->stripe_customer_id);
+                if ($customer && !$customer->deleted) {
+                    return $user->stripe_customer_id;
+                }
+            } catch (\Exception $e) {
+                // Customer doesn't exist in Stripe (deleted or different account)
+                \Log::info('Stripe customer not found, creating new one', [
+                    'user_id' => $user->id,
+                    'old_customer_id' => $user->stripe_customer_id,
+                ]);
+            }
+        }
+
+        // Create new customer
         $customer = Customer::create([
             'email' => $user->email,
             'name' => $user->name,

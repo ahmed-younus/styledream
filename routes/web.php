@@ -59,10 +59,12 @@ Route::middleware('auth')->group(function () {
 
     // Payment routes - Credit Packs
     Route::post('/checkout/credits', [PaymentController::class, 'createCheckout'])->name('checkout.credits');
+    Route::get('/checkout/credits', fn() => redirect()->route('pricing'))->name('checkout.credits.redirect');
     Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
 
     // Subscription routes
     Route::post('/checkout/subscription', [PaymentController::class, 'createSubscription'])->name('checkout.subscription');
+    Route::get('/checkout/subscription', fn() => redirect()->route('pricing'))->name('checkout.subscription.redirect');
     Route::get('/subscription/success', [PaymentController::class, 'subscriptionSuccess'])->name('subscription.success');
     Route::get('/billing', [PaymentController::class, 'billingPortal'])->name('billing');
 });
