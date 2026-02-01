@@ -1,0 +1,4 @@
+{!! $slot !!}
+
+
+{{ config('app.name') }}

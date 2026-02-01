@@ -11,9 +11,7 @@ We're excited to have you on board. With Stylely, you can:
 - **Save to your wardrobe** - Build your personal digital closet
 - **Discover new styles** - Get inspired by our style feed
 
-<x-mail::panel>
 **Your Free Credits:** You've received {{ config('credits.signup', 5) }} free credits to get started!
-</x-mail::panel>
 
 Ready to try your first outfit?
 

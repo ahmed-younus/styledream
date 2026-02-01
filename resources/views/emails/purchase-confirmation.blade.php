@@ -5,19 +5,17 @@ Hi {{ $user->name }},
 
 Your credit purchase has been confirmed and the credits have been added to your account.
 
-<x-mail::panel>
 **Order Details:**
 
 - **Pack:** {{ ucwords(str_replace('_', ' ', $purchase->pack)) }}
 - **Credits:** {{ $purchase->credits }}
 - **Amount:** {{ strtoupper($purchase->currency) }} {{ number_format($purchase->amount / 100, 2) }}
 - **Date:** {{ $purchase->created_at->format('F j, Y \a\t g:i A') }}
-</x-mail::panel>
 
 Your new credit balance is ready to use!
 
 <x-mail::button :url="config('app.url') . '/studio'">
-Start Trying On Outfits
+Start Trying On
 </x-mail::button>
 
 ---

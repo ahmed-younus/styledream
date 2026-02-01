@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Services\EmailTemplateService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -19,8 +20,12 @@ class PasswordResetEmail extends Mailable
 
     public function envelope(): Envelope
     {
+        $subject = EmailTemplateService::renderSubject('password-reset', [
+            'user_name' => $this->userName,
+        ]);
+
         return new Envelope(
-            subject: 'Reset Your Stylely Password',
+            subject: $subject,
         );
     }
 
@@ -34,5 +39,13 @@ class PasswordResetEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Check if this email should be sent
+     */
+    public static function shouldSend(): bool
+    {
+        return EmailTemplateService::isActive('password-reset');
     }
 }

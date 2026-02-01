@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\PricingService;
+use App\Services\EmailTemplateService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -27,8 +28,13 @@ class SubscriptionConfirmationEmail extends Mailable
     public function envelope(): Envelope
     {
         $planName = ucfirst($this->subscription->plan);
+        $subject = EmailTemplateService::renderSubject('subscription-confirmation', [
+            'user_name' => $this->user->name,
+            'plan_name' => $planName,
+        ]);
+
         return new Envelope(
-            subject: "Welcome to Stylely {$planName} - Subscription Confirmed",
+            subject: $subject,
         );
     }
 
@@ -42,5 +48,13 @@ class SubscriptionConfirmationEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Check if this email should be sent
+     */
+    public static function shouldSend(): bool
+    {
+        return EmailTemplateService::isActive('subscription-confirmation');
     }
 }

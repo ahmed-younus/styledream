@@ -300,13 +300,36 @@ class PaymentController extends Controller
                         'subscription_id' => $session->subscription->id,
                     ]);
 
-                    // Send subscription confirmation email
+                    // Send subscription confirmation email to user
                     try {
-                        \Mail::to(auth()->user()->email)->send(
-                            new \App\Mail\SubscriptionConfirmationEmail(auth()->user(), $subscription)
+                        \Log::info('Sending subscription confirmation email to user', ['email' => auth()->user()->email]);
+                        $subscriptionEmail = new \App\Mail\SubscriptionConfirmationEmail(auth()->user(), $subscription);
+                        \Mail::to(auth()->user()->email)->send($subscriptionEmail);
+                        \Log::info('Subscription confirmation email sent to user successfully');
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to send subscription confirmation email to user', [
+                            'email' => auth()->user()->email,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                    }
+
+                    // Send admin copy if enabled (separate try-catch)
+                    try {
+                        $planDetails = \App\Services\PricingService::getPlan($plan) ?? [];
+                        $subject = 'Welcome to Stylely ' . ucfirst($plan) . ' - Subscription Confirmed';
+                        \App\Mail\AdminNotificationEmail::sendIfEnabled(
+                            'subscription-confirmation',
+                            $subject,
+                            [
+                                'user_name' => auth()->user()->name,
+                                'user_email' => auth()->user()->email,
+                                'plan_name' => ucfirst($plan),
+                                'credits' => $planDetails['credits_per_month'] ?? 0,
+                            ]
                         );
                     } catch (\Exception $e) {
-                        \Log::error('Failed to send subscription confirmation email', ['error' => $e->getMessage()]);
+                        \Log::error('Failed to send subscription admin copy email', ['error' => $e->getMessage()]);
                     }
                 }
 
@@ -503,15 +526,39 @@ class PaymentController extends Controller
         ]);
 
         // Send purchase confirmation email
-        try {
-            $purchase = CreditPurchase::where('stripe_session_id', $session->id)->first();
-            if ($purchase) {
-                \Mail::to($user->email)->send(
-                    new \App\Mail\PurchaseConfirmationEmail($user, $purchase)
-                );
+        $purchase = CreditPurchase::where('stripe_session_id', $session->id)->first();
+        if ($purchase) {
+            // Send user email
+            try {
+                \Log::info('Sending purchase confirmation email to user', ['email' => $user->email]);
+                $purchaseEmail = new \App\Mail\PurchaseConfirmationEmail($user, $purchase);
+                \Mail::to($user->email)->send($purchaseEmail);
+                \Log::info('Purchase confirmation email sent to user successfully');
+            } catch (\Exception $e) {
+                \Log::error('Failed to send purchase confirmation email to user', [
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
-        } catch (\Exception $e) {
-            \Log::error('Failed to send purchase confirmation email', ['error' => $e->getMessage()]);
+
+            // Send admin copy if enabled (separate try-catch)
+            try {
+                $subject = 'Your Stylely Credit Purchase Confirmation';
+                \App\Mail\AdminNotificationEmail::sendIfEnabled(
+                    'purchase-confirmation',
+                    $subject,
+                    [
+                        'user_name' => $user->name,
+                        'user_email' => $user->email,
+                        'credits' => $purchase->credits,
+                        'amount' => $purchase->amount,
+                        'currency' => strtoupper($purchase->currency),
+                    ]
+                );
+            } catch (\Exception $e) {
+                \Log::error('Failed to send admin copy email', ['error' => $e->getMessage()]);
+            }
         }
     }
 

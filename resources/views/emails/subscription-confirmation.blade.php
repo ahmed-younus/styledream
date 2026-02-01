@@ -5,24 +5,23 @@ Hi {{ $user->name }},
 
 Thank you for subscribing to Stylely! Your subscription is now active.
 
-<x-mail::panel>
 **Subscription Details:**
 
 - **Plan:** {{ ucfirst($subscription->plan) }}
 - **Monthly Credits:** {{ $planDetails['credits_per_month'] ?? 'Unlimited' }}
 - **Status:** Active
 - **Next Billing Date:** {{ $subscription->current_period_end->format('F j, Y') }}
-</x-mail::panel>
 
 @if(isset($planDetails['features']) && count($planDetails['features']) > 0)
 **Your Plan Benefits:**
+
 @foreach($planDetails['features'] as $feature)
 - {{ $feature }}
 @endforeach
 @endif
 
 <x-mail::button :url="config('app.url') . '/studio'">
-Start Trying On Outfits
+Start Trying On
 </x-mail::button>
 
 ---

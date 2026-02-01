@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\CreditPurchase;
 use App\Models\User;
+use App\Services\EmailTemplateService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -21,8 +22,14 @@ class PurchaseConfirmationEmail extends Mailable
 
     public function envelope(): Envelope
     {
+        $subject = EmailTemplateService::renderSubject('purchase-confirmation', [
+            'user_name' => $this->user->name,
+            'pack_name' => ucfirst($this->purchase->pack),
+            'credits' => $this->purchase->credits,
+        ]);
+
         return new Envelope(
-            subject: 'Your Stylely Credit Purchase Confirmation',
+            subject: $subject,
         );
     }
 
@@ -36,5 +43,13 @@ class PurchaseConfirmationEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Check if this email should be sent
+     */
+    public static function shouldSend(): bool
+    {
+        return EmailTemplateService::isActive('purchase-confirmation');
     }
 }

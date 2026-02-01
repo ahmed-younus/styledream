@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Setting;
 use App\Models\SeoSetting;
 use App\Models\AdminActivityLog;
+use App\Services\EmailTemplateService;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -19,12 +20,31 @@ class Settings extends Component
     public array $seoSettings = [];
     public string $testEmailTo = '';
 
+    // Email Templates
+    public array $emailTemplates = [];
+    public ?string $editingTemplate = null;
+    public string $editSubject = '';
+    public string $editBody = '';
+    public bool $editIsActive = true;
+    public bool $editSendAdminCopy = false;
+    public string $previewMode = 'light';
+
+    // Test Email Modal
+    public ?string $testingTemplate = null;
+    public string $testEmailAddress = '';
+
     public function mount()
     {
         Setting::initializeDefaults();
         SeoSetting::initializeDefaults();
         $this->loadSettings();
         $this->loadSeoSettings();
+        $this->loadEmailTemplates();
+    }
+
+    protected function loadEmailTemplates()
+    {
+        $this->emailTemplates = EmailTemplateService::getAllTemplates();
     }
 
     protected function loadSettings()
@@ -226,6 +246,237 @@ class Settings extends Component
 
         auth('admin')->user()->logActivity(AdminActivityLog::ACTION_SETTINGS_CHANGED, null, null, null, null, 'SEO settings updated');
         $this->dispatch('notify', message: 'SEO settings saved successfully');
+    }
+
+    // Email Template Methods
+    public function editEmailTemplate(string $name)
+    {
+        $template = $this->emailTemplates[$name] ?? null;
+        if (!$template) return;
+
+        $this->editingTemplate = $name;
+        $this->editSubject = $template['subject'] ?? '';
+        $this->editBody = $template['body'] ?? '';
+        $this->editIsActive = $template['is_active'] ?? true;
+        $this->editSendAdminCopy = $template['send_admin_copy'] ?? false;
+    }
+
+    public function saveEmailTemplate()
+    {
+        if (!$this->editingTemplate) return;
+
+        EmailTemplateService::saveTemplate($this->editingTemplate, [
+            'subject' => $this->editSubject,
+            'body' => $this->editBody,
+            'is_active' => $this->editIsActive,
+            'send_admin_copy' => $this->editSendAdminCopy,
+        ]);
+
+        $this->loadEmailTemplates();
+        auth('admin')->user()->logActivity(
+            AdminActivityLog::ACTION_SETTINGS_CHANGED,
+            null, null, null, null,
+            'Email template updated: ' . $this->editingTemplate
+        );
+
+        $this->cancelEditTemplate();
+        $this->dispatch('notify', message: 'Email template saved successfully');
+    }
+
+    public function cancelEditTemplate()
+    {
+        $this->editingTemplate = null;
+        $this->editSubject = '';
+        $this->editBody = '';
+        $this->editIsActive = true;
+        $this->editSendAdminCopy = false;
+    }
+
+    public function resetEmailTemplate(string $name)
+    {
+        EmailTemplateService::resetToDefault($name);
+        $this->loadEmailTemplates();
+
+        auth('admin')->user()->logActivity(
+            AdminActivityLog::ACTION_SETTINGS_CHANGED,
+            null, null, null, null,
+            'Email template reset to default: ' . $name
+        );
+
+        $this->dispatch('notify', message: 'Email template reset to default');
+    }
+
+    public function toggleEmailActive(string $name)
+    {
+        $template = $this->emailTemplates[$name] ?? null;
+        if (!$template) return;
+
+        $newStatus = !($template['is_active'] ?? true);
+
+        EmailTemplateService::saveTemplate($name, [
+            'subject' => $template['subject'],
+            'body' => $template['body'],
+            'is_active' => $newStatus,
+            'send_admin_copy' => $template['send_admin_copy'] ?? false,
+        ]);
+
+        $this->loadEmailTemplates();
+        $this->dispatch('notify', message: 'Email template ' . ($newStatus ? 'enabled' : 'disabled'));
+    }
+
+    public function toggleAdminCopy(string $name)
+    {
+        $template = $this->emailTemplates[$name] ?? null;
+        if (!$template) return;
+
+        $newStatus = !($template['send_admin_copy'] ?? false);
+
+        EmailTemplateService::saveTemplate($name, [
+            'subject' => $template['subject'],
+            'body' => $template['body'],
+            'is_active' => $template['is_active'] ?? true,
+            'send_admin_copy' => $newStatus,
+        ]);
+
+        $this->loadEmailTemplates();
+        $this->dispatch('notify', message: 'Admin copy ' . ($newStatus ? 'enabled' : 'disabled'));
+    }
+
+    public function openTestEmailModal(string $templateName)
+    {
+        $this->testingTemplate = $templateName;
+        $this->testEmailAddress = $this->settings['admin_email'] ?? '';
+    }
+
+    public function cancelTestEmail()
+    {
+        $this->testingTemplate = null;
+        $this->testEmailAddress = '';
+    }
+
+    public function sendTemplateTestEmail()
+    {
+        if (!$this->testingTemplate) {
+            $this->dispatch('notify', message: 'No template selected', type: 'error');
+            return;
+        }
+
+        $this->validate([
+            'testEmailAddress' => 'required|email',
+        ], [
+            'testEmailAddress.required' => 'Please enter an email address',
+            'testEmailAddress.email' => 'Please enter a valid email address',
+        ]);
+
+        $toEmail = $this->testEmailAddress;
+        $templateName = $this->testingTemplate;
+
+        try {
+            // Send the test email using the appropriate Mailable
+            switch ($templateName) {
+                case 'welcome':
+                    $mockUser = new \App\Models\User([
+                        'name' => 'Test User',
+                        'email' => $toEmail,
+                    ]);
+                    $mockUser->id = 1;
+                    \Mail::to($toEmail)->send(new \App\Mail\WelcomeEmail($mockUser));
+                    break;
+
+                case 'password-reset':
+                    \Mail::to($toEmail)->send(new \App\Mail\PasswordResetEmail(
+                        config('app.url') . '/reset-password/test-token-123',
+                        'Test User'
+                    ));
+                    break;
+
+                case 'purchase-confirmation':
+                    $mockUser = new \App\Models\User(['name' => 'Test User', 'email' => $toEmail]);
+                    $mockUser->id = 1;
+                    $mockPurchase = new \App\Models\CreditPurchase();
+                    $mockPurchase->pack = 'starter';
+                    $mockPurchase->credits = 10;
+                    $mockPurchase->amount = 199;
+                    $mockPurchase->currency = 'usd';
+                    $mockPurchase->stripe_session_id = 'test_session_123';
+                    $mockPurchase->created_at = now();
+                    \Mail::to($toEmail)->send(new \App\Mail\PurchaseConfirmationEmail($mockUser, $mockPurchase));
+                    break;
+
+                case 'subscription-confirmation':
+                    $mockUser = new \App\Models\User(['name' => 'Test User', 'email' => $toEmail]);
+                    $mockUser->id = 1;
+                    $mockSubscription = new \App\Models\Subscription();
+                    $mockSubscription->plan = 'pro';
+                    $mockSubscription->status = 'active';
+                    $mockSubscription->current_period_end = now()->addMonth();
+                    \Mail::to($toEmail)->send(new \App\Mail\SubscriptionConfirmationEmail($mockUser, $mockSubscription));
+                    break;
+
+                case 'tryon-complete':
+                    $this->sendGenericTestEmail($templateName, $toEmail);
+                    break;
+
+                case 'contact-notification':
+                    $mockInquiry = new \App\Models\ContactInquiry();
+                    $mockInquiry->name = 'Test Customer';
+                    $mockInquiry->email = 'testcustomer@example.com';
+                    $mockInquiry->subject = 'Test Inquiry Subject';
+                    $mockInquiry->message = 'This is a test message from the email template testing system.';
+                    $mockInquiry->created_at = now();
+                    \Mail::to($toEmail)->send(new \App\Mail\ContactNotification($mockInquiry));
+                    break;
+
+                case 'brand-registration':
+                    $mockRegistration = new \App\Models\BrandRegistration();
+                    $mockRegistration->brand_name = 'Test Brand Co.';
+                    $mockRegistration->website = 'https://testbrand.com';
+                    $mockRegistration->contact_email = 'contact@testbrand.com';
+                    $mockRegistration->contact_name = 'John Test';
+                    $mockRegistration->phone = '+1 234 567 8900';
+                    $mockRegistration->message = 'This is a test brand registration message.';
+                    $mockRegistration->created_at = now();
+                    \Mail::to($toEmail)->send(new \App\Mail\BrandRegistrationNotification($mockRegistration));
+                    break;
+
+                default:
+                    $this->sendGenericTestEmail($templateName, $toEmail);
+            }
+
+            $this->dispatch('notify', message: 'Test email sent to ' . $toEmail);
+            $this->cancelTestEmail();
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to send test email', [
+                'template' => $templateName,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->dispatch('notify', message: 'Failed to send test email: ' . $e->getMessage(), type: 'error');
+        }
+    }
+
+    protected function sendGenericTestEmail(string $templateName, string $toEmail)
+    {
+        // Send a generic test email using raw markdown
+        $template = EmailTemplateService::getTemplate($templateName);
+        $subject = '[TEST] ' . ($template['subject'] ?? 'Test Email');
+
+        \Mail::raw("This is a test email for template: {$templateName}", function ($message) use ($toEmail, $subject) {
+            $message->to($toEmail)->subject($subject);
+        });
+    }
+
+    protected function getMockDataForTemplate(string $templateName): array
+    {
+        return match($templateName) {
+            'welcome' => ['user_name' => 'Test User', 'signup_credits' => 5],
+            'password-reset' => ['user_name' => 'Test User', 'reset_url' => config('app.url') . '/reset'],
+            'purchase-confirmation' => ['user_name' => 'Test User', 'credits' => 10, 'amount' => 199],
+            'subscription-confirmation' => ['user_name' => 'Test User', 'plan_name' => 'Pro'],
+            'tryon-complete' => ['user_name' => 'Test User', 'garment_name' => 'Test Outfit'],
+            default => ['user_name' => 'Test User'],
+        };
     }
 
     public function render()

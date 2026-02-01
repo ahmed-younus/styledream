@@ -11,9 +11,7 @@ Click the button below to set a new password:
 Reset Password
 </x-mail::button>
 
-<x-mail::panel>
-This link will expire in 60 minutes for security reasons.
-</x-mail::panel>
+**Note:** This link will expire in 60 minutes for security reasons.
 
 If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
 

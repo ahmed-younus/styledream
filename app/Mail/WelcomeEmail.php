@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Services\EmailTemplateService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -19,8 +20,12 @@ class WelcomeEmail extends Mailable
 
     public function envelope(): Envelope
     {
+        $subject = EmailTemplateService::renderSubject('welcome', [
+            'user_name' => $this->user->name,
+        ]);
+
         return new Envelope(
-            subject: 'Welcome to Stylely - Your AI Fashion Journey Begins!',
+            subject: $subject,
         );
     }
 
@@ -34,5 +39,13 @@ class WelcomeEmail extends Mailable
     public function attachments(): array
     {
         return [];
+    }
+
+    /**
+     * Check if this email should be sent
+     */
+    public static function shouldSend(): bool
+    {
+        return EmailTemplateService::isActive('welcome');
     }
 }
