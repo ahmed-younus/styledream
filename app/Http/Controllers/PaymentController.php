@@ -263,6 +263,14 @@ class PaymentController extends Controller
                         $session->subscription->items->data[0]->price->id ?? null
                     );
 
+                    // Get period dates with null safety
+                    $periodStart = $session->subscription->current_period_start
+                        ? \Carbon\Carbon::createFromTimestamp($session->subscription->current_period_start)
+                        : now();
+                    $periodEnd = $session->subscription->current_period_end
+                        ? \Carbon\Carbon::createFromTimestamp($session->subscription->current_period_end)
+                        : now()->addMonth();
+
                     // Create subscription in our database
                     $subscription = Subscription::create([
                         'user_id' => auth()->id(),
@@ -270,8 +278,8 @@ class PaymentController extends Controller
                         'status' => $session->subscription->status,
                         'stripe_subscription_id' => $session->subscription->id,
                         'stripe_customer_id' => $session->customer,
-                        'current_period_start' => \Carbon\Carbon::createFromTimestamp($session->subscription->current_period_start),
-                        'current_period_end' => \Carbon\Carbon::createFromTimestamp($session->subscription->current_period_end),
+                        'current_period_start' => $periodStart,
+                        'current_period_end' => $periodEnd,
                     ]);
 
                     // Update user's subscription tier
