@@ -66,7 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout/subscription', [PaymentController::class, 'createSubscription'])->name('checkout.subscription');
     Route::get('/checkout/subscription', fn() => redirect()->route('pricing'))->name('checkout.subscription.redirect');
     Route::get('/subscription/success', [PaymentController::class, 'subscriptionSuccess'])->name('subscription.success');
-    Route::get('/billing', [PaymentController::class, 'billingPortal'])->name('billing');
+    Route::get('/billing', \App\Livewire\Billing::class)->name('billing');
     Route::get('/billing/return', [PaymentController::class, 'billingReturn'])->name('billing.return');
     Route::post('/subscription/update', [PaymentController::class, 'updateSubscription'])->name('subscription.update');
     Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription'])->name('subscription.cancel');
@@ -86,6 +86,10 @@ Route::middleware('auth')->group(function () {
     // In-app credit pack purchase routes
     Route::post('/credits/purchase-inapp', [PaymentController::class, 'purchaseCreditPackInApp'])->name('credits.purchase.inapp');
     Route::post('/credits/confirm-inapp', [PaymentController::class, 'confirmCreditPackPayment'])->name('credits.confirm.inapp');
+
+    // Single try-on quick purchase
+    Route::post('/tryon/quick-purchase', [PaymentController::class, 'purchaseSingleTryOn'])->name('tryon.quick-purchase');
+    Route::post('/tryon/confirm-purchase', [PaymentController::class, 'confirmSingleTryOn'])->name('tryon.confirm-purchase');
 });
 
 // Stripe webhook (CSRF excluded in bootstrap/app.php)

@@ -10,8 +10,10 @@ use App\Models\ShareEvent;
 use App\Models\Avatar;
 use App\Jobs\ProcessTryOn;
 use App\Services\CreditService;
+use App\Services\CurrencyService;
 use App\Services\PricingService;
 use Livewire\Component;
+use Stripe\StripeClient;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +83,10 @@ class Studio extends Component
 
     // Credit purchase modal
     public $showCreditModal = false;
+    public bool $hasPaymentMethod = false;
+    public ?array $savedCard = null;
+    public ?string $singleTryOnPrice = null;
+    public ?string $singleTryOnCurrency = null;
 
     // User-managed queue
     public $queueItems = [];
@@ -567,7 +573,7 @@ class Studio extends Component
 
         // 1 try-on session = 1 credit (regardless of number of items)
         if (!$user->hasCredits(1)) {
-            $this->showCreditModal = true;
+            $this->openCreditModal();
             return;
         }
 
@@ -770,7 +776,7 @@ class Studio extends Component
 
         // Check credits
         if (!$user->hasCredits(1)) {
-            $this->showCreditModal = true;
+            $this->openCreditModal();
             return;
         }
 
@@ -1350,9 +1356,51 @@ class Studio extends Component
         }
     }
 
+    public function generateAfterPayment(): void
+    {
+        $this->showCreditModal = false;
+        $this->generate();
+    }
+
+    protected function openCreditModal(): void
+    {
+        $this->showCreditModal = true;
+
+        // Load saved payment method
+        $user = auth()->user();
+        if ($user && $user->stripe_customer_id) {
+            try {
+                $stripe = new StripeClient(config('services.stripe.secret'));
+                $customer = $stripe->customers->retrieve($user->stripe_customer_id, [
+                    'expand' => ['invoice_settings.default_payment_method'],
+                ]);
+
+                $pm = $customer->invoice_settings->default_payment_method ?? null;
+                if ($pm && isset($pm->card)) {
+                    $this->hasPaymentMethod = true;
+                    $this->savedCard = [
+                        'brand' => ucfirst($pm->card->brand),
+                        'last4' => $pm->card->last4,
+                    ];
+                }
+            } catch (\Exception $e) {
+                \Log::error('Failed to load payment method in studio', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Load single try-on price
+        $currency = CurrencyService::getUserCurrency();
+        $singleTryOn = config('credits.single_tryon');
+        $price = $singleTryOn['prices'][$currency] ?? $singleTryOn['prices']['usd'];
+        $symbol = CurrencyService::getSymbol($currency);
+        $this->singleTryOnPrice = $symbol . number_format($price / 100, 2);
+        $this->singleTryOnCurrency = $currency;
+    }
+
     public function render()
     {
         $user = auth()->user();
+        $currency = CurrencyService::getUserCurrency();
 
         return view('livewire.studio', [
             'credits' => $user->totalCredits(),
@@ -1361,7 +1409,7 @@ class Studio extends Component
             'history' => $user->tryOns()->completed()->latest()->take(6)->get(),
             'wardrobeItems' => $user->wardrobeItems()->latest()->get(),
             'selectedItems' => WardrobeItem::whereIn('id', $this->selectedWardrobeItems)->get(),
-            'creditPacks' => PricingService::getCreditPacksForCurrency('usd'),
+            'creditPacks' => PricingService::getCreditPacksForCurrency($currency),
         ])->layout('layouts.app', ['title' => 'Try-On Studio']);
     }
 }

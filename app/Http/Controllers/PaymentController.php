@@ -2392,4 +2392,186 @@ class PaymentController extends Controller
             \Log::error('Failed to send admin notification for credit pack', ['error' => $e->getMessage()]);
         }
     }
+
+    /**
+     * Quick single try-on purchase (pay-per-use)
+     * Charges a small amount and adds 1 credit
+     */
+    public function purchaseSingleTryOn(Request $request)
+    {
+        $request->validate([
+            'currency' => 'nullable|string|in:usd,gbp,eur',
+            'payment_method_id' => 'nullable|string',
+            'use_saved_card' => 'nullable|boolean',
+        ]);
+
+        $user = auth()->user();
+        $currency = $request->currency ?? CurrencyService::getUserCurrency();
+        $paymentMethodId = $request->payment_method_id;
+        $useSavedCard = $request->use_saved_card ?? false;
+
+        $singleTryOn = config('credits.single_tryon');
+        if (!$singleTryOn) {
+            return response()->json(['error' => 'Single try-on purchase not available'], 400);
+        }
+
+        $price = $singleTryOn['prices'][$currency] ?? $singleTryOn['prices']['usd'];
+
+        try {
+            $stripe = new StripeClient(config('services.stripe.secret'));
+            $customerId = $this->getOrCreateStripeCustomer($user);
+
+            if ($useSavedCard && !$paymentMethodId) {
+                $customer = $stripe->customers->retrieve($customerId, [
+                    'expand' => ['invoice_settings.default_payment_method'],
+                ]);
+                $defaultPm = $customer->invoice_settings->default_payment_method ?? null;
+                if (!$defaultPm) {
+                    return response()->json(['error' => 'No saved payment method found.'], 400);
+                }
+                $paymentMethodId = is_string($defaultPm) ? $defaultPm : $defaultPm->id;
+            }
+
+            if (!$paymentMethodId) {
+                return response()->json(['error' => 'Payment method required'], 400);
+            }
+
+            if (!$useSavedCard) {
+                try {
+                    $stripe->paymentMethods->attach($paymentMethodId, [
+                        'customer' => $customerId,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::info('Payment method attach info', ['message' => $e->getMessage()]);
+                }
+
+                $stripe->customers->update($customerId, [
+                    'invoice_settings' => ['default_payment_method' => $paymentMethodId],
+                ]);
+            }
+
+            $paymentIntent = $stripe->paymentIntents->create([
+                'amount' => $price,
+                'currency' => $currency,
+                'customer' => $customerId,
+                'payment_method' => $paymentMethodId,
+                'payment_method_types' => ['card'],
+                'description' => 'Stylely - Single Try-On',
+                'metadata' => [
+                    'user_id' => $user->id,
+                    'type' => 'single_tryon',
+                    'credits' => 1,
+                ],
+                'confirm' => true,
+                'return_url' => route('studio'),
+            ]);
+
+            if ($paymentIntent->status === 'requires_action') {
+                return response()->json([
+                    'requires_action' => true,
+                    'client_secret' => $paymentIntent->client_secret,
+                    'payment_intent_id' => $paymentIntent->id,
+                ]);
+            }
+
+            if ($paymentIntent->status === 'requires_payment_method') {
+                return response()->json(['error' => 'Card was declined. Please try a different card.'], 400);
+            }
+
+            if ($paymentIntent->status === 'succeeded') {
+                $this->fulfillSingleTryOn($user, $paymentIntent, $currency);
+
+                return response()->json([
+                    'success' => true,
+                    'credits' => $user->fresh()->totalCredits(),
+                ]);
+            }
+
+            return response()->json(['error' => 'Payment failed. Please try again.'], 400);
+
+        } catch (\Exception $e) {
+            \Log::error('Single try-on purchase failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Confirm single try-on payment after 3D Secure
+     */
+    public function confirmSingleTryOn(Request $request)
+    {
+        $request->validate([
+            'payment_intent_id' => 'required|string',
+        ]);
+
+        $user = auth()->user();
+
+        try {
+            $stripe = new StripeClient(config('services.stripe.secret'));
+            $paymentIntent = $stripe->paymentIntents->retrieve($request->payment_intent_id);
+
+            if (($paymentIntent->metadata->user_id ?? null) != $user->id) {
+                return response()->json(['error' => 'Invalid payment'], 400);
+            }
+
+            if ($paymentIntent->status === 'succeeded') {
+                $existing = CreditPurchase::where('stripe_payment_intent', $paymentIntent->id)->first();
+                if ($existing) {
+                    return response()->json([
+                        'success' => true,
+                        'credits' => $user->fresh()->totalCredits(),
+                    ]);
+                }
+
+                $this->fulfillSingleTryOn($user, $paymentIntent, $paymentIntent->currency);
+
+                return response()->json([
+                    'success' => true,
+                    'credits' => $user->fresh()->totalCredits(),
+                ]);
+            }
+
+            return response()->json(['error' => 'Payment not completed'], 400);
+
+        } catch (\Exception $e) {
+            \Log::error('Single try-on confirmation failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    protected function fulfillSingleTryOn($user, $paymentIntent, $currency)
+    {
+        if (CreditPurchase::where('stripe_payment_intent', $paymentIntent->id)->exists()) {
+            return;
+        }
+
+        CreditPurchase::create([
+            'user_id' => $user->id,
+            'pack' => 'single_tryon',
+            'credits' => 1,
+            'amount' => $paymentIntent->amount,
+            'currency' => $currency,
+            'stripe_session_id' => 'pi_' . $paymentIntent->id,
+            'stripe_payment_intent' => $paymentIntent->id,
+        ]);
+
+        $this->creditService->addCredits(
+            $user,
+            1,
+            CreditTransaction::TYPE_PURCHASE,
+            'Single try-on purchase',
+            $paymentIntent->id
+        );
+
+        \Log::info('Single try-on fulfilled', [
+            'user_id' => $user->id,
+            'payment_intent_id' => $paymentIntent->id,
+        ]);
+    }
 }

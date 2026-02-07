@@ -1345,81 +1345,301 @@
 
     {{-- Get Credits Modal --}}
     @if($showCreditModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showCreditModal', false)">
-            <div class="bg-background rounded-2xl max-w-md w-full overflow-hidden"
-                 x-data
-                 x-init="$el.querySelector('button')?.focus()"
+        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center sm:p-4" wire:click.self="$set('showCreditModal', false)">
+            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50"
+                 x-data="{
+                     stripe: null,
+                     cardElement: null,
+                     processing: false,
+                     payError: null,
+                     showNewCard: false
+                 }"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
 
+                {{-- Close Button --}}
+                <button wire:click="$set('showCreditModal', false)" class="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
+                    <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
                 {{-- Header --}}
-                <div class="p-6 text-center border-b border-border">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <div class="p-4 sm:p-6 text-center border-b border-border">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-foreground mb-1">{{ __('studio.get_credits_title') }}</h3>
-                    <p class="text-sm text-muted-foreground">{{ __('studio.get_credits_subtitle') }}</p>
+                    <h3 class="text-lg sm:text-xl font-bold text-foreground mb-1">{{ __('studio.no_credits_title') }}</h3>
+                    <p class="text-sm text-muted-foreground">{{ __('studio.no_credits_subtitle') }}</p>
                 </div>
 
-                {{-- Credit Packs (synced from admin pricing) --}}
-                <div class="p-6 space-y-3">
-                    {{-- Quick Pack Options - Show 2 best options --}}
+                <div class="p-4 sm:p-6 space-y-4">
+                    {{-- Quick Pay: Single Try-On --}}
+                    <div class="p-3 sm:p-4 bg-primary/5 border-2 border-primary rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <p class="font-semibold text-foreground">{{ __('studio.quick_generate') }}</p>
+                                <p class="text-xs text-muted-foreground">{{ __('studio.one_time_charge') }}</p>
+                            </div>
+                            <span class="text-xl font-bold text-primary">{{ $singleTryOnPrice }}</span>
+                        </div>
+
+                        {{-- Error display --}}
+                        <div x-show="payError" x-text="payError" class="text-destructive text-sm mb-3 p-2 bg-destructive/10 rounded-lg"></div>
+
+                        @if($hasPaymentMethod && $savedCard)
+                            {{-- Quick pay with saved card --}}
+                            <div x-show="!showNewCard">
+                                <button
+                                    @click="async () => {
+                                        if (processing) return;
+                                        processing = true;
+                                        payError = null;
+                                        try {
+                                            const response = await fetch('/tryon/quick-purchase', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                                                    'Accept': 'application/json',
+                                                },
+                                                body: JSON.stringify({
+                                                    currency: '{{ $singleTryOnCurrency }}',
+                                                    use_saved_card: true,
+                                                }),
+                                            });
+                                            const data = await response.json();
+                                            if (data.requires_action) {
+                                                if (!stripe) stripe = Stripe('{{ config('services.stripe.key') }}');
+                                                const { error } = await stripe.confirmCardPayment(data.client_secret);
+                                                if (error) {
+                                                    payError = error.message;
+                                                    processing = false;
+                                                    return;
+                                                }
+                                                const confirmRes = await fetch('/tryon/confirm-purchase', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                                                        'Accept': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({ payment_intent_id: data.payment_intent_id }),
+                                                });
+                                                const confirmData = await confirmRes.json();
+                                                if (confirmData.error) {
+                                                    payError = confirmData.error;
+                                                    processing = false;
+                                                    return;
+                                                }
+                                            } else if (data.error) {
+                                                payError = data.error;
+                                                processing = false;
+                                                return;
+                                            }
+                                            $wire.generateAfterPayment();
+                                        } catch (e) {
+                                            payError = 'An unexpected error occurred.';
+                                        }
+                                        processing = false;
+                                    }"
+                                    :disabled="processing"
+                                    class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                    <span x-show="!processing" class="flex items-center gap-2">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                        </svg>
+                                        {{ __('studio.pay_with_card', ['brand' => $savedCard['brand'], 'last4' => $savedCard['last4']]) }}
+                                    </span>
+                                    <span x-show="processing" class="flex items-center gap-2">
+                                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        {{ __('studio.processing_payment') }}
+                                    </span>
+                                </button>
+                                <button @click="showNewCard = true; $nextTick(() => {
+                                    if (!stripe) stripe = Stripe('{{ config('services.stripe.key') }}');
+                                    const container = document.getElementById('quick-pay-card-element');
+                                    if (container) {
+                                        container.innerHTML = '';
+                                        const elements = stripe.elements({
+                                            appearance: { theme: 'stripe', variables: { colorPrimary: '#8B5CF6', colorBackground: '#ffffff', colorText: '#1a1a1a', fontFamily: 'Inter, system-ui, sans-serif', borderRadius: '8px' } },
+                                        });
+                                        cardElement = elements.create('card', { hidePostalCode: true, style: { base: { fontSize: '16px', color: '#1a1a1a', '::placeholder': { color: '#9ca3af' } } } });
+                                        cardElement.mount('#quick-pay-card-element');
+                                        cardElement.on('change', (event) => { payError = event.error ? event.error.message : null; });
+                                    }
+                                })"
+                                    class="w-full mt-2 text-center text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                                    {{ __('studio.use_different_card') }}
+                                </button>
+                            </div>
+                        @endif
+
+                        {{-- New card input (shown if no saved card, or user clicks "use different card") --}}
+                        <div x-show="showNewCard || {{ !$hasPaymentMethod ? 'true' : 'false' }}"
+                             x-init="if ({{ !$hasPaymentMethod ? 'true' : 'false' }}) {
+                                $nextTick(() => {
+                                    setTimeout(() => {
+                                        if (!stripe) stripe = Stripe('{{ config('services.stripe.key') }}');
+                                        const container = document.getElementById('quick-pay-card-element');
+                                        if (container && container.children.length === 0) {
+                                            const elements = stripe.elements({
+                                                appearance: { theme: 'stripe', variables: { colorPrimary: '#8B5CF6', colorBackground: '#ffffff', colorText: '#1a1a1a', fontFamily: 'Inter, system-ui, sans-serif', borderRadius: '8px' } },
+                                            });
+                                            cardElement = elements.create('card', { hidePostalCode: true, style: { base: { fontSize: '16px', color: '#1a1a1a', '::placeholder': { color: '#9ca3af' } } } });
+                                            cardElement.mount('#quick-pay-card-element');
+                                            cardElement.on('change', (event) => { payError = event.error ? event.error.message : null; });
+                                        }
+                                    }, 200);
+                                });
+                             }">
+                            <div id="quick-pay-card-element" class="p-3 bg-white border border-border rounded-lg min-h-[44px] mb-3"></div>
+                            <button
+                                @click="async () => {
+                                    if (processing || !cardElement) return;
+                                    processing = true;
+                                    payError = null;
+                                    try {
+                                        if (!stripe) stripe = Stripe('{{ config('services.stripe.key') }}');
+                                        const { paymentMethod: pm, error: pmError } = await stripe.createPaymentMethod({ type: 'card', card: cardElement });
+                                        if (pmError) {
+                                            payError = pmError.message;
+                                            processing = false;
+                                            return;
+                                        }
+                                        const response = await fetch('/tryon/quick-purchase', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                                                'Accept': 'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                currency: '{{ $singleTryOnCurrency }}',
+                                                payment_method_id: pm.id,
+                                            }),
+                                        });
+                                        const data = await response.json();
+                                        if (data.requires_action) {
+                                            const { error } = await stripe.confirmCardPayment(data.client_secret);
+                                            if (error) {
+                                                payError = error.message;
+                                                processing = false;
+                                                return;
+                                            }
+                                            const confirmRes = await fetch('/tryon/confirm-purchase', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                                                    'Accept': 'application/json',
+                                                },
+                                                body: JSON.stringify({ payment_intent_id: data.payment_intent_id }),
+                                            });
+                                            const confirmData = await confirmRes.json();
+                                            if (confirmData.error) {
+                                                payError = confirmData.error;
+                                                processing = false;
+                                                return;
+                                            }
+                                        } else if (data.error) {
+                                            payError = data.error;
+                                            processing = false;
+                                            return;
+                                        }
+                                        $wire.generateAfterPayment();
+                                    } catch (e) {
+                                        payError = 'An unexpected error occurred.';
+                                    }
+                                    processing = false;
+                                }"
+                                :disabled="processing"
+                                class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                <span x-show="!processing" class="flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                                    </svg>
+                                    {{ __('studio.pay_and_generate', ['price' => $singleTryOnPrice]) }}
+                                </span>
+                                <span x-show="processing" class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    {{ __('studio.processing_payment') }}
+                                </span>
+                            </button>
+                            @if($hasPaymentMethod)
+                                <button @click="showNewCard = false" class="w-full mt-2 text-center text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                                    {{ __('studio.use_saved_card') }}
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Divider --}}
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 border-t border-border"></div>
+                        <span class="text-xs text-muted-foreground uppercase">{{ __('studio.or_buy_credits') }}</span>
+                        <div class="flex-1 border-t border-border"></div>
+                    </div>
+
+                    {{-- Credit Pack Options --}}
                     <div class="grid grid-cols-2 gap-3">
                         @if(isset($creditPacks['medium']))
-                        {{-- Medium Pack (Popular) --}}
                         <form action="{{ route('checkout.credits') }}" method="POST">
                             @csrf
                             <input type="hidden" name="pack" value="medium">
-                            <button type="submit" class="w-full p-4 bg-primary/5 border-2 border-primary rounded-xl hover:bg-primary/10 transition-all group cursor-pointer text-left">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-2xl font-bold text-foreground">{{ $creditPacks['medium']['credits'] ?? 50 }}</span>
+                            <button type="submit" class="w-full p-3 bg-secondary border border-border rounded-xl hover:border-primary/50 transition-all cursor-pointer text-left">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-lg font-bold text-foreground">{{ $creditPacks['medium']['credits'] ?? 50 }}</span>
                                     @if($creditPacks['medium']['popular'] ?? false)
-                                    <span class="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-semibold rounded-full uppercase">{{ __('pricing.popular') }}</span>
+                                    <span class="px-1.5 py-0.5 bg-primary text-primary-foreground text-[9px] font-semibold rounded-full uppercase">{{ __('pricing.popular') }}</span>
                                     @endif
                                 </div>
-                                <div class="text-xs text-muted-foreground mb-2">{{ __('pricing.credits') }}</div>
-                                <div class="text-lg font-bold text-primary">${{ number_format(($creditPacks['medium']['price'] ?? 999) / 100, 2) }}</div>
-                                <div class="text-[10px] text-muted-foreground">{{ $creditPacks['medium']['per_credit'] ?? '$0.20/credit' }}</div>
+                                <div class="text-[10px] text-muted-foreground mb-1">{{ __('pricing.credits') }}</div>
+                                <div class="text-sm font-bold text-foreground">{{ \App\Services\CurrencyService::getSymbol($singleTryOnCurrency ?? 'usd') }}{{ number_format(($creditPacks['medium']['price'] ?? 999) / 100, 2) }}</div>
                             </button>
                         </form>
                         @endif
 
                         @if(isset($creditPacks['large']))
-                        {{-- Large Pack --}}
                         <form action="{{ route('checkout.credits') }}" method="POST">
                             @csrf
                             <input type="hidden" name="pack" value="large">
-                            <button type="submit" class="w-full p-4 bg-secondary border-2 border-border rounded-xl hover:border-primary/50 transition-all group cursor-pointer text-left">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-2xl font-bold text-foreground">{{ $creditPacks['large']['credits'] ?? 100 }}</span>
+                            <button type="submit" class="w-full p-3 bg-secondary border border-border rounded-xl hover:border-primary/50 transition-all cursor-pointer text-left">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-lg font-bold text-foreground">{{ $creditPacks['large']['credits'] ?? 100 }}</span>
                                     @if($creditPacks['large']['best_value'] ?? false)
-                                    <span class="px-2 py-0.5 bg-green-500 text-white text-[10px] font-semibold rounded-full uppercase">{{ __('pricing.best_value') }}</span>
+                                    <span class="px-1.5 py-0.5 bg-green-500 text-white text-[9px] font-semibold rounded-full uppercase">{{ __('pricing.best_value') }}</span>
                                     @endif
                                 </div>
-                                <div class="text-xs text-muted-foreground mb-2">{{ __('pricing.credits') }}</div>
-                                <div class="text-lg font-bold text-foreground">${{ number_format(($creditPacks['large']['price'] ?? 1499) / 100, 2) }}</div>
-                                <div class="text-[10px] text-muted-foreground">{{ $creditPacks['large']['per_credit'] ?? '$0.15/credit' }}</div>
+                                <div class="text-[10px] text-muted-foreground mb-1">{{ __('pricing.credits') }}</div>
+                                <div class="text-sm font-bold text-foreground">{{ \App\Services\CurrencyService::getSymbol($singleTryOnCurrency ?? 'usd') }}{{ number_format(($creditPacks['large']['price'] ?? 1499) / 100, 2) }}</div>
                             </button>
                         </form>
                         @endif
                     </div>
 
                     {{-- Subscription Promo --}}
-                    <a href="{{ route('pricing') }}" class="block p-4 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl hover:border-primary/40 transition-all">
+                    <a href="{{ route('pricing') }}" class="block p-3 bg-gradient-to-r from-primary/5 to-transparent border border-primary/20 rounded-xl hover:border-primary/40 transition-all">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                                 </svg>
                             </div>
-                            <div class="flex-1">
+                            <div class="flex-1 min-w-0">
                                 <p class="text-sm font-semibold text-foreground">{{ __('studio.subscribe_promo') }}</p>
                                 <p class="text-xs text-muted-foreground">{{ __('studio.subscribe_promo_desc') }}</p>
                             </div>
-                            <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                             </svg>
                         </div>
@@ -1427,8 +1647,8 @@
                 </div>
 
                 {{-- Footer --}}
-                <div class="p-6 pt-4 flex justify-center">
-                    <button wire:click="$set('showCreditModal', false)" class="px-8 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-full transition-all">
+                <div class="p-4 sm:p-6 pt-2">
+                    <button wire:click="$set('showCreditModal', false)" class="w-full py-3 bg-foreground text-background font-semibold rounded-xl hover:bg-foreground/90 transition-colors">
                         {{ __('studio.maybe_later') }}
                     </button>
                 </div>

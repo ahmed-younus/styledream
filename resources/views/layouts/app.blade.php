@@ -133,15 +133,28 @@
                                 <p class="text-xs text-muted-foreground">{{ auth()->user()->email }}</p>
                             </div>
                             <a href="{{ route('profile') }}" class="block px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors">{{ __('nav.profile') }}</a>
+                            <a href="{{ route('billing') }}" class="block px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors">{{ __('nav.billing') }}</a>
                             <div class="border-t border-border my-1"></div>
-                            <div class="px-4 py-2 text-xs text-muted-foreground uppercase">{{ __('profile.language') }}</div>
-                            <div class="grid grid-cols-2 gap-1 px-2 pb-2">
-                                <a href="?lang=en" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'en' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">EN</a>
-                                <a href="?lang=es" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'es' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">ES</a>
-                                <a href="?lang=fr" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'fr' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">FR</a>
-                                <a href="?lang=de" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'de' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">DE</a>
-                                <a href="?lang=it" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'it' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">IT</a>
-                                <a href="?lang=pt" class="px-2 py-1 text-xs text-center rounded {{ app()->getLocale() === 'pt' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary' }}">PT</a>
+                            <div x-data="{ langOpen: false }">
+                                <button @click="langOpen = !langOpen" class="flex items-center justify-between w-full px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                                        </svg>
+                                        <span>{{ __('profile.language') }}</span>
+                                    </div>
+                                    <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': langOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                <div x-show="langOpen" x-collapse class="pl-10 space-y-0.5 pb-1">
+                                    <a href="?lang=en" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'en' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">English</a>
+                                    <a href="?lang=es" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'es' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">Español</a>
+                                    <a href="?lang=fr" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'fr' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">Français</a>
+                                    <a href="?lang=de" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'de' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">Deutsch</a>
+                                    <a href="?lang=it" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'it' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">Italiano</a>
+                                    <a href="?lang=pt" class="block px-2 py-1.5 text-sm rounded {{ app()->getLocale() === 'pt' ? 'text-primary font-medium' : 'text-muted-foreground hover:bg-secondary' }}">Português</a>
+                                </div>
                             </div>
                             <div class="border-t border-border my-1"></div>
                             <form method="POST" action="{{ route('logout') }}">
@@ -228,6 +241,7 @@
                             <a href="{{ route('my-outfits') }}" class="block py-2 text-foreground font-medium">{{ __('nav.my_outfits') }}</a>
                             <a href="{{ route('brands') }}" class="block py-2 text-foreground font-medium">{{ __('nav.brands') }}</a>
                             <a href="{{ route('profile') }}" class="block py-2 text-foreground font-medium">{{ __('nav.profile') }}</a>
+                            <a href="{{ route('billing') }}" class="block py-2 text-foreground font-medium">{{ __('nav.billing') }}</a>
                             <div class="pt-2 border-t border-border" x-data="{ langOpen: false }">
                                 <button @click="langOpen = !langOpen" class="flex items-center justify-between w-full py-2 text-foreground font-medium">
                                     <div class="flex items-center gap-2">

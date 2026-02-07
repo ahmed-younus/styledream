@@ -8,6 +8,7 @@ return [
     'my_outfits' => 'My Outfits',
     'pricing' => 'Pricing',
     'profile' => 'Profile',
+    'billing' => 'Billing',
     'brands' => 'For Brands',
     'get_started' => 'Get Started',
     'sign_in' => 'Sign In',

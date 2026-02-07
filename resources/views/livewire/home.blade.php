@@ -1,29 +1,6 @@
 <div x-data="tryOnDemo()" x-init="init()">
-    {{-- Trial Activation Banner for logged-in users with 0 credits --}}
-    @auth
-        @if(auth()->user()->totalCredits() == 0 && !auth()->user()->trial_activated_at)
-            <div class="fixed top-16 left-0 right-0 z-40 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 border-b border-primary/20">
-                <div class="max-w-7xl mx-auto px-4 py-3">
-                    <div class="flex items-center justify-between flex-wrap gap-3">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">🎁</span>
-                            <div>
-                                <p class="font-semibold text-foreground text-sm sm:text-base">{{ __('pricing.activate_trial_title') }}</p>
-                                <p class="text-xs sm:text-sm text-muted-foreground">{{ __('pricing.trial_benefit_1') }} · {{ __('pricing.trial_benefit_2') }}</p>
-                            </div>
-                        </div>
-                        <button onclick="Livewire.dispatch('openTrialModal')"
-                            class="px-4 sm:px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors text-sm whitespace-nowrap">
-                            {{ __('pricing.activate_trial') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        @endif
-    @endauth
-
     {{-- Hero Section --}}
-    <section class="relative min-h-[90vh] flex items-center overflow-x-hidden pt-20 pb-16 bg-background @auth @if(auth()->user()->totalCredits() == 0 && !auth()->user()->trial_activated_at) mt-14 sm:mt-12 @endif @endauth">
+    <section class="relative min-h-[90vh] flex items-center overflow-x-hidden pt-20 pb-16 bg-background">
         {{-- Background --}}
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>

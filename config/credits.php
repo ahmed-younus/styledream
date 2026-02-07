@@ -15,6 +15,24 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Single Try-On Purchase (Pay-Per-Use)
+    |--------------------------------------------------------------------------
+    |
+    | When a user has 0 credits, they can pay a one-time fee to generate
+    | a single try-on without buying a full credit pack.
+    |
+    */
+    'single_tryon' => [
+        'credits' => 1,
+        'prices' => [
+            'usd' => 59,    // $0.59
+            'gbp' => 50,    // £0.50
+            'eur' => 55,    // €0.55
+        ],
+    ],
+
     'packs' => [
         'small' => [
             'credits' => 10,
