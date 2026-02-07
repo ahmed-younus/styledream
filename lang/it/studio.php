@@ -29,6 +29,11 @@ return [
     'credits_required' => 'Requires :count credit',
     'try_on_complete' => 'Try-on complete!',
 
+    // Generation Loading with Timer
+    'preparing' => 'Preparazione...',
+    'checking_credits' => 'Verifica del tuo account...',
+    'generating_outfit' => 'Creazione del tuo look...',
+
     // Result
     'result_title' => 'Your New Look',
     'download_result' => 'Download',

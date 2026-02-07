@@ -171,6 +171,8 @@ return [
     'uploading_clothing' => 'Uploading...',
 
     // Generation Loading with Timer
+    'preparing' => 'Preparing...',
+    'checking_credits' => 'Checking your account...',
     'generating_outfit' => 'Creating your look...',
     'generation_time_hint' => 'This usually takes about 30 seconds',
     'generating_btn' => 'Generating...',

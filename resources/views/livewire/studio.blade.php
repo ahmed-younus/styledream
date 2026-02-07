@@ -606,8 +606,8 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                             </svg>
                         </div>
-                        <h4 class="text-lg font-semibold text-foreground mb-1">{{ __('studio.preparing') ?? 'Preparing...' }}</h4>
-                        <p class="text-sm text-muted-foreground">{{ __('studio.checking_credits') ?? 'Checking your account...' }}</p>
+                        <h4 class="text-lg font-semibold text-foreground mb-1">{{ __('studio.preparing') }}</h4>
+                        <p class="text-sm text-muted-foreground">{{ __('studio.checking_credits') }}</p>
                     </div>
 
                     {{-- Active generation state: timer countdown (after start-timer fires) --}}

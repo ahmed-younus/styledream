@@ -33,6 +33,9 @@ return [
     'generating' => 'Generando outfit...',
     'credits_required' => 'Requiere :count crédito',
     'try_on_complete' => '¡Prueba completada!',
+    'preparing' => 'Preparando...',
+    'checking_credits' => 'Verificando tu cuenta...',
+    'generating_outfit' => 'Creando tu outfit...',
     'creating_outfit' => 'Creando tu outfit...',
     'processing_time' => 'Esto puede tardar hasta 30 segundos',
 
