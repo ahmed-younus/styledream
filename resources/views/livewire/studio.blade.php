@@ -508,7 +508,9 @@
                     <div class="flex gap-3">
                         {{-- Generate Now Button --}}
                         <button
-                            x-on:click="$wire.generate().then((started) => { if(started) $dispatch('start-timer', { duration: 30 }) })"
+                            x-data="{ submitting: false }"
+                            x-on:click="if(submitting) return; submitting = true; $wire.generate().then((started) => { if(started) { $dispatch('start-timer', { duration: 30 }) } else { submitting = false } }).catch(() => { submitting = false })"
+                            :disabled="submitting"
                             wire:loading.attr="disabled"
                             wire:target="generate"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
@@ -532,7 +534,9 @@
                         {{-- Add to Queue Button --}}
                         @auth
                         <button
-                            wire:click="addToQueue"
+                            x-data="{ submitting: false }"
+                            x-on:click="if(submitting) return; submitting = true; $wire.addToQueue().then(() => { submitting = false }).catch(() => { submitting = false })"
+                            :disabled="submitting"
                             wire:loading.attr="disabled"
                             wire:target="addToQueue"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
@@ -591,10 +595,23 @@
                 {{-- Generation Loading Overlay with Dynamic Timer --}}
                 <div wire:loading wire:target="generate, runQueue"
                      class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30"
-                     x-data="{ seconds: 30, totalSeconds: 30, interval: null }"
-                     x-init="interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)"
-                     @start-timer.window="seconds = $event.detail.duration; totalSeconds = $event.detail.duration; clearInterval(interval); interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)">
-                    <div class="text-center p-6">
+                     x-data="{ seconds: 0, totalSeconds: 30, interval: null, started: false }"
+                     @start-timer.window="started = true; seconds = $event.detail.duration; totalSeconds = $event.detail.duration; clearInterval(interval); interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)">
+
+                    {{-- Initial state: checking credits/preparing (before start-timer fires) --}}
+                    <div x-show="!started" class="text-center p-6">
+                        <div class="w-24 h-24 mx-auto mb-5 flex items-center justify-center">
+                            <svg class="w-10 h-10 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="text-lg font-semibold text-foreground mb-1">{{ __('studio.preparing') ?? 'Preparing...' }}</h4>
+                        <p class="text-sm text-muted-foreground">{{ __('studio.checking_credits') ?? 'Checking your account...' }}</p>
+                    </div>
+
+                    {{-- Active generation state: timer countdown (after start-timer fires) --}}
+                    <div x-show="started" x-cloak class="text-center p-6">
                         {{-- Circular Progress with Timer --}}
                         <div class="relative w-24 h-24 mx-auto mb-5">
                             {{-- Background circle --}}

@@ -17,7 +17,9 @@ use Stripe\StripeClient;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use App\Models\User;
 
 class Studio extends Component
 {
@@ -537,41 +539,14 @@ class Studio extends Component
 
         $user = auth()->user();
 
-        // Collect all garment URLs and categories (in same order)
-        $garmentUrls = [];
-        $garmentCategories = [];
-
-        // Add garments from file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $index => $garment) {
-            if ($garment && method_exists($garment, 'getRealPath')) {
-                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
-                $garmentUrls[] = $this->storeImage($base64, 'garment');
-                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
-            }
-        }
-
-        // Add garments from URL paste (already base64)
-        $uploadedCount = count($this->uploadedGarments);
-        foreach ($this->garmentBase64Array as $index => $base64) {
-            $garmentUrls[] = $this->storeImage($base64, 'garment');
-            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
-        }
-
-        // Add wardrobe items (default to 'auto' category)
-        foreach ($this->selectedWardrobeItems as $itemId) {
-            $item = WardrobeItem::find($itemId);
-            if ($item) {
-                $garmentUrls[] = $item->image_url;
-                $garmentCategories[] = 'auto';
-            }
-        }
-
-        if (empty($garmentUrls)) {
+        // Quick-check: has any garments selected? (before expensive image processing)
+        $hasGarments = !empty($this->uploadedGarments) || !empty($this->garmentBase64Array) || !empty($this->selectedWardrobeItems);
+        if (!$hasGarments) {
             $this->error = __('studio.error_no_clothing');
             return false;
         }
 
-        // 1 try-on session = 1 credit (regardless of number of items)
+        // CHECK CREDITS EARLY — before any image processing/storage
         if (!$user->hasCredits(1)) {
             $this->openCreditModal();
             return false;
@@ -580,6 +555,40 @@ class Studio extends Component
         $this->error = '';
 
         try {
+            // Collect all garment URLs and categories (in same order)
+            $garmentUrls = [];
+            $garmentCategories = [];
+
+            // Add garments from file uploads (convert to base64 and store)
+            foreach ($this->uploadedGarments as $index => $garment) {
+                if ($garment && method_exists($garment, 'getRealPath')) {
+                    $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                    $garmentUrls[] = $this->storeImage($base64, 'garment');
+                    $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
+                }
+            }
+
+            // Add garments from URL paste (already base64)
+            $uploadedCount = count($this->uploadedGarments);
+            foreach ($this->garmentBase64Array as $index => $base64) {
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
+            }
+
+            // Add wardrobe items (default to 'auto' category)
+            foreach ($this->selectedWardrobeItems as $itemId) {
+                $item = WardrobeItem::find($itemId);
+                if ($item) {
+                    $garmentUrls[] = $item->image_url;
+                    $garmentCategories[] = 'auto';
+                }
+            }
+
+            if (empty($garmentUrls)) {
+                $this->error = __('studio.error_no_clothing');
+                return false;
+            }
+
             // Get body image base64 - either from URL paste or file upload
             if ($this->bodyImageBase64) {
                 $bodyBase64 = $this->bodyImageBase64;
@@ -587,26 +596,42 @@ class Studio extends Component
                 $bodyBase64 = base64_encode(file_get_contents($this->bodyImage->getRealPath()));
             }
 
-            $creditService = app(CreditService::class);
-
             // Store body image
             $bodyUrl = $this->storeImage($bodyBase64, 'body');
 
-            // Create try-on record with PENDING status
-            $tryOn = TryOn::create([
-                'user_id' => $user->id,
-                'body_image_url' => $bodyUrl,
-                'garment_image_url' => $garmentUrls[0], // Primary garment (backwards compat)
-                'garment_urls' => $garmentUrls, // All garments as JSON
-                'garment_categories' => $garmentCategories, // Categories for each garment
-                'status' => TryOn::STATUS_PENDING,
-                'credits_used' => 1,
-            ]);
+            // ATOMIC: Create TryOn + deduct credit inside DB transaction with lock
+            $tryOn = DB::transaction(function () use ($user, $bodyUrl, $garmentUrls, $garmentCategories) {
+                // Lock user row to prevent race conditions from rapid clicks
+                $lockedUser = User::lockForUpdate()->find($user->id);
 
-            // Deduct 1 credit upfront
-            $creditService->useCredits($user, 1, 'Virtual try-on (' . count($garmentUrls) . ' items)', (string) $tryOn->id);
+                // Re-verify credits inside the lock (another request may have used them)
+                if (!$lockedUser->hasCredits(1)) {
+                    return null;
+                }
 
-            // Dispatch job to queue
+                $tryOn = TryOn::create([
+                    'user_id' => $lockedUser->id,
+                    'body_image_url' => $bodyUrl,
+                    'garment_image_url' => $garmentUrls[0],
+                    'garment_urls' => $garmentUrls,
+                    'garment_categories' => $garmentCategories,
+                    'status' => TryOn::STATUS_PENDING,
+                    'credits_used' => 1,
+                ]);
+
+                $creditService = app(CreditService::class);
+                $creditService->useCredits($lockedUser, 1, 'Virtual try-on (' . count($garmentUrls) . ' items)', (string) $tryOn->id);
+
+                return $tryOn;
+            });
+
+            // If transaction returned null, credits were used by concurrent request
+            if (!$tryOn) {
+                $this->openCreditModal();
+                return false;
+            }
+
+            // Dispatch job AFTER transaction commits
             ProcessTryOn::dispatch($tryOn);
 
             // Track current job for UI
@@ -647,7 +672,7 @@ class Studio extends Component
         } catch (\Exception $e) {
             $this->error = __('studio.queue_error') . ': ' . $e->getMessage();
 
-            if (isset($tryOn)) {
+            if (isset($tryOn) && $tryOn) {
                 $tryOn->markAsFailed($e->getMessage());
 
                 // Refund credits
@@ -744,41 +769,14 @@ class Studio extends Component
             return;
         }
 
-        // Collect garment URLs and categories
-        $garmentUrls = [];
-        $garmentCategories = [];
-
-        // From file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $index => $garment) {
-            if ($garment && method_exists($garment, 'getRealPath')) {
-                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
-                $garmentUrls[] = $this->storeImage($base64, 'garment');
-                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
-            }
-        }
-
-        // From URL paste (already base64)
-        $uploadedCount = count($this->uploadedGarments);
-        foreach ($this->garmentBase64Array as $index => $base64) {
-            $garmentUrls[] = $this->storeImage($base64, 'garment');
-            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
-        }
-
-        // From wardrobe (default to 'auto' category)
-        foreach ($this->selectedWardrobeItems as $itemId) {
-            $item = WardrobeItem::find($itemId);
-            if ($item) {
-                $garmentUrls[] = $item->image_url;
-                $garmentCategories[] = 'auto';
-            }
-        }
-
-        if (empty($garmentUrls)) {
+        // Quick-check: has any garments selected?
+        $hasGarments = !empty($this->uploadedGarments) || !empty($this->garmentBase64Array) || !empty($this->selectedWardrobeItems);
+        if (!$hasGarments) {
             $this->error = __('studio.error_no_clothing');
             return;
         }
 
-        // Check credits
+        // CHECK CREDITS EARLY — before any image processing/storage
         if (!$user->hasCredits(1)) {
             $this->openCreditModal();
             return;
@@ -787,6 +785,40 @@ class Studio extends Component
         $this->error = '';
 
         try {
+            // Collect garment URLs and categories
+            $garmentUrls = [];
+            $garmentCategories = [];
+
+            // From file uploads (convert to base64 and store)
+            foreach ($this->uploadedGarments as $index => $garment) {
+                if ($garment && method_exists($garment, 'getRealPath')) {
+                    $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                    $garmentUrls[] = $this->storeImage($base64, 'garment');
+                    $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
+                }
+            }
+
+            // From URL paste (already base64)
+            $uploadedCount = count($this->uploadedGarments);
+            foreach ($this->garmentBase64Array as $index => $base64) {
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
+            }
+
+            // From wardrobe (default to 'auto' category)
+            foreach ($this->selectedWardrobeItems as $itemId) {
+                $item = WardrobeItem::find($itemId);
+                if ($item) {
+                    $garmentUrls[] = $item->image_url;
+                    $garmentCategories[] = 'auto';
+                }
+            }
+
+            if (empty($garmentUrls)) {
+                $this->error = __('studio.error_no_clothing');
+                return;
+            }
+
             // Get body image base64
             if ($this->bodyImageBase64) {
                 $bodyBase64 = $this->bodyImageBase64;
@@ -797,21 +829,35 @@ class Studio extends Component
             // Store body image
             $bodyUrl = $this->storeImage($bodyBase64, 'body');
 
-            // Create TryOn with QUEUED status
-            $tryOn = TryOn::create([
-                'user_id' => $user->id,
-                'body_image_url' => $bodyUrl,
-                'garment_image_url' => $garmentUrls[0],
-                'garment_urls' => $garmentUrls,
-                'garment_categories' => $garmentCategories,
-                'status' => TryOn::STATUS_QUEUED,
-                'queue_position' => $queueCount + 1,
-                'credits_used' => 1,
-            ]);
+            // ATOMIC: Create TryOn + deduct credit inside DB transaction with lock
+            $tryOn = DB::transaction(function () use ($user, $bodyUrl, $garmentUrls, $garmentCategories, $queueCount) {
+                $lockedUser = User::lockForUpdate()->find($user->id);
 
-            // Deduct credit immediately
-            $creditService = app(CreditService::class);
-            $creditService->useCredits($user, 1, 'Queued outfit #' . $tryOn->id, (string) $tryOn->id);
+                if (!$lockedUser->hasCredits(1)) {
+                    return null;
+                }
+
+                $tryOn = TryOn::create([
+                    'user_id' => $lockedUser->id,
+                    'body_image_url' => $bodyUrl,
+                    'garment_image_url' => $garmentUrls[0],
+                    'garment_urls' => $garmentUrls,
+                    'garment_categories' => $garmentCategories,
+                    'status' => TryOn::STATUS_QUEUED,
+                    'queue_position' => $queueCount + 1,
+                    'credits_used' => 1,
+                ]);
+
+                $creditService = app(CreditService::class);
+                $creditService->useCredits($lockedUser, 1, 'Queued outfit #' . $tryOn->id, (string) $tryOn->id);
+
+                return $tryOn;
+            });
+
+            if (!$tryOn) {
+                $this->openCreditModal();
+                return;
+            }
 
             // Clear garments, keep body image
             $this->reset([
