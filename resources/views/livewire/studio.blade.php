@@ -508,7 +508,7 @@
                     <div class="flex gap-3">
                         {{-- Generate Now Button --}}
                         <button
-                            x-on:click="$wire.generate().then(() => { $dispatch('start-timer', { duration: 30 }) })"
+                            x-on:click="$wire.generate().then((started) => { if(started) $dispatch('start-timer', { duration: 30 }) })"
                             wire:loading.attr="disabled"
                             wire:target="generate"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
@@ -1447,8 +1447,8 @@
                                                 return;
                                             }
                                             await $wire.generateAfterPayment();
-                                            $dispatch('start-timer', { duration: 30 });
-                                            $wire.generate();
+                                            const started = await $wire.generate();
+                                            if (started) $dispatch('start-timer', { duration: 30 });
                                         } catch (e) {
                                             payError = 'An unexpected error occurred.';
                                         }
@@ -1562,8 +1562,8 @@
                                             return;
                                         }
                                         await $wire.generateAfterPayment();
-                                        $dispatch('start-timer', { duration: 30 });
-                                        $wire.generate();
+                                        const started = await $wire.generate();
+                                        if (started) $dispatch('start-timer', { duration: 30 });
                                     } catch (e) {
                                         payError = 'An unexpected error occurred.';
                                     }

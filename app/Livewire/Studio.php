@@ -523,12 +523,12 @@ class Studio extends Component
         }
     }
 
-    public function generate()
+    public function generate(): bool
     {
         // Validate body image - either file upload or URL paste
         if (!$this->bodyImage && !$this->bodyImageBase64) {
             $this->error = __('studio.error_no_photo');
-            return;
+            return false;
         }
 
         if ($this->bodyImage) {
@@ -568,13 +568,13 @@ class Studio extends Component
 
         if (empty($garmentUrls)) {
             $this->error = __('studio.error_no_clothing');
-            return;
+            return false;
         }
 
         // 1 try-on session = 1 credit (regardless of number of items)
         if (!$user->hasCredits(1)) {
             $this->openCreditModal();
-            return;
+            return false;
         }
 
         $this->error = '';
@@ -642,6 +642,8 @@ class Studio extends Component
                 session()->flash('message', __('studio.queued_success'));
             }
 
+            return true;
+
         } catch (\Exception $e) {
             $this->error = __('studio.queue_error') . ': ' . $e->getMessage();
 
@@ -652,6 +654,8 @@ class Studio extends Component
                 $creditService = app(CreditService::class);
                 $creditService->refundCredits($user, 1, 'Try-on failed - refund', (string) $tryOn->id);
             }
+
+            return false;
         }
     }
 
