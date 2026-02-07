@@ -508,7 +508,7 @@
                     <div class="flex gap-3">
                         {{-- Generate Now Button --}}
                         <button
-                            x-on:click="$dispatch('start-timer', { duration: 30 }); $wire.generate()"
+                            x-on:click="$wire.generate().then(() => { $dispatch('start-timer', { duration: 30 }) })"
                             wire:loading.attr="disabled"
                             wire:target="generate"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
@@ -1346,7 +1346,7 @@
     {{-- Get Credits Modal --}}
     @if($showCreditModal)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center sm:p-4" wire:click.self="$set('showCreditModal', false)">
-            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50"
+            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50 pt-12 sm:pt-0"
                  x-data="{
                      stripe: null,
                      cardElement: null,
@@ -1440,7 +1440,9 @@
                                                 processing = false;
                                                 return;
                                             }
-                                            $wire.generateAfterPayment();
+                                            await $wire.generateAfterPayment();
+                                            $dispatch('start-timer', { duration: 30 });
+                                            $wire.generate();
                                         } catch (e) {
                                             payError = 'An unexpected error occurred.';
                                         }
@@ -1553,7 +1555,9 @@
                                             processing = false;
                                             return;
                                         }
-                                        $wire.generateAfterPayment();
+                                        await $wire.generateAfterPayment();
+                                        $dispatch('start-timer', { duration: 30 });
+                                        $wire.generate();
                                     } catch (e) {
                                         payError = 'An unexpected error occurred.';
                                     }

@@ -1359,7 +1359,6 @@ class Studio extends Component
     public function generateAfterPayment(): void
     {
         $this->showCreditModal = false;
-        $this->generate();
     }
 
     protected function openCreditModal(): void
