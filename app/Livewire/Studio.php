@@ -1406,7 +1406,7 @@ class Studio extends Component
             'subscriptionCredits' => $user->getSubscriptionCredits(),
             'purchasedCredits' => $user->getPurchasedCredits(),
             'history' => $user->tryOns()->completed()->latest()->take(6)->get(),
-            'wardrobeItems' => $user->wardrobeItems()->latest()->get(),
+            'wardrobeItems' => $user->wardrobeItems()->latest()->take(50)->get(),
             'selectedItems' => WardrobeItem::whereIn('id', $this->selectedWardrobeItems)->get(),
             'creditPacks' => PricingService::getCreditPacksForCurrency($currency),
         ])->layout('layouts.app', ['title' => 'Try-On Studio']);

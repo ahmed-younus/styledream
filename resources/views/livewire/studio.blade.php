@@ -930,7 +930,9 @@
     {{-- Wardrobe Modal --}}
     @if($showWardrobeModal)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showWardrobeModal', false)">
-            <div class="bg-background rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div class="bg-background rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+                 x-data="{ selected: @js(array_map('intval', $selectedWardrobeItems)) }"
+                 x-init="$watch('selected', val => $wire.set('selectedWardrobeItems', val))">
                 <div class="p-6 border-b border-border flex items-center justify-between">
                     <h3 class="text-lg font-bold text-foreground">{{ __('studio.wardrobe_title') }}</h3>
                     <button wire:click="$set('showWardrobeModal', false)" class="p-2 hover:bg-secondary rounded-lg">
@@ -941,15 +943,19 @@
                     @if($wardrobeItems->count() > 0)
                         <div class="grid grid-cols-3 sm:grid-cols-4 gap-4">
                             @foreach($wardrobeItems as $item)
-                                <button wire:click="toggleWardrobeItem({{ $item->id }})" class="relative aspect-square rounded-xl overflow-hidden border-2 {{ in_array($item->id, $selectedWardrobeItems) ? 'border-primary' : 'border-transparent' }} hover:border-primary/50 transition-colors">
-                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover">
-                                    @if(in_array($item->id, $selectedWardrobeItems))
-                                        <div class="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                            <svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                            </svg>
-                                        </div>
-                                    @endif
+                                <button @click="selected.includes({{ $item->id }}) ? selected = selected.filter(id => id !== {{ $item->id }}) : selected.push({{ $item->id }})"
+                                        class="relative aspect-square rounded-xl overflow-hidden border-2 transition-all duration-150 active:scale-95"
+                                        :class="selected.includes({{ $item->id }}) ? 'border-primary shadow-md shadow-primary/20' : 'border-transparent hover:border-primary/50'">
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-full h-full object-cover" loading="lazy">
+                                    <div x-show="selected.includes({{ $item->id }})"
+                                         x-transition:enter="transition ease-out duration-150"
+                                         x-transition:enter-start="opacity-0 scale-75"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         class="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                        </svg>
+                                    </div>
                                     <span class="absolute bottom-1 left-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded truncate">{{ $item->name }}</span>
                                 </button>
                             @endforeach
@@ -966,7 +972,7 @@
                         {{ __('app.cancel') }}
                     </button>
                     <button wire:click="addFromWardrobe" class="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90">
-                        {{ __('studio.done') }} ({{ count($selectedWardrobeItems) }} {{ __('studio.selected') }})
+                        {{ __('studio.done') }} (<span x-text="selected.length"></span> {{ __('studio.selected') }})
                     </button>
                 </div>
             </div>
@@ -1346,7 +1352,7 @@
     {{-- Get Credits Modal --}}
     @if($showCreditModal)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center sm:p-4" wire:click.self="$set('showCreditModal', false)">
-            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50 pt-12 sm:pt-0"
+            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50"
                  x-data="{
                      stripe: null,
                      cardElement: null,

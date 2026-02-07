@@ -14,8 +14,8 @@
         {{-- Current Plan Section --}}
         <div class="mb-6">
             <h2 class="text-lg font-semibold text-foreground mb-3">{{ __('billing.current_plan') }}</h2>
-            <div class="p-5 bg-card border border-border rounded-xl">
-                <div class="flex items-center justify-between">
+            <div class="p-4 sm:p-5 bg-card border border-border rounded-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                         <p class="font-bold text-foreground text-lg">{{ $planDetails['name'] ?? ucfirst($currentPlan) }}</p>
                         @if($currentPlan !== 'free' && $subscriptionStatus === 'active')
@@ -27,7 +27,7 @@
                         @endif
                     </div>
                     <a href="{{ route('pricing') }}"
-                       class="px-5 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-secondary transition-colors">
+                       class="px-5 py-2 border border-border rounded-lg text-sm font-medium text-foreground hover:bg-secondary transition-colors text-center sm:text-left shrink-0">
                         @if($currentPlan === 'free')
                             {{ __('billing.view_plans') }}
                         @else
@@ -50,13 +50,13 @@
             cardError: null
         }">
             <h2 class="text-lg font-semibold text-foreground mb-3">{{ __('billing.payment') }}</h2>
-            <div class="p-5 bg-card border border-border rounded-xl">
+            <div class="p-4 sm:p-5 bg-card border border-border rounded-xl">
                 @if($hasPaymentMethod && $paymentMethod)
                     {{-- Saved card display --}}
                     <div x-show="!editing">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-12 h-8 bg-secondary rounded border border-border flex items-center justify-center">
+                                <div class="w-12 h-8 bg-secondary rounded border border-border flex items-center justify-center shrink-0">
                                     @if(strtolower($paymentMethod['brand']) === 'visa')
                                         <span class="text-blue-600 font-bold text-xs italic">VISA</span>
                                     @elseif(strtolower($paymentMethod['brand']) === 'mastercard')
@@ -198,7 +198,8 @@
         <div>
             <h2 class="text-lg font-semibold text-foreground mb-3">{{ __('billing.payment_history') }}</h2>
             @if($paymentHistory->count() > 0)
-                <div class="bg-card border border-border rounded-xl overflow-hidden">
+                {{-- Desktop: Table view --}}
+                <div class="hidden sm:block bg-card border border-border rounded-xl overflow-hidden">
                     <table class="w-full">
                         <thead>
                             <tr class="border-b border-border">
@@ -223,6 +224,24 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Mobile: Card view --}}
+                <div class="sm:hidden space-y-3">
+                    @foreach($paymentHistory as $purchase)
+                        <div class="p-4 bg-card border border-border rounded-xl">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-foreground">{{ __('billing.credit_pack_purchase', ['credits' => $purchase->credits]) }}</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                    {{ __('billing.paid') }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-muted-foreground">{{ $purchase->created_at->format('M j, Y') }}</span>
+                                <span class="text-sm font-semibold text-foreground">{{ $purchase->formatted_price }}</span>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @else
                 <div class="p-5 bg-card border border-border rounded-xl">
