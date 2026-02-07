@@ -459,6 +459,41 @@ class SubscriptionModal extends Component
         }
     }
 
+    /**
+     * Remove saved payment method from Stripe
+     */
+    public function removePaymentMethod()
+    {
+        $user = auth()->user();
+        if (!$user || !$user->stripe_customer_id) {
+            return;
+        }
+
+        try {
+            $stripe = new StripeClient(config('services.stripe.secret'));
+
+            $paymentMethods = $stripe->paymentMethods->all([
+                'customer' => $user->stripe_customer_id,
+                'type' => 'card',
+            ]);
+
+            foreach ($paymentMethods->data as $pm) {
+                $stripe->paymentMethods->detach($pm->id);
+            }
+
+            $stripe->customers->update($user->stripe_customer_id, [
+                'invoice_settings' => ['default_payment_method' => null],
+            ]);
+
+            $this->hasPaymentMethod = false;
+            $this->paymentMethod = null;
+
+        } catch (\Exception $e) {
+            $this->error = 'Failed to remove card. Please try again.';
+            \Log::error('Failed to remove payment method', ['error' => $e->getMessage()]);
+        }
+    }
+
     public function render()
     {
         return view('livewire.subscription-modal');

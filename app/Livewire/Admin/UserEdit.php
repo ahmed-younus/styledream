@@ -7,6 +7,7 @@ use App\Models\Subscription;
 use App\Models\AdminActivityLog;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Stripe\StripeClient;
 
 #[Layout('layouts.admin')]
 class UserEdit extends Component
@@ -145,6 +146,31 @@ class UserEdit extends Component
             }
         }
 
+        // Remove saved payment methods from Stripe
+        $cardRemoved = false;
+        if ($this->user->stripe_customer_id) {
+            try {
+                $stripe = new StripeClient(config('services.stripe.secret'));
+                $paymentMethods = $stripe->paymentMethods->all([
+                    'customer' => $this->user->stripe_customer_id,
+                    'type' => 'card',
+                ]);
+
+                foreach ($paymentMethods->data as $pm) {
+                    $stripe->paymentMethods->detach($pm->id);
+                }
+
+                // Clear default payment method on customer
+                $stripe->customers->update($this->user->stripe_customer_id, [
+                    'invoice_settings' => ['default_payment_method' => null],
+                ]);
+
+                $cardRemoved = count($paymentMethods->data) > 0;
+            } catch (\Exception $e) {
+                \Log::error('Failed to remove payment methods during user reset', ['error' => $e->getMessage()]);
+            }
+        }
+
         $this->user->refresh();
 
         auth('admin')->user()->logActivity(
@@ -158,10 +184,10 @@ class UserEdit extends Component
                 'subscription_tier' => 'free',
                 'trial_activated_at' => null,
             ],
-            "User reset for testing. Trial reset, {$canceledCount} subscription(s) canceled."
+            "User reset for testing. Trial reset, {$canceledCount} subscription(s) canceled." . ($cardRemoved ? ' Card removed.' : '')
         );
 
-        session()->flash('success', "User reset successfully! Credits: 0, Trial: Reset, Subscriptions canceled: {$canceledCount}");
+        session()->flash('success', "User reset successfully! Credits: 0, Trial: Reset, Subscriptions canceled: {$canceledCount}" . ($cardRemoved ? ', Card removed' : ''));
     }
 
     public function render()

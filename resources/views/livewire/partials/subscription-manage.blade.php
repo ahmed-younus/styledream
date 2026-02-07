@@ -84,10 +84,17 @@
                         <span class="text-xs text-gray-500">{{ $paymentMethod['exp_month'] }}/{{ $paymentMethod['exp_year'] }}</span>
                     </div>
                 </div>
-                <button @click="editingCard = true; $nextTick(() => window.initManageCardElement && window.initManageCardElement())"
-                        class="px-3 py-1.5 text-sm text-primary hover:text-primary/80 hover:bg-primary/5 rounded transition-colors">
-                    {{ __('pricing.edit') }}
-                </button>
+                <div class="flex items-center gap-2">
+                    <button @click="editingCard = true; $nextTick(() => window.initManageCardElement && window.initManageCardElement())"
+                            class="px-3 py-1.5 text-sm text-primary hover:text-primary/80 hover:bg-primary/5 rounded transition-colors">
+                        {{ __('pricing.edit') }}
+                    </button>
+                    <button wire:click="removePaymentMethod"
+                            wire:confirm="Are you sure you want to remove this card?"
+                            class="px-3 py-1.5 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                        {{ __('pricing.remove_card') }}
+                    </button>
+                </div>
             </div>
         </div>
 

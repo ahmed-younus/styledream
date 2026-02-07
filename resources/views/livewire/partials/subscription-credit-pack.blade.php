@@ -49,11 +49,18 @@
                         <span class="text-xs text-gray-500 ml-2">{{ $paymentMethod['exp_month'] }}/{{ $paymentMethod['exp_year'] }}</span>
                     </div>
                 </div>
-                <button @click="useNewCard = !useNewCard; if(useNewCard) { $nextTick(() => window.initCreditPackCardElement && window.initCreditPackCardElement()) }"
-                        class="text-sm text-primary hover:underline">
-                    <span x-show="!useNewCard">{{ __('pricing.edit') }}</span>
-                    <span x-show="useNewCard">{{ __('pricing.cancel') }}</span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <button @click="useNewCard = !useNewCard; if(useNewCard) { $nextTick(() => window.initCreditPackCardElement && window.initCreditPackCardElement()) }"
+                            class="text-sm text-primary hover:underline">
+                        <span x-show="!useNewCard">{{ __('pricing.edit') }}</span>
+                        <span x-show="useNewCard">{{ __('pricing.cancel') }}</span>
+                    </button>
+                    <button wire:click="removePaymentMethod"
+                            wire:confirm="Are you sure you want to remove this card?"
+                            class="text-sm text-red-500 hover:underline">
+                        {{ __('pricing.remove_card') }}
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -108,7 +115,7 @@
             class="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
             {{ __('pricing.cancel') }}
         </button>
-        <button @click="purchaseCreditPack('{{ $creditPack }}', '{{ $currency }}', false)"
+        <button @click="purchaseCreditPack('{{ $creditPack }}', '{{ $currency }}', true)"
             :disabled="processing"
             class="flex-1 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
             <span x-show="!processing">{{ __('pricing.purchase_credits') }}</span>

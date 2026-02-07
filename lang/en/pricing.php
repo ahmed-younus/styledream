@@ -153,4 +153,5 @@ return [
     'credit_packs_owned' => 'Credit Packs',
     'credit_packs_info' => ':credits credits · Never expire',
     'buy_more_credits' => 'Buy More Credits',
+    'remove_card' => 'Remove',
 ];

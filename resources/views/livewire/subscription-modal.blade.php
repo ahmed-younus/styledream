@@ -60,6 +60,7 @@
                 });
 
                 cardElement = elements.create('card', {
+                    hidePostalCode: true,
                     style: {
                         base: {
                             fontSize: '16px',
@@ -252,6 +253,7 @@
         });
 
         alpineData.upgradeCardElement = elements.create('card', {
+            hidePostalCode: true,
             style: {
                 base: {
                     fontSize: '16px',
@@ -373,6 +375,7 @@
         });
 
         alpineData.manageCardElement = elements.create('card', {
+            hidePostalCode: true,
             style: {
                 base: {
                     fontSize: '16px',
@@ -540,6 +543,7 @@
         });
 
         alpineData.creditPackCardElement = elements.create('card', {
+            hidePostalCode: true,
             style: {
                 base: {
                     fontSize: '16px',
@@ -577,7 +581,7 @@
 
             // If using new card, create payment method from card element
             if (useNewCard) {
-                let cardElement = alpineData.creditPackCardElement;
+                let cardElement = alpineData.creditPackCardElement || alpineData.cardElement;
 
                 if (!cardElement) {
                     alpineData.error = 'Please enter card details first.';
