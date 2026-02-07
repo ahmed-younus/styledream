@@ -23,8 +23,10 @@ class User extends Authenticatable
         'avatar_url',
         'google_id',
         'credits',
+        'subscription_credits',
         'subscription_tier',
         'subscription_ends_at',
+        'trial_activated_at',
         'stripe_customer_id',
         'stripe_subscription_id',
         'current_streak',
@@ -41,6 +43,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
+            'trial_activated_at' => 'datetime',
             'last_credit_claimed_at' => 'datetime',
             'onboarding_completed' => 'boolean',
             'password' => 'hashed',
@@ -128,23 +131,78 @@ class User extends Authenticatable
         return $this->activeSubscription() !== null;
     }
 
-    public function hasCredits(int $amount = 1): bool
+    /**
+     * Get total available credits (subscription + purchased)
+     */
+    public function totalCredits(): int
     {
-        return $this->credits >= $amount;
+        return ($this->subscription_credits ?? 0) + ($this->credits ?? 0);
     }
 
+    /**
+     * Check if user has enough credits (subscription + purchased)
+     */
+    public function hasCredits(int $amount = 1): bool
+    {
+        return $this->totalCredits() >= $amount;
+    }
+
+    /**
+     * Use credits with priority: subscription credits first, then purchased credits
+     */
     public function useCredits(int $amount = 1): bool
     {
         if (!$this->hasCredits($amount)) {
             return false;
         }
-        $this->decrement('credits', $amount);
+
+        $remaining = $amount;
+
+        // 1. Use subscription credits first (reset monthly)
+        if ($this->subscription_credits > 0) {
+            $fromSubscription = min($this->subscription_credits, $remaining);
+            $this->decrement('subscription_credits', $fromSubscription);
+            $remaining -= $fromSubscription;
+        }
+
+        // 2. Use purchased credits for remainder (lifetime credits)
+        if ($remaining > 0) {
+            $this->decrement('credits', $remaining);
+        }
+
         return true;
     }
 
+    /**
+     * Add purchased credits (lifetime, never expire)
+     */
     public function addCredits(int $amount): void
     {
         $this->increment('credits', $amount);
+    }
+
+    /**
+     * Add or reset subscription credits (monthly)
+     */
+    public function setSubscriptionCredits(int $amount): void
+    {
+        $this->update(['subscription_credits' => $amount]);
+    }
+
+    /**
+     * Get purchased credits only (lifetime)
+     */
+    public function getPurchasedCredits(): int
+    {
+        return $this->credits ?? 0;
+    }
+
+    /**
+     * Get subscription credits only (monthly)
+     */
+    public function getSubscriptionCredits(): int
+    {
+        return $this->subscription_credits ?? 0;
     }
 
     public function canClaimDailyCredit(): bool

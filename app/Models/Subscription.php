@@ -10,6 +10,8 @@ class Subscription extends Model
     protected $fillable = [
         'user_id',
         'plan',
+        'scheduled_plan',
+        'scheduled_change_at',
         'status',
         'stripe_subscription_id',
         'stripe_customer_id',
@@ -22,6 +24,7 @@ class Subscription extends Model
         'current_period_start' => 'datetime',
         'current_period_end' => 'datetime',
         'canceled_at' => 'datetime',
+        'scheduled_change_at' => 'datetime',
     ];
 
     // Status constants
@@ -61,6 +64,23 @@ class Subscription extends Model
         return $this->canceled_at !== null
             && $this->current_period_end !== null
             && $this->current_period_end->isFuture();
+    }
+
+    public function hasScheduledDowngrade(): bool
+    {
+        return $this->scheduled_plan !== null;
+    }
+
+    public function getScheduledDowngradeInfo(): ?array
+    {
+        if (!$this->hasScheduledDowngrade()) {
+            return null;
+        }
+
+        return [
+            'plan' => $this->scheduled_plan,
+            'date' => $this->scheduled_change_at,
+        ];
     }
 
     public function getPlanDetails(): ?array

@@ -67,6 +67,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/subscription', fn() => redirect()->route('pricing'))->name('checkout.subscription.redirect');
     Route::get('/subscription/success', [PaymentController::class, 'subscriptionSuccess'])->name('subscription.success');
     Route::get('/billing', [PaymentController::class, 'billingPortal'])->name('billing');
+    Route::get('/billing/return', [PaymentController::class, 'billingReturn'])->name('billing.return');
+    Route::post('/subscription/update', [PaymentController::class, 'updateSubscription'])->name('subscription.update');
+    Route::post('/subscription/cancel', [PaymentController::class, 'cancelSubscription'])->name('subscription.cancel');
+    Route::get('/upgrade/success', [PaymentController::class, 'upgradeSuccess'])->name('upgrade.success');
+
+    // In-app subscription modal routes
+    Route::post('/trial/setup-intent', [PaymentController::class, 'createTrialSetupIntent'])->name('trial.setup-intent');
+    Route::post('/trial/activate', [PaymentController::class, 'activateFreeTrial'])->name('trial.activate');
+    Route::post('/subscription/create-inapp', [PaymentController::class, 'createInAppSubscription'])->name('subscription.create.inapp');
+    Route::post('/subscription/upgrade-inapp', [PaymentController::class, 'processInAppUpgrade'])->name('subscription.upgrade.inapp');
+    Route::post('/subscription/downgrade-inapp', [PaymentController::class, 'processInAppDowngrade'])->name('subscription.downgrade.inapp');
+    Route::post('/subscription/confirm-inapp', [PaymentController::class, 'confirmInAppSubscription'])->name('subscription.confirm.inapp');
+    Route::get('/subscription/payment-method', [PaymentController::class, 'getPaymentMethod'])->name('subscription.payment-method');
+    Route::get('/subscription/proration', [PaymentController::class, 'calculateProration'])->name('subscription.proration');
+    Route::post('/subscription/update-payment-method', [PaymentController::class, 'updatePaymentMethod'])->name('subscription.update-payment-method');
+
+    // In-app credit pack purchase routes
+    Route::post('/credits/purchase-inapp', [PaymentController::class, 'purchaseCreditPackInApp'])->name('credits.purchase.inapp');
+    Route::post('/credits/confirm-inapp', [PaymentController::class, 'confirmCreditPackPayment'])->name('credits.confirm.inapp');
 });
 
 // Stripe webhook (CSRF excluded in bootstrap/app.php)

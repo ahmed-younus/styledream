@@ -66,10 +66,11 @@
         </div>
 
         @php
-            $activeSubscription = auth()->check() ? auth()->user()->activeSubscription() : null;
-            $currentPlan = $activeSubscription ? $activeSubscription->plan : 'free';
             $planCount = count($plans);
             $gridCols = $planCount <= 3 ? 'md:grid-cols-' . $planCount : 'md:grid-cols-4';
+            // Plan tier comparison for upgrade/downgrade logic
+            $planTiers = ['free' => 0, 'pro' => 1, 'premium' => 2];
+            $currentTier = $planTiers[$currentPlan] ?? 0;
         @endphp
 
         <div class="grid {{ $planCount === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : ($planCount === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' : ($planCount === 3 ? 'md:grid-cols-3' : ($planCount === 4 ? 'md:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4'))) }} gap-6">
@@ -80,6 +81,27 @@
                     $isCurrentPlan = $currentPlan === $planKey;
                     $isFree = ($plan['price'] ?? 0) == 0;
                     $features = $plan['features'] ?? [];
+
+                    // Dynamic button text based on upgrade/downgrade
+                    $targetTier = $planTiers[$planKey] ?? 0;
+                    $isUpgrade = $targetTier > $currentTier;
+                    $isDowngrade = $targetTier < $currentTier;
+                    $isCanceling = $subscription && $subscription->status === 'canceling';
+                    $hasScheduledDowngrade = $subscription && $subscription->scheduled_plan;
+                    $isScheduledPlan = $hasScheduledDowngrade && $subscription->scheduled_plan === $planKey;
+                    $scheduledDate = $subscription?->scheduled_change_at?->format('F j, Y');
+
+                    if ($isCurrentPlan) {
+                        $buttonText = __('pricing.current_plan');
+                    } elseif ($isScheduledPlan) {
+                        $buttonText = __('pricing.scheduled_downgrade', ['plan' => $plan['name'], 'date' => $scheduledDate]);
+                    } elseif ($isUpgrade) {
+                        $buttonText = __('pricing.upgrade_to', ['plan' => $plan['name']]);
+                    } elseif ($isDowngrade) {
+                        $buttonText = __('pricing.downgrade_to', ['plan' => $plan['name']]);
+                    } else {
+                        $buttonText = $plan['button_text'] ?? __('pricing.upgrade_now');
+                    }
                 @endphp
 
                 @if($isPopular)
@@ -108,16 +130,34 @@
                         </ul>
                         @auth
                             @if($isCurrentPlan)
-                                <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.manage_subscription') }}</a>
+                                <button
+                                    wire:click="$dispatch('openManageModal')"
+                                    class="w-full py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+                                    {{ __('pricing.manage_subscription') }}
+                                </button>
+                                @if($isCanceling)
+                                    <p class="text-xs text-center mt-2 text-orange-300">{{ __('pricing.cancels_on', ['date' => $subscriptionEndDate]) }}</p>
+                                @endif
                             @elseif($isFree)
                                 <span class="block w-full py-3 text-center bg-background/50 text-foreground/70 font-medium rounded-lg">{{ $plan['button_text'] ?? __('pricing.free_tier') }}</span>
+                            @elseif($isScheduledPlan)
+                                {{-- This plan is scheduled for downgrade --}}
+                                <div class="w-full py-3 text-center bg-background/50 rounded-lg">
+                                    <span class="text-sm font-medium text-foreground/70">{{ $buttonText }}</span>
+                                </div>
+                            @elseif($isCanceling && $isDowngrade)
+                                {{-- User is canceling subscription, disable intermediate plan buttons --}}
+                                <div class="w-full py-3 text-center bg-background/50 rounded-lg opacity-60">
+                                    <span class="text-sm font-medium text-foreground/70">{{ $buttonText }}</span>
+                                </div>
+                                <p class="text-xs text-center mt-2 text-foreground/50">{{ __('pricing.reactivate_first') }}</p>
                             @else
-                                <form action="{{ route('checkout.subscription') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="plan" value="{{ $planKey }}">
-                                    <input type="hidden" name="currency" value="{{ $currency }}">
-                                    <button type="submit" class="w-full py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">{{ $plan['button_text'] ?? __('pricing.upgrade_now') }}</button>
-                                </form>
+                                {{-- In-app subscription modal --}}
+                                <button
+                                    wire:click="$dispatch('openSubscriptionModal', { plan: '{{ $planKey }}' })"
+                                    class="w-full py-3 bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors cursor-pointer">
+                                    {{ $buttonText }}
+                                </button>
                             @endif
                         @else
                             <a href="{{ route('login') }}" class="block w-full py-3 text-center bg-background text-foreground font-semibold rounded-lg hover:bg-secondary transition-colors">{{ __('pricing.login_to_upgrade') }}</a>
@@ -151,18 +191,73 @@
                         </ul>
                         @auth
                             @if($isCurrentPlan && $isFree)
-                                <span class="block w-full py-3 text-center bg-primary/10 text-primary font-medium rounded-lg border border-primary">{{ __('pricing.current_plan') }}</span>
+                                @if(!auth()->user()->trial_activated_at)
+                                    {{-- Trial not activated yet - show activation button --}}
+                                    <button
+                                        wire:click="$dispatch('openTrialModal')"
+                                        class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                                        {{ __('pricing.activate_trial') }}
+                                    </button>
+                                    <p class="text-xs text-center mt-2 text-muted-foreground">{{ __('pricing.trial_benefit_2') }}</p>
+                                @else
+                                    {{-- Trial already activated - show current plan --}}
+                                    <span class="block w-full py-3 text-center bg-muted text-muted-foreground font-medium rounded-lg">
+                                        {{ __('pricing.current_plan') }}
+                                    </span>
+                                @endif
                             @elseif($isCurrentPlan)
-                                <a href="{{ route('billing') }}" class="block w-full py-3 text-center bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors">{{ __('pricing.manage_subscription') }}</a>
+                                <button
+                                    wire:click="$dispatch('openManageModal')"
+                                    class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                                    {{ __('pricing.manage_subscription') }}
+                                </button>
+                                @if($isCanceling)
+                                    <p class="text-xs text-center mt-2 text-orange-500">{{ __('pricing.cancels_on', ['date' => $subscriptionEndDate]) }}</p>
+                                @endif
+                            @elseif($isFree && $currentPlan !== 'free')
+                                {{-- Downgrade to Free button --}}
+                                @if($isCanceling)
+                                    <div class="w-full py-3 text-center bg-gray-100 rounded-lg">
+                                        <span class="text-sm font-medium text-gray-700">Free · {{ __('pricing.starts_on', ['date' => $subscriptionEndDate]) }}</span>
+                                    </div>
+                                @elseif($hasScheduledDowngrade)
+                                    {{-- User has scheduled downgrade, show disabled state --}}
+                                    <span class="block w-full py-3 text-center bg-gray-100 text-gray-500 font-medium rounded-lg">
+                                        {{ __('pricing.cancel_subscription') }}
+                                    </span>
+                                @else
+                                    <button
+                                        wire:click="$dispatch('openSubscriptionModal', { plan: 'free' })"
+                                        class="w-full py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors cursor-pointer">
+                                        {{ __('pricing.cancel_subscription') }}
+                                    </button>
+                                @endif
                             @elseif($isFree)
                                 <span class="block w-full py-3 text-center bg-secondary text-muted-foreground font-medium rounded-lg border border-border">{{ $plan['button_text'] ?? __('pricing.free_tier') }}</span>
+                            @elseif($isScheduledPlan)
+                                {{-- This plan is scheduled for downgrade --}}
+                                <div class="w-full py-3 text-center bg-gray-100 rounded-lg">
+                                    <span class="text-sm font-medium text-gray-700">{{ $buttonText }}</span>
+                                </div>
+                            @elseif($isCanceling && $isDowngrade)
+                                {{-- User is canceling subscription, disable intermediate plan buttons --}}
+                                <div class="w-full py-3 text-center bg-gray-100 rounded-lg opacity-60">
+                                    <span class="text-sm font-medium text-gray-500">{{ $buttonText }}</span>
+                                </div>
+                                <p class="text-xs text-center mt-2 text-gray-500">{{ __('pricing.reactivate_first') }}</p>
                             @else
-                                <form action="{{ route('checkout.subscription') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="plan" value="{{ $planKey }}">
-                                    <input type="hidden" name="currency" value="{{ $currency }}">
-                                    <button type="submit" class="w-full py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">{{ $plan['button_text'] ?? __('pricing.upgrade_now') }}</button>
-                                </form>
+                                {{-- In-app subscription modal --}}
+                                @if($hasScheduledDowngrade && $isDowngrade)
+                                    {{-- Already has a scheduled downgrade, disable button --}}
+                                    <span class="block w-full py-3 text-center bg-secondary text-muted-foreground font-medium rounded-lg border border-border">{{ __('pricing.downgrade_to', ['plan' => $plan['name']]) }}</span>
+                                    <p class="text-xs text-center mt-2 text-muted-foreground">Already scheduled for {{ $subscription->scheduled_plan }}</p>
+                                @else
+                                    <button
+                                        wire:click="$dispatch('openSubscriptionModal', { plan: '{{ $planKey }}' })"
+                                        class="w-full py-3 {{ $isDowngrade ? 'bg-orange-500 hover:bg-orange-600' : 'bg-primary hover:bg-primary/90' }} text-primary-foreground font-semibold rounded-lg transition-colors cursor-pointer">
+                                        {{ $buttonText }}
+                                    </button>
+                                @endif
                             @endif
                         @else
                             @if($isFree)
@@ -178,30 +273,119 @@
 
         {{-- Active Subscription Info --}}
         @auth
-            @if($activeSubscription)
-                <div class="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+            @if($subscription)
+                <div class="mt-8 p-4 {{ $subscription->scheduled_plan || $subscription->status === 'canceling' ? 'bg-orange-500/5 border-orange-500/20' : 'bg-primary/5 border-primary/20' }} border rounded-xl">
                     <div class="flex items-center justify-between flex-wrap gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
+                            <div class="w-10 h-10 rounded-full {{ $subscription->scheduled_plan || $subscription->status === 'canceling' ? 'bg-orange-500/10' : 'bg-primary/10' }} flex items-center justify-center">
+                                @if($subscription->scheduled_plan || $subscription->status === 'canceling')
+                                    <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                @else
+                                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                @endif
                             </div>
                             <div>
-                                <p class="font-semibold text-foreground">{{ __('pricing.active_subscription', ['plan' => ucfirst($activeSubscription->plan)]) }}</p>
-                                <p class="text-sm text-muted-foreground">{{ __('pricing.renews_on', ['date' => $activeSubscription->current_period_end->format('M d, Y')]) }}</p>
+                                <p class="font-semibold text-foreground">{{ __('pricing.active_subscription', ['plan' => ucfirst($subscription->plan)]) }}</p>
+                                @if($subscription->scheduled_plan)
+                                    <p class="text-sm text-orange-600">{{ __('pricing.changing_to', ['plan' => ucfirst($subscription->scheduled_plan), 'date' => $subscription->scheduled_change_at->format('M d, Y')]) }}</p>
+                                @elseif($subscription->status === 'canceling')
+                                    <p class="text-sm text-orange-500">{{ __('pricing.cancels_on', ['date' => $subscription->current_period_end->format('M d, Y')]) }}</p>
+                                @else
+                                    <p class="text-sm text-muted-foreground">{{ __('pricing.renews_on', ['date' => $subscription->current_period_end->format('M d, Y')]) }}</p>
+                                @endif
                             </div>
                         </div>
-                        <a href="{{ route('billing') }}" class="px-4 py-2 bg-secondary text-foreground text-sm font-medium rounded-lg hover:bg-secondary/80 transition-colors">
-                            {{ __('pricing.manage_billing') }}
-                        </a>
+                        {{-- Only show payment method link for active subscriptions --}}
+                        @if($subscription->status === 'active' && !$subscription->scheduled_plan)
+                            <button
+                                wire:click="$dispatch('openManageModal')"
+                                class="inline-flex items-center gap-2 px-4 py-2 text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                </svg>
+                                {{ __('pricing.update_payment') }}
+                            </button>
+                        @endif
                     </div>
                 </div>
+            @else
+                {{-- Free Plan Banner (no subscription) --}}
+                @if(!auth()->user()->trial_activated_at)
+                    {{-- Trial NOT activated --}}
+                    <div class="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-foreground">{{ __('pricing.free_plan_title') }}</p>
+                                    <p class="text-sm text-muted-foreground">{{ __('pricing.activate_trial_prompt') }}</p>
+                                </div>
+                            </div>
+                            <button
+                                wire:click="$dispatch('openTrialModal')"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                                {{ __('pricing.activate_trial') }}
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    {{-- Trial activated, on Free plan --}}
+                    <div class="mt-8 p-4 bg-secondary border border-border rounded-xl">
+                        <div class="flex items-center justify-between flex-wrap gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-foreground">{{ __('pricing.free_plan_title') }}</p>
+                                    <p class="text-sm text-muted-foreground">{{ __('pricing.credits_remaining', ['credits' => auth()->user()->totalCredits()]) }}</p>
+                                </div>
+                            </div>
+                            <button
+                                wire:click="$dispatch('openSubscriptionModal', { plan: 'pro' })"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                                {{ __('pricing.upgrade_pro') }}
+                            </button>
+                        </div>
+                    </div>
+                @endif
             @endif
         @endauth
 
+        {{-- Credit Packs Banner --}}
+        @auth
+            <div class="mt-4 p-4 bg-green-500/5 border border-green-500/20 rounded-xl">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-foreground">{{ __('pricing.credit_packs_owned') }}</p>
+                            <p class="text-sm text-muted-foreground">{{ __('pricing.credit_packs_info', ['credits' => auth()->user()->getPurchasedCredits()]) }}</p>
+                        </div>
+                    </div>
+                    <a href="#credit-packs" class="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 transition-colors">
+                        {{ __('pricing.buy_more_credits') }}
+                    </a>
+                </div>
+            </div>
+        @endauth
+
         {{-- Credit Packs Section --}}
-        <div class="mt-16">
+        <div id="credit-packs" class="mt-16">
             <div class="text-center mb-8">
                 <h2 class="text-2xl sm:text-3xl font-bold text-foreground mb-3">{{ __('pricing.buy_credits') }}</h2>
                 <p class="text-muted-foreground max-w-lg mx-auto">{{ __('pricing.credits_description') }}</p>
@@ -228,14 +412,10 @@
                             <div class="text-xs text-muted-foreground mb-4">{{ $pack['per_credit'] }}</div>
 
                             @auth
-                                <form action="{{ route('checkout.credits') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="pack" value="{{ $key }}">
-                                    <input type="hidden" name="currency" value="{{ $currency }}">
-                                    <button type="submit" class="w-full py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
-                                        {{ __('pricing.buy_now') }}
-                                    </button>
-                                </form>
+                                <button wire:click="$dispatch('openCreditPackModal', { pack: '{{ $key }}' })"
+                                        class="w-full py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer">
+                                    {{ __('pricing.buy_now') }}
+                                </button>
                             @else
                                 <a href="{{ route('login') }}" class="block w-full py-2.5 bg-primary text-primary-foreground text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors text-center">
                                     {{ __('pricing.login_to_buy') }}
@@ -247,9 +427,22 @@
             </div>
 
             @auth
-                <p class="text-center text-sm text-muted-foreground mt-6">
-                    {{ __('pricing.current_credits', ['credits' => auth()->user()->credits]) }}
-                </p>
+                <div class="text-center mt-6">
+                    <p class="text-sm text-muted-foreground">
+                        {{ __('pricing.current_credits', ['credits' => auth()->user()->totalCredits()]) }}
+                    </p>
+                    @if(auth()->user()->getSubscriptionCredits() > 0 || auth()->user()->getPurchasedCredits() > 0)
+                        <p class="text-xs text-muted-foreground/70 mt-1">
+                            {{ __('pricing.credits_breakdown', [
+                                'subscription' => auth()->user()->getSubscriptionCredits(),
+                                'purchased' => auth()->user()->getPurchasedCredits()
+                            ]) }}
+                        </p>
+                    @endif
+                    <p class="text-xs text-muted-foreground/50 mt-2">
+                        {{ __('pricing.credits_info') }}
+                    </p>
+                </div>
             @endauth
         </div>
 
@@ -263,4 +456,7 @@
             </div>
         </div>
     </div>
+
+    {{-- Subscription Modal Component --}}
+    @livewire('subscription-modal')
 </div>

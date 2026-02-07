@@ -41,7 +41,7 @@ class CreditTransaction extends Model
             'type' => $type,
             'description' => $description,
             'reference_id' => $referenceId,
-            'balance_after' => $user->credits,
+            'balance_after' => $user->totalCredits(),
         ]);
     }
 }

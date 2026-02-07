@@ -7,24 +7,34 @@ use App\Models\CreditTransaction;
 
 class CreditService
 {
+    /**
+     * Check if user has enough credits (subscription + purchased)
+     */
     public function hasCredits(User $user, int $amount = 1): bool
     {
-        return $user->credits >= $amount;
+        return $user->hasCredits($amount);
     }
 
+    /**
+     * Use credits with priority: subscription first, then purchased
+     */
     public function useCredits(User $user, int $amount, string $description, ?string $referenceId = null): bool
     {
         if (!$this->hasCredits($user, $amount)) {
             return false;
         }
 
-        $user->decrement('credits', $amount);
+        // User model handles priority (subscription first, then purchased)
+        $user->useCredits($amount);
 
         CreditTransaction::record($user, -$amount, CreditTransaction::TYPE_TRY_ON, $description, $referenceId);
 
         return true;
     }
 
+    /**
+     * Add purchased credits (lifetime, never expire)
+     */
     public function addCredits(User $user, int $amount, string $type, string $description, ?string $referenceId = null): void
     {
         $user->increment('credits', $amount);
@@ -32,8 +42,30 @@ class CreditService
         CreditTransaction::record($user, $amount, $type, $description, $referenceId);
     }
 
+    /**
+     * Add subscription credits (resets monthly)
+     */
+    public function addSubscriptionCredits(User $user, int $amount): void
+    {
+        // Reset subscription credits to new amount (not additive)
+        $user->update(['subscription_credits' => $amount]);
+
+        CreditTransaction::record($user, $amount, CreditTransaction::TYPE_SUBSCRIPTION, 'Monthly subscription credits');
+    }
+
+    /**
+     * Add purchased credits (lifetime)
+     */
+    public function addPurchasedCredits(User $user, int $amount, string $description, ?string $referenceId = null): void
+    {
+        $user->increment('credits', $amount);
+
+        CreditTransaction::record($user, $amount, CreditTransaction::TYPE_PURCHASE, $description, $referenceId);
+    }
+
     public function refundCredits(User $user, int $amount, string $description, ?string $referenceId = null): void
     {
+        // Refunds go to purchased credits (lifetime)
         $this->addCredits($user, $amount, CreditTransaction::TYPE_REFUND, $description, $referenceId);
     }
 
@@ -55,7 +87,7 @@ class CreditService
         $user->last_credit_claimed_at = now();
         $user->save();
 
-        // Base credit
+        // Daily credits go to purchased credits (lifetime)
         $this->addCredits($user, 1, CreditTransaction::TYPE_DAILY_CLAIM, 'Daily free credit');
 
         // Streak bonus (every 7 days)

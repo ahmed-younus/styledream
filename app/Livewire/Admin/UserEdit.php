@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\User;
+use App\Models\Subscription;
 use App\Models\AdminActivityLog;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -100,6 +101,67 @@ class UserEdit extends Component
 
         session()->flash('success', "Deducted {$this->creditAmount} credits from user");
         $this->reset(['creditAmount', 'creditReason']);
+    }
+
+    /**
+     * Reset user to initial state for testing
+     * - Resets purchased credits to 0 (new users start with 0)
+     * - Resets subscription credits to 0
+     * - Resets trial_activated_at to null (can activate trial again)
+     * - Cancels all subscriptions
+     * - Resets subscription tier to free
+     */
+    public function resetUser()
+    {
+        $oldValues = [
+            'credits' => $this->user->credits,
+            'subscription_credits' => $this->user->subscription_credits,
+            'subscription_tier' => $this->user->subscription_tier,
+            'trial_activated_at' => $this->user->trial_activated_at,
+        ];
+
+        // Reset user credits, trial, and subscription fields
+        $this->user->update([
+            'credits' => 0, // New users start with 0, get 5 after trial activation
+            'subscription_credits' => 0,
+            'subscription_tier' => 'free',
+            'subscription_ends_at' => null,
+            'trial_activated_at' => null, // Reset trial so user can activate again
+        ]);
+
+        // Cancel all subscriptions
+        $subscriptions = Subscription::where('user_id', $this->user->id)->get();
+        $canceledCount = 0;
+
+        foreach ($subscriptions as $sub) {
+            if ($sub->status !== 'canceled') {
+                $sub->update([
+                    'status' => 'canceled',
+                    'canceled_at' => now(),
+                    'scheduled_plan' => null,
+                    'scheduled_change_at' => null,
+                ]);
+                $canceledCount++;
+            }
+        }
+
+        $this->user->refresh();
+
+        auth('admin')->user()->logActivity(
+            AdminActivityLog::ACTION_UPDATED,
+            User::class,
+            $this->user->id,
+            $oldValues,
+            [
+                'credits' => 0,
+                'subscription_credits' => 0,
+                'subscription_tier' => 'free',
+                'trial_activated_at' => null,
+            ],
+            "User reset for testing. Trial reset, {$canceledCount} subscription(s) canceled."
+        );
+
+        session()->flash('success', "User reset successfully! Credits: 0, Trial: Reset, Subscriptions canceled: {$canceledCount}");
     }
 
     public function render()

@@ -59,6 +59,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" defer></script>
 
+    <!-- Stripe.js for in-app payments -->
+    <script src="https://js.stripe.com/v3/"></script>
+
     <style>
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -106,7 +109,7 @@
                                 <circle cx="12" cy="12" r="10"/>
                                 <path d="M12 6v12M8 10h8M8 14h8"/>
                             </svg>
-                            <span class="text-sm font-bold text-foreground">{{ auth()->user()->credits }}</span>
+                            <span class="text-sm font-bold text-foreground">{{ auth()->user()->totalCredits() }}</span>
                         </div>
                         <span class="text-[10px] font-semibold text-primary-foreground bg-primary px-2 py-0.5 rounded-full group-hover:bg-primary/90 transition-colors">GET MORE</span>
                     </a>
@@ -214,7 +217,7 @@
                                         <circle cx="12" cy="12" r="10"/>
                                         <path d="M12 6v12M8 10h8M8 14h8"/>
                                     </svg>
-                                    <span class="font-bold text-foreground">{{ auth()->user()->credits }} credits</span>
+                                    <span class="font-bold text-foreground">{{ auth()->user()->totalCredits() }} credits</span>
                                 </div>
                                 <span class="text-xs font-semibold text-primary-foreground bg-primary px-3 py-1 rounded-full">GET MORE</span>
                             </a>

@@ -3,7 +3,6 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
-use App\Models\CreditTransaction;
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -29,16 +28,8 @@ class Register extends Component
             'name' => $this->name,
             'email' => $this->email,
             'password' => Hash::make($this->password),
-            'credits' => 5,
+            'credits' => 0, // Users start with 0 credits, get 5 after trial activation with card
         ]);
-
-        // Record signup bonus
-        CreditTransaction::record(
-            $user,
-            5,
-            CreditTransaction::TYPE_SIGNUP_BONUS,
-            'Welcome bonus - 5 free credits'
-        );
 
         Auth::login($user);
 

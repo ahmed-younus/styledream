@@ -1355,7 +1355,9 @@ class Studio extends Component
         $user = auth()->user();
 
         return view('livewire.studio', [
-            'credits' => $user->credits,
+            'credits' => $user->totalCredits(),
+            'subscriptionCredits' => $user->getSubscriptionCredits(),
+            'purchasedCredits' => $user->getPurchasedCredits(),
             'history' => $user->tryOns()->completed()->latest()->take(6)->get(),
             'wardrobeItems' => $user->wardrobeItems()->latest()->get(),
             'selectedItems' => WardrobeItem::whereIn('id', $this->selectedWardrobeItems)->get(),

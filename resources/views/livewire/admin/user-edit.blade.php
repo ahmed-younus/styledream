@@ -46,8 +46,20 @@
                 <h3 class="text-sm font-semibold text-[#1a1f36] mb-4">Stats</h3>
                 <div class="space-y-3">
                     <div class="flex justify-between">
-                        <span class="text-sm text-[#697386]">Credits</span>
-                        <span class="text-sm font-semibold text-[#1a1f36] tabular-nums">{{ number_format($user->credits) }}</span>
+                        <span class="text-sm text-[#697386]">Total Credits</span>
+                        <span class="text-sm font-semibold text-[#1a1f36] tabular-nums">{{ number_format($user->totalCredits()) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-[#697386]">- Subscription</span>
+                        <span class="text-sm text-[#697386] tabular-nums">{{ number_format($user->subscription_credits ?? 0) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-[#697386]">- Purchased</span>
+                        <span class="text-sm text-[#697386] tabular-nums">{{ number_format($user->credits) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-[#697386]">Subscription Tier</span>
+                        <span class="text-sm font-semibold text-[#1a1f36]">{{ ucfirst($user->subscription_tier ?? 'Free') }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-sm text-[#697386]">Try-Ons</span>
@@ -100,10 +112,25 @@
                     <div class="space-y-2">
                         <p class="text-base font-semibold text-[#1a1f36]">{{ ucfirst($subscription->plan) }}</p>
                         <p class="text-sm text-[#697386]">Expires: {{ $subscription->current_period_end->format('M d, Y') }}</p>
+                        @if($subscription->scheduled_plan)
+                            <p class="text-sm text-orange-500">Scheduled: {{ ucfirst($subscription->scheduled_plan) }} on {{ $subscription->scheduled_change_at->format('M d, Y') }}</p>
+                        @endif
                     </div>
                 @else
                     <p class="text-sm text-[#697386]">No active subscription</p>
                 @endif
+            </div>
+
+            {{-- Reset User for Testing --}}
+            <div class="bg-white rounded-lg border border-[#df1b41]/20 p-5">
+                <h3 class="text-sm font-semibold text-[#df1b41] mb-2">Reset User (Testing)</h3>
+                <p class="text-xs text-[#697386] mb-4">Reset user to initial state: 5 credits, no subscription. All subscriptions will be canceled.</p>
+                <button wire:click="resetUser"
+                        wire:confirm="Are you sure? This will reset credits to 5 and cancel all subscriptions."
+                        type="button"
+                        class="w-full px-4 py-2 bg-[#df1b41] text-white rounded-lg hover:bg-[#c8183a] transition-colors text-sm font-medium">
+                    Reset User
+                </button>
             </div>
         </div>
     </div>

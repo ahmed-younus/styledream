@@ -5,6 +5,12 @@ return [
     'title' => 'Try-On Studio',
     'subtitle' => 'Upload your photo and select clothing items to create your outfit',
     'credits_available' => 'credits available',
+    'view_details' => 'View details',
+    'subscription_credits' => 'Subscription',
+    'purchased_credits' => 'Purchased',
+    'resets_monthly' => 'resets monthly',
+    'lifetime' => 'never expires',
+    'subscription_used_first' => 'Subscription credits are used first',
 
     // Steps
     'step_photo' => 'Your Photo',

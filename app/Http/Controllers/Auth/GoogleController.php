@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\CreditTransaction;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -41,17 +40,9 @@ class GoogleController extends Controller
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'avatar_url' => $googleUser->avatar,
-                    'credits' => 5,
+                    'credits' => 0, // Users start with 0 credits, get 5 after trial activation with card
                     'email_verified_at' => now(),
                 ]);
-
-                // Record signup bonus
-                CreditTransaction::record(
-                    $user,
-                    5,
-                    CreditTransaction::TYPE_SIGNUP_BONUS,
-                    'Welcome bonus - 5 free credits'
-                );
 
                 $isNewUser = true;
             }

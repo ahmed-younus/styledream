@@ -7,15 +7,40 @@
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-foreground mb-2">{{ __('studio.title') }}</h1>
             <p class="text-muted-foreground">{{ __('studio.subtitle') }}</p>
-            <a href="{{ route('pricing') }}" class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-full transition-all border border-border group">
-                <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v12M8 10h8M8 14h8"/>
-                </svg>
-                <span class="font-semibold text-foreground">{{ $credits }}</span>
-                <span class="text-muted-foreground">{{ __('studio.credits_available') }}</span>
-                <span class="text-[10px] font-semibold text-primary-foreground bg-primary px-2 py-0.5 rounded-full group-hover:bg-primary/90 transition-colors">GET MORE</span>
-            </a>
+            <div class="mt-4 flex flex-col items-center gap-2">
+                <a href="{{ route('pricing') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-full transition-all border border-border group">
+                    <svg class="w-4 h-4 text-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v12M8 10h8M8 14h8"/>
+                    </svg>
+                    <span class="font-semibold text-foreground">{{ $credits }}</span>
+                    <span class="text-muted-foreground">{{ __('studio.credits_available') }}</span>
+                    <span class="text-[10px] font-semibold text-primary-foreground bg-primary px-2 py-0.5 rounded-full group-hover:bg-primary/90 transition-colors">GET MORE</span>
+                </a>
+                @if($subscriptionCredits > 0 || $purchasedCredits > 0)
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="text-xs text-muted-foreground hover:text-foreground underline cursor-pointer">
+                            {{ __('studio.view_details') }}
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition
+                             class="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-card border border-border rounded-lg p-3 shadow-lg z-50 w-52 text-left">
+                            <p class="text-sm text-foreground mb-2">
+                                <span class="text-muted-foreground">{{ __('studio.subscription_credits') }}:</span>
+                                <span class="font-medium">{{ $subscriptionCredits }}</span>
+                                <span class="text-xs text-muted-foreground/70">({{ __('studio.resets_monthly') }})</span>
+                            </p>
+                            <p class="text-sm text-foreground">
+                                <span class="text-muted-foreground">{{ __('studio.purchased_credits') }}:</span>
+                                <span class="font-medium">{{ $purchasedCredits }}</span>
+                                <span class="text-xs text-muted-foreground/70">({{ __('studio.lifetime') }})</span>
+                            </p>
+                            <p class="text-xs text-muted-foreground/60 mt-2 pt-2 border-t border-border">
+                                {{ __('studio.subscription_used_first') }}
+                            </p>
+                        </div>
+                    </div>
+                @endif
+            </div>
         </div>
 
         {{-- Error Message --}}
