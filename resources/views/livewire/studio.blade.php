@@ -823,7 +823,7 @@
 
     {{-- Generation Queue Modal --}}
     @if($showQueueModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showQueueModal', false)">
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4" wire:click.self="$set('showQueueModal', false)">
             <div class="bg-background rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl">
                 {{-- Header --}}
                 <div class="p-5 border-b border-border flex items-center justify-between">
@@ -929,7 +929,7 @@
 
     {{-- Wardrobe Modal --}}
     @if($showWardrobeModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="$set('showWardrobeModal', false)">
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4" wire:click.self="$set('showWardrobeModal', false)">
             <div class="bg-background rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
                  x-data="{ selected: @js(array_map('intval', $selectedWardrobeItems)) }"
                  x-init="$watch('selected', val => $wire.set('selectedWardrobeItems', val))">
@@ -981,7 +981,7 @@
 
     {{-- Save Outfit Modal --}}
     @if($showSaveModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="closeSaveModal">
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4" wire:click.self="closeSaveModal">
             <div class="bg-background rounded-2xl max-w-md w-full p-6">
                 <h3 class="text-lg font-bold text-foreground mb-4">{{ __('outfits.save_title') }}</h3>
                 <div class="space-y-4">
@@ -1008,7 +1008,7 @@
 
     {{-- Post to Feed Modal --}}
     @if($showPostModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="closePostModal">
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4" wire:click.self="closePostModal">
             <div class="bg-background rounded-2xl max-w-md w-full p-6">
                 <h3 class="text-lg font-bold text-foreground mb-4">{{ __('outfits.post_title') }}</h3>
                 <div class="space-y-4">
@@ -1044,7 +1044,7 @@
 
     {{-- Share Modal --}}
     @if($showShareModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="closeShareModal">
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4" wire:click.self="closeShareModal">
             <div class="bg-background rounded-2xl max-w-sm w-full p-6">
                 <h3 class="text-lg font-bold text-foreground mb-4">{{ __('feed.share_to') }}</h3>
                 <div class="grid grid-cols-3 gap-4">
@@ -1100,7 +1100,7 @@
 
     {{-- Result Lightbox Modal --}}
     @if($showLightbox && $lightboxImage)
-        <div class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+        <div class="fixed inset-0 bg-black/90 z-[70] flex items-center justify-center p-4"
              wire:click.self="closeLightbox">
             <div class="relative max-w-[90vw] sm:max-w-md bg-background rounded-2xl overflow-hidden shadow-2xl">
                 {{-- Close Button --}}
@@ -1201,7 +1201,7 @@
 
     {{-- User Queue Panel (Slideover) --}}
     @if($showQueuePanel)
-        <div class="fixed inset-0 z-40"
+        <div class="fixed inset-0 z-[70]"
              x-data="{ visible: true }"
              x-show="visible"
              x-transition:leave="transition ease-in duration-200"
@@ -1351,8 +1351,8 @@
 
     {{-- Get Credits Modal --}}
     @if($showCreditModal)
-        <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center sm:p-4" wire:click.self="$set('showCreditModal', false)">
-            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-50"
+        <div class="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center sm:p-4" wire:click.self="$set('showCreditModal', false)">
+            <div class="fixed inset-0 sm:static sm:inset-auto bg-background sm:rounded-2xl sm:max-w-md w-full overflow-y-auto relative z-[70]"
                  x-data="{
                      stripe: null,
                      cardElement: null,
