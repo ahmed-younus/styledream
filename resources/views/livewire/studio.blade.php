@@ -1464,7 +1464,6 @@
                                                 return;
                                             }
                                             await $wire.generateAfterPayment();
-                                            $wire.generate();
                                         } catch (e) {
                                             payError = 'An unexpected error occurred.';
                                         }
@@ -1578,7 +1577,6 @@
                                             return;
                                         }
                                         await $wire.generateAfterPayment();
-                                        $wire.generate();
                                     } catch (e) {
                                         payError = 'An unexpected error occurred.';
                                     }

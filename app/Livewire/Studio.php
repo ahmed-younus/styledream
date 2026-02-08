@@ -176,8 +176,8 @@ class Studio extends Component
                 $this->lastTryOnId = $newlyCompleted->id;
                 $this->showResultReady = true;
 
-                // Dispatch browser event for notification
-                $this->dispatch('result-ready');
+                // Dispatch browser event to hide timer overlay
+                $this->js("window.dispatchEvent(new CustomEvent('result-ready'))");
             }
         }
 
@@ -630,7 +630,7 @@ class Studio extends Component
             } else {
                 $this->showQueueStatus = true;
                 // Notify frontend that generation has started (for timer overlay)
-                $this->dispatch('generation-started', duration: 30);
+                $this->js("window.dispatchEvent(new CustomEvent('generation-started', { detail: { duration: 30 } }))");
             }
 
             // Reload pending jobs and processing results
@@ -903,7 +903,8 @@ class Studio extends Component
         }
 
         // Notify frontend that generation has started (timer overlay)
-        $this->dispatch('generation-started', duration: count($queuedItems) * 30);
+        $duration = count($queuedItems) * 30;
+        $this->js("window.dispatchEvent(new CustomEvent('generation-started', { detail: { duration: {$duration} } }))");
 
         // Refresh results after processing
         $this->loadProcessingResults();
@@ -1378,6 +1379,8 @@ class Studio extends Component
     public function generateAfterPayment(): void
     {
         $this->showCreditModal = false;
+        // Trigger generation after modal closes (runs after DOM update)
+        $this->js('$wire.generate()');
     }
 
     protected function openCreditModal(): void
