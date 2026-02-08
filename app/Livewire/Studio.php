@@ -537,41 +537,14 @@ class Studio extends Component
 
         $user = auth()->user();
 
-        // Collect all garment URLs and categories (in same order)
-        $garmentUrls = [];
-        $garmentCategories = [];
-
-        // Add garments from file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $index => $garment) {
-            if ($garment && method_exists($garment, 'getRealPath')) {
-                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
-                $garmentUrls[] = $this->storeImage($base64, 'garment');
-                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
-            }
-        }
-
-        // Add garments from URL paste (already base64)
-        $uploadedCount = count($this->uploadedGarments);
-        foreach ($this->garmentBase64Array as $index => $base64) {
-            $garmentUrls[] = $this->storeImage($base64, 'garment');
-            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
-        }
-
-        // Add wardrobe items (default to 'auto' category)
-        foreach ($this->selectedWardrobeItems as $itemId) {
-            $item = WardrobeItem::find($itemId);
-            if ($item) {
-                $garmentUrls[] = $item->image_url;
-                $garmentCategories[] = 'auto';
-            }
-        }
-
-        if (empty($garmentUrls)) {
+        // Quick garment availability check (before expensive image processing)
+        $hasGarments = !empty($this->uploadedGarments) || !empty($this->garmentBase64Array) || !empty($this->selectedWardrobeItems);
+        if (!$hasGarments) {
             $this->error = __('studio.error_no_clothing');
             return;
         }
 
-        // 1 try-on session = 1 credit (regardless of number of items)
+        // Credit check FIRST — before any expensive image processing
         if (!$user->hasCredits(1)) {
             $this->openCreditModal();
             return;
@@ -580,6 +553,40 @@ class Studio extends Component
         $this->error = '';
 
         try {
+            // Collect all garment URLs and categories (in same order)
+            $garmentUrls = [];
+            $garmentCategories = [];
+
+            // Add garments from file uploads (convert to base64 and store)
+            foreach ($this->uploadedGarments as $index => $garment) {
+                if ($garment && method_exists($garment, 'getRealPath')) {
+                    $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                    $garmentUrls[] = $this->storeImage($base64, 'garment');
+                    $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
+                }
+            }
+
+            // Add garments from URL paste (already base64)
+            $uploadedCount = count($this->uploadedGarments);
+            foreach ($this->garmentBase64Array as $index => $base64) {
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
+            }
+
+            // Add wardrobe items (default to 'auto' category)
+            foreach ($this->selectedWardrobeItems as $itemId) {
+                $item = WardrobeItem::find($itemId);
+                if ($item) {
+                    $garmentUrls[] = $item->image_url;
+                    $garmentCategories[] = 'auto';
+                }
+            }
+
+            if (empty($garmentUrls)) {
+                $this->error = __('studio.error_no_clothing');
+                return;
+            }
+
             // Get body image base64 - either from URL paste or file upload
             if ($this->bodyImageBase64) {
                 $bodyBase64 = $this->bodyImageBase64;
@@ -622,6 +629,8 @@ class Studio extends Component
                 $this->showResultReady = true;
             } else {
                 $this->showQueueStatus = true;
+                // Notify frontend that generation has started (for timer overlay)
+                $this->dispatch('generation-started', duration: 30);
             }
 
             // Reload pending jobs and processing results
@@ -740,41 +749,14 @@ class Studio extends Component
             return;
         }
 
-        // Collect garment URLs and categories
-        $garmentUrls = [];
-        $garmentCategories = [];
-
-        // From file uploads (convert to base64 and store)
-        foreach ($this->uploadedGarments as $index => $garment) {
-            if ($garment && method_exists($garment, 'getRealPath')) {
-                $base64 = base64_encode(file_get_contents($garment->getRealPath()));
-                $garmentUrls[] = $this->storeImage($base64, 'garment');
-                $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
-            }
-        }
-
-        // From URL paste (already base64)
-        $uploadedCount = count($this->uploadedGarments);
-        foreach ($this->garmentBase64Array as $index => $base64) {
-            $garmentUrls[] = $this->storeImage($base64, 'garment');
-            $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
-        }
-
-        // From wardrobe (default to 'auto' category)
-        foreach ($this->selectedWardrobeItems as $itemId) {
-            $item = WardrobeItem::find($itemId);
-            if ($item) {
-                $garmentUrls[] = $item->image_url;
-                $garmentCategories[] = 'auto';
-            }
-        }
-
-        if (empty($garmentUrls)) {
+        // Quick garment availability check (before expensive image processing)
+        $hasGarments = !empty($this->uploadedGarments) || !empty($this->garmentBase64Array) || !empty($this->selectedWardrobeItems);
+        if (!$hasGarments) {
             $this->error = __('studio.error_no_clothing');
             return;
         }
 
-        // Check credits
+        // Credit check FIRST — before any expensive image processing
         if (!$user->hasCredits(1)) {
             $this->openCreditModal();
             return;
@@ -783,6 +765,40 @@ class Studio extends Component
         $this->error = '';
 
         try {
+            // Collect garment URLs and categories
+            $garmentUrls = [];
+            $garmentCategories = [];
+
+            // From file uploads (convert to base64 and store)
+            foreach ($this->uploadedGarments as $index => $garment) {
+                if ($garment && method_exists($garment, 'getRealPath')) {
+                    $base64 = base64_encode(file_get_contents($garment->getRealPath()));
+                    $garmentUrls[] = $this->storeImage($base64, 'garment');
+                    $garmentCategories[] = $this->garmentCategories[$index] ?? 'auto';
+                }
+            }
+
+            // From URL paste (already base64)
+            $uploadedCount = count($this->uploadedGarments);
+            foreach ($this->garmentBase64Array as $index => $base64) {
+                $garmentUrls[] = $this->storeImage($base64, 'garment');
+                $garmentCategories[] = $this->garmentCategories[$uploadedCount + $index] ?? 'auto';
+            }
+
+            // From wardrobe (default to 'auto' category)
+            foreach ($this->selectedWardrobeItems as $itemId) {
+                $item = WardrobeItem::find($itemId);
+                if ($item) {
+                    $garmentUrls[] = $item->image_url;
+                    $garmentCategories[] = 'auto';
+                }
+            }
+
+            if (empty($garmentUrls)) {
+                $this->error = __('studio.error_no_clothing');
+                return;
+            }
+
             // Get body image base64
             if ($this->bodyImageBase64) {
                 $bodyBase64 = $this->bodyImageBase64;
@@ -885,6 +901,9 @@ class Studio extends Component
             // Dispatch job - with sync driver this runs immediately
             ProcessTryOn::dispatch($tryOn);
         }
+
+        // Notify frontend that generation has started (timer overlay)
+        $this->dispatch('generation-started', duration: count($queuedItems) * 30);
 
         // Refresh results after processing
         $this->loadProcessingResults();

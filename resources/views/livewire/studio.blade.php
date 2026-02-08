@@ -508,19 +508,19 @@
                     <div class="flex gap-3">
                         {{-- Generate Now Button --}}
                         <button
-                            x-on:click="$wire.generate().then(() => { $dispatch('start-timer', { duration: 30 }) })"
-                            wire:loading.attr="disabled"
-                            wire:target="generate"
+                            x-data="{ loading: false }"
+                            @click="if(loading) return; loading = true; $wire.generate().finally(() => loading = false)"
+                            :disabled="loading"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
                             class="flex-1 py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                            <span wire:loading.remove wire:target="generate" class="flex items-center gap-2">
+                            <span x-show="!loading" class="flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                                 </svg>
                                 {{ __('studio.generate_now') }}
                             </span>
-                            <span wire:loading wire:target="generate" class="flex items-center gap-2">
+                            <span x-show="loading" x-cloak class="flex items-center gap-2">
                                 <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -532,20 +532,20 @@
                         {{-- Add to Queue Button --}}
                         @auth
                         <button
-                            wire:click="addToQueue"
-                            wire:loading.attr="disabled"
-                            wire:target="addToQueue"
+                            x-data="{ loading: false }"
+                            @click="if(loading) return; loading = true; $wire.addToQueue().finally(() => loading = false)"
+                            :disabled="loading"
                             @if(!$bodyImagePreview || (count($garmentPreviews) == 0 && count($selectedWardrobeItems) == 0)) disabled @endif
                             class="py-4 px-5 bg-secondary hover:bg-secondary/80 text-foreground font-medium rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 border border-border hover:border-primary/30 relative"
                             title="{{ __('studio.add_to_queue') }}"
                         >
-                            <span wire:loading.remove wire:target="addToQueue" class="flex items-center gap-2">
+                            <span x-show="!loading" class="flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                 </svg>
                                 <span class="hidden sm:inline text-sm">Queue</span>
                             </span>
-                            <span wire:loading wire:target="addToQueue">
+                            <span x-show="loading" x-cloak>
                                 <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -588,12 +588,30 @@
 
             {{-- Right Column: Result --}}
             <div class="bg-secondary rounded-2xl p-4 sm:p-6 relative overflow-hidden">
-                {{-- Generation Loading Overlay with Dynamic Timer --}}
-                <div wire:loading wire:target="generate, runQueue"
-                     class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30"
-                     x-data="{ seconds: 30, totalSeconds: 30, interval: null }"
-                     x-init="interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)"
-                     @start-timer.window="seconds = $event.detail.duration; totalSeconds = $event.detail.duration; clearInterval(interval); interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)">
+                {{-- Generation Loading Overlay with Dynamic Timer (event-driven, not wire:loading) --}}
+                <div x-data="{
+                        generating: false,
+                        seconds: 30,
+                        totalSeconds: 30,
+                        interval: null
+                     }"
+                     @generation-started.window="
+                        generating = true;
+                        seconds = $event.detail?.duration ?? 30;
+                        totalSeconds = $event.detail?.duration ?? 30;
+                        clearInterval(interval);
+                        interval = setInterval(() => { if(seconds > 0) seconds--; }, 1000)
+                     "
+                     @result-ready.window="generating = false; clearInterval(interval)"
+                     x-show="generating"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     x-cloak
+                     class="absolute inset-0 bg-secondary/98 backdrop-blur-sm rounded-2xl flex items-center justify-center z-30">
                     <div class="text-center p-6">
                         {{-- Circular Progress with Timer --}}
                         <div class="relative w-24 h-24 mx-auto mb-5">
@@ -1300,19 +1318,18 @@
                 {{-- Footer --}}
                 @if(count($queueItems) > 0)
                     <div class="p-4 bg-secondary border-t border-border">
-                        <button x-on:click="$dispatch('close-queue-panel'); $dispatch('start-timer', { duration: {{ count($queueItems) * 30 }} }); $wire.runQueue()"
-                                wire:loading.attr="disabled"
-                                wire:loading.class="opacity-75 cursor-wait"
-                                wire:target="runQueue"
-                                class="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
-                            <span wire:loading.remove wire:target="runQueue" class="flex items-center gap-2">
+                        <button x-data="{ loading: false }"
+                                @click="if(loading) return; loading = true; $dispatch('close-queue-panel'); $wire.runQueue().finally(() => loading = false)"
+                                :disabled="loading"
+                                class="w-full py-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-semibold transition-all flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-wait">
+                            <span x-show="!loading" class="flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                                 Generate All {{ count($queueItems) }} Outfits
                             </span>
-                            <span wire:loading wire:target="runQueue" class="flex items-center gap-2">
+                            <span x-show="loading" x-cloak class="flex items-center gap-2">
                                 <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -1447,7 +1464,6 @@
                                                 return;
                                             }
                                             await $wire.generateAfterPayment();
-                                            $dispatch('start-timer', { duration: 30 });
                                             $wire.generate();
                                         } catch (e) {
                                             payError = 'An unexpected error occurred.';
@@ -1562,7 +1578,6 @@
                                             return;
                                         }
                                         await $wire.generateAfterPayment();
-                                        $dispatch('start-timer', { duration: 30 });
                                         $wire.generate();
                                     } catch (e) {
                                         payError = 'An unexpected error occurred.';
